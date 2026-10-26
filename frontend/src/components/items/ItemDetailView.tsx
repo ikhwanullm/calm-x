@@ -14,7 +14,7 @@ import {
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { ProgressBar, StatusBadge, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
 import { getDeadlineStatus, DEFAULT_THRESHOLD } from '@/utils/deadline'
-import { getLocalToday, formatRelativeDate, formatAbsoluteDate } from '@/utils/date'
+import { getLocalToday, formatAbsoluteDate } from '@/utils/date'
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu,

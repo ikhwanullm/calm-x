@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dialog'
 import { useCreateItem } from '@/hooks/useItems'
 import { extractApiError } from '@/api/client'
-import { extractApiError } from '@/api/client'
 import type { ItemType } from '@/types/models'
 import { cn } from '@/lib/utils'
 
