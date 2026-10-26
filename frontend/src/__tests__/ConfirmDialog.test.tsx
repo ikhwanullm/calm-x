@@ -65,4 +65,28 @@ describe('ConfirmDialog', () => {
     renderDialog({ cancelLabel: 'Keep it' })
     expect(screen.getByRole('button', { name: 'Keep it' })).toBeTruthy()
   })
+
+  it('cancel button does not have bg-accent class', () => {
+    renderDialog()
+    const cancelBtn = screen.getByRole('button', { name: 'Cancel' })
+    expect(cancelBtn.className).not.toContain('bg-accent')
+  })
+
+  it('cancel button has secondary style (bg-surface)', () => {
+    renderDialog()
+    const cancelBtn = screen.getByRole('button', { name: 'Cancel' })
+    expect(cancelBtn.className).toContain('bg-surface')
+  })
+
+  it('cancel button does not have bg-accent class', () => {
+    renderDialog()
+    const cancelBtn = screen.getByRole('button', { name: 'Cancel' })
+    expect(cancelBtn.className).not.toContain('bg-accent')
+  })
+
+  it('cancel button has secondary style', () => {
+    renderDialog()
+    const cancelBtn = screen.getByRole('button', { name: 'Cancel' })
+    expect(cancelBtn.className).toContain('bg-surface')
+  })
 })
