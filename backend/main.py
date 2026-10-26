@@ -111,6 +111,10 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
     if assets_path.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_path)), name="assets")
 
+    # --- Built-in API routers ---
+    from backend.api.items import router as items_router
+    app.include_router(items_router, prefix="/api")
+
     # --- Extra routers (registered before SPA fallback) ---
     if extra_routers:
         for router in extra_routers:

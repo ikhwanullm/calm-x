@@ -1,74 +1,58 @@
-"""Service layer for Item CRUD, archive, restore, and project completion."""
+"""Service layer for Items (Projects, Areas, Resources)."""
 from __future__ import annotations
 
-from typing import Literal
+from datetime import datetime, timezone
+from typing import Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.exceptions import ConflictError, NotFoundError
-from backend.models.item import Item, Task
-from backend.models.utils import now_utc
-from backend.schemas.item import (
-    AreaCreate,
-    ItemResponse,
-    ItemUpdate,
-    ProjectCreate,
-    ResourceCreate,
-    item_to_response,
-)
-from backend.services.guards import guard_not_archived
-
-ItemType = Literal["project", "area", "resource"]
+from backend.exceptions import ArchivedItemError, ConflictError, NotFoundError
+from backend.models.item import Item
+from backend.schemas.item import AreaCreate, ItemUpdate, ProjectCreate, ResourceCreate
 
 
-def _get_task_counts(session: Session, item_id: int) -> tuple[int, int]:
-    """Return (total_task_count, completed_task_count) for an item."""
-    total = session.execute(
-        select(func.count()).where(Task.item_id == item_id)
-    ).scalar_one()
-    completed = session.execute(
-        select(func.count()).where(Task.item_id == item_id, Task.is_complete == 1)
-    ).scalar_one()
-    return total, completed
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
 
 
-def _to_response(session: Session, item: Item) -> ItemResponse:
-    total, completed = _get_task_counts(session, item.id)
-    return item_to_response(item, task_count=total, completed_task_count=completed)
-
-
-def get_item(session: Session, item_id: int) -> ItemResponse:
-    """Fetch a single item by id. Raises NotFoundError if not found."""
+def _get_or_404(session: Session, item_id: int) -> Item:
     item = session.get(Item, item_id)
     if item is None:
-        raise NotFoundError(f"Item {item_id} not found", detail=f"id={item_id}")
-    return _to_response(session, item)
+        raise NotFoundError(f"Item {item_id} not found")
+    return item
+
+
+def _guard_not_archived(item: Item) -> None:
+    if item.archived_at is not None:
+        raise ArchivedItemError(f"Item {item.id} is archived and cannot be modified")
 
 
 def list_items(
     session: Session,
-    *,
-    type_filter: ItemType | None = None,
+    type_filter: Optional[str] = None,
     include_archived: bool = False,
-) -> list[ItemResponse]:
-    """List items with optional type and archive filters."""
-    stmt = select(Item)
-    if type_filter:
-        stmt = stmt.where(Item.type == type_filter)
+) -> list[Item]:
+    """Return items, optionally filtered by type and archived status."""
+    q = select(Item)
+    if type_filter is not None:
+        q = q.where(Item.type == type_filter)
     if not include_archived:
-        stmt = stmt.where(Item.archived_at.is_(None))
-    stmt = stmt.order_by(Item.updated_at.desc())
-    items = session.execute(stmt).scalars().all()
-    return [_to_response(session, item) for item in items]
+        q = q.where(Item.archived_at.is_(None))
+    return list(session.execute(q).scalars().all())
+
+
+def get_item(session: Session, item_id: int) -> Item:
+    """Return a single item by id or raise NotFoundError."""
+    return _get_or_404(session, item_id)
 
 
 def create_item(
     session: Session,
     data: ProjectCreate | AreaCreate | ResourceCreate,
-) -> ItemResponse:
-    """Create a new item from a create schema."""
-    now = now_utc()
+) -> Item:
+    """Persist a new Project, Area, or Resource and return it."""
+    now = _now_utc()
     item = Item(
         type=data.type,
         title=data.title,
@@ -77,101 +61,98 @@ def create_item(
         created_at=now,
         updated_at=now,
     )
-    if isinstance(data, ProjectCreate):
-        item.project_goal = data.project_goal
-        item.project_deadline = data.project_deadline
+    if data.type == "project":
         item.project_status = "active"
-    elif isinstance(data, AreaCreate):
-        item.area_maintenance_notes = data.area_maintenance_notes
+        item.project_goal = data.project_goal  # type: ignore[attr-defined]
+        item.project_deadline = data.project_deadline  # type: ignore[attr-defined]
+    elif data.type == "area":
+        item.area_maintenance_notes = data.area_maintenance_notes  # type: ignore[attr-defined]
 
     session.add(item)
-    session.flush()  # get the id before commit
-    return _to_response(session, item)
-
-
-def update_item(session: Session, item_id: int, data: ItemUpdate) -> ItemResponse:
-    """Partially update an item. Raises NotFoundError, ArchivedItemError."""
-    item = session.get(Item, item_id)
-    if item is None:
-        raise NotFoundError(f"Item {item_id} not found")
-    guard_not_archived(item)
-
-    update_data = data.model_dump(exclude_none=True)
-    for field, value in update_data.items():
-        setattr(item, field, value)
-    item.updated_at = now_utc()
     session.flush()
-    return _to_response(session, item)
+    return item
+
+
+def update_item(session: Session, item_id: int, data: ItemUpdate) -> Item:
+    """Partially update an item (archived items are rejected)."""
+    item = _get_or_404(session, item_id)
+    _guard_not_archived(item)
+
+    if data.title is not None:
+        item.title = data.title
+    if data.description is not None:
+        item.description = data.description
+    if data.notes is not None:
+        item.notes = data.notes
+
+    if item.type == "project":
+        if data.project_goal is not None:
+            item.project_goal = data.project_goal
+        if data.project_deadline is not None:
+            item.project_deadline = data.project_deadline
+    elif item.type == "area":
+        if data.area_maintenance_notes is not None:
+            item.area_maintenance_notes = data.area_maintenance_notes
+
+    item.updated_at = _now_utc()
+    session.flush()
+    return item
 
 
 def delete_item(session: Session, item_id: int) -> None:
-    """Delete an item (and cascade-delete its tasks). No archive guard.
-
-    Per R7.9: deletion is always allowed, even for archived items.
-    """
-    item = session.get(Item, item_id)
-    if item is None:
-        raise NotFoundError(f"Item {item_id} not found")
+    """Delete an item (and its tasks via cascade). Works for archived items too."""
+    item = _get_or_404(session, item_id)
     session.delete(item)
     session.flush()
 
 
-def archive_item(session: Session, item_id: int) -> ItemResponse:
-    """Archive an item. Raises NotFoundError, ArchivedItemError (already archived)."""
-    item = session.get(Item, item_id)
-    if item is None:
-        raise NotFoundError(f"Item {item_id} not found")
-    guard_not_archived(item)  # prevent double-archiving
-    item.archived_at = now_utc()
-    item.updated_at = now_utc()
+def archive_item(session: Session, item_id: int) -> Item:
+    """Archive an item (sets archived_at timestamp)."""
+    item = _get_or_404(session, item_id)
+    _guard_not_archived(item)
+    now = _now_utc()
+    item.archived_at = now
+    item.updated_at = now
     session.flush()
-    return _to_response(session, item)
+    return item
 
 
-def restore_item(session: Session, item_id: int) -> ItemResponse:
-    """Restore an archived item. Raises NotFoundError, ConflictError (not archived)."""
-    item = session.get(Item, item_id)
-    if item is None:
-        raise NotFoundError(f"Item {item_id} not found")
+def restore_item(session: Session, item_id: int) -> Item:
+    """Restore an archived item (clears archived_at). Raises ConflictError if not archived."""
+    item = _get_or_404(session, item_id)
     if item.archived_at is None:
         raise ConflictError(f"Item {item_id} is not archived")
     item.archived_at = None
-    item.updated_at = now_utc()
+    item.updated_at = _now_utc()
     session.flush()
-    return _to_response(session, item)
+    return item
 
 
-def complete_project(session: Session, item_id: int) -> ItemResponse:
-    """Mark a project as completed. Status-only — does NOT complete tasks.
-
-    Per R4.10: completing a project changes its status; it does not close tasks.
-    After calling this, the caller should prompt the user to archive (R1.6).
-    """
-    item = session.get(Item, item_id)
-    if item is None:
-        raise NotFoundError(f"Item {item_id} not found")
-    guard_not_archived(item)
+def complete_project(session: Session, item_id: int) -> Item:
+    """Set project_status to 'completed'. Item must be a project."""
+    item = _get_or_404(session, item_id)
+    _guard_not_archived(item)
     if item.type != "project":
         raise ConflictError(f"Item {item_id} is not a project")
+    now = _now_utc()
     item.project_status = "completed"
-    item.project_completed_at = now_utc()
-    item.updated_at = now_utc()
+    item.project_completed_at = now
+    item.updated_at = now
     session.flush()
-    return _to_response(session, item)
+    return item
 
 
-def reopen_project(session: Session, item_id: int) -> ItemResponse:
-    """Reopen a completed project (set status back to active)."""
-    item = session.get(Item, item_id)
-    if item is None:
-        raise NotFoundError(f"Item {item_id} not found")
-    guard_not_archived(item)
+def reopen_project(session: Session, item_id: int) -> Item:
+    """Reopen a completed project (set project_status back to 'active')."""
+    item = _get_or_404(session, item_id)
+    _guard_not_archived(item)
     if item.type != "project":
         raise ConflictError(f"Item {item_id} is not a project")
-    if item.project_status != "completed":
-        raise ConflictError(f"Project {item_id} is not completed")
+    if item.project_status == "active":
+        raise ConflictError(f"Project {item_id} is already active")
+    now = _now_utc()
     item.project_status = "active"
     item.project_completed_at = None
-    item.updated_at = now_utc()
+    item.updated_at = now
     session.flush()
-    return _to_response(session, item)
+    return item

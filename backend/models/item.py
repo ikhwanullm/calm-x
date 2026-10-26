@@ -61,6 +61,22 @@ class Item(Base):
         passive_deletes=True,
     )
 
+    @property
+    def task_count(self) -> int:
+        return len(self.tasks)
+
+    @property
+    def completed_task_count(self) -> int:
+        return sum(1 for t in self.tasks if t.is_complete)
+
+    @property
+    def progress_percentage(self) -> int:
+        total = len(self.tasks)
+        if total == 0:
+            return 0
+        completed = sum(1 for t in self.tasks if t.is_complete)
+        return (200 * completed + total) // (2 * total)
+
     def __repr__(self) -> str:
         return f"<Item id={self.id} type={self.type!r} title={self.title!r}>"
 
