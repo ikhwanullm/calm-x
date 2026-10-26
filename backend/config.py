@@ -1,12 +1,13 @@
-﻿"""Application configuration via pydantic-settings."""
+"""Application configuration via pydantic-settings."""
 from __future__ import annotations
 
 import argparse
 import sys
 from pathlib import Path
+from typing import Annotated
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Config(BaseSettings):
@@ -17,19 +18,14 @@ class Config(BaseSettings):
         extra="ignore",
     )
 
-    # Core settings
     db_path: str = "data/calm_x.db"
     backup_dir: str = "data/backups"
     frontend_dist: str = "frontend/dist"
     port: int = 8080
-    dev_origins: list[str] = []
+    dev_origins: Annotated[list[str], NoDecode] = []
 
-    # ------------------------------------------------------------------ #
-    # Computed absolute paths (derived from project root)                 #
-    # ------------------------------------------------------------------ #
     @property
     def project_root(self) -> Path:
-        """Absolute path to the project root (parent of backend/)."""
         return Path(__file__).parent.parent.resolve()
 
     @property
@@ -55,7 +51,7 @@ class Config(BaseSettings):
     @field_validator("dev_origins", mode="before")
     @classmethod
     def parse_dev_origins(cls, v: object) -> list[str]:
-        """Accept a comma-separated string (from env var) or a list."""
+        """Accept comma-separated string or list. NoDecode prevents JSON-parsing."""
         if isinstance(v, str):
             return [o.strip() for o in v.split(",") if o.strip()]
         if isinstance(v, list):
@@ -64,17 +60,11 @@ class Config(BaseSettings):
 
 
 def load_config() -> Config:
-    """Load config, with optional CLI --port override.
-
-    Reads CALM_X_PORT env var via pydantic-settings automatically.
-    Supports --port CLI argument which takes precedence over env var.
-    """
+    """Load config, with optional CLI --port override."""
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--port", type=int, default=None)
     known, _ = parser.parse_known_args(sys.argv[1:])
-
     config = Config()
     if known.port is not None:
-        # CLI overrides env var
         config = Config(port=known.port)
     return config
