@@ -89,7 +89,6 @@ export interface ItemUpdatePayload {
   notes?: string
   project_goal?: string | null
   project_deadline?: string | null
-  project_status?: ProjectStatus | null
   area_maintenance_notes?: string | null
 }
 
