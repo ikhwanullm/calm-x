@@ -13,8 +13,8 @@ import {
 } from '@/hooks/useItems'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { ProgressBar, StatusBadge, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
-import { getDeadlineStatus } from '@/utils/deadline'
-import { getLocalToday, formatRelativeDate } from '@/utils/date'
+import { getDeadlineStatus, DEFAULT_THRESHOLD } from '@/utils/deadline'
+import { getLocalToday, formatRelativeDate, formatAbsoluteDate } from '@/utils/date'
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
@@ -109,7 +109,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
           role="status"
         >
           <span className="text-warn-fg font-medium">
-            Read-only · Archived on {formatRelativeDate(item.archived_at!, today)}
+            Read-only · Archived on {formatAbsoluteDate(item.archived_at!)}
           </span>
           <div className="flex gap-2">
             <button
@@ -223,9 +223,9 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
       {/* Project deadline status */}
       {isProject(item) && item.project_deadline && (
         <div className="mt-2">
-          {getDeadlineStatus(item.project_deadline, item.project_status === 'completed', 3, today) && (
+          {getDeadlineStatus(item.project_deadline, item.project_status === 'completed', DEFAULT_THRESHOLD, today) && (
             <StatusBadge
-              status={getDeadlineStatus(item.project_deadline, item.project_status === 'completed', 3, today)!}
+              status={getDeadlineStatus(item.project_deadline, item.project_status === 'completed', DEFAULT_THRESHOLD, today)!}
               date={item.project_deadline}
               today={today}
             />
