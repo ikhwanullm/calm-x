@@ -81,7 +81,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
 
   - [x] 0.9 Initialize React frontend with Vite
     - Create Vite + React + TypeScript project in `frontend/`
-    - Configure `vite.config.ts` with proxy: `/api` â†’ `http://127.0.0.1:8080`
+    - Configure `vite.config.ts` with proxy: `/api` → `http://127.0.0.1:8080`
     - Install dependencies: @tanstack/react-query, zustand, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, react-router-dom, axios, date-fns, cmdk, sonner, lucide-react
     - Install dev dependencies: vitest, @testing-library/react, @testing-library/user-event, jsdom, fast-check
     - Configure vitest in vite.config.ts with jsdom environment
@@ -89,16 +89,16 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
 
   - [x] 0.10 Configure Tailwind CSS with design tokens
     - Install and configure Tailwind CSS
-    - Create `frontend/src/index.css` with CSS variables for all tokens from ui-guidelines.md Â§3 (light and dark themes)
+    - Create `frontend/src/index.css` with CSS variables for all tokens from ui-guidelines.md §3 (light and dark themes)
     - Configure `tailwind.config.ts` to reference CSS variables
     - Map shadcn variable names to design tokens
-    - _Requirements: R16.5; ui-guidelines.md Â§3_
+    - _Requirements: R16.5; ui-guidelines.md §3_
 
   - [x] 0.11 Set up shadcn/ui and Inter font
     - Initialize shadcn/ui with Tailwind integration
     - Add Inter font via Google Fonts or local files
     - Configure font-family in Tailwind config
-    - _Requirements: ui-guidelines.md Â§2, Â§3_
+    - _Requirements: ui-guidelines.md §2, §3_
 
   - [x] 0.12 Implement ThemeProvider with system/light/dark
     - Create `frontend/src/components/ThemeProvider.tsx`
@@ -106,29 +106,29 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Apply `.dark` class to `<html>` element for dark mode
     - Store preference in localStorage initially (backend persistence comes in Phase 10)
     - Add inline script in index.html `<head>` that reads theme from localStorage and applies class to `<html>` BEFORE React hydration to prevent flash of wrong theme
-    - _Requirements: R16.5; ui-guidelines.md Â§3_
+    - _Requirements: R16.5; ui-guidelines.md §3_
 
   - [x] 0.13 Set up React Router with all routes
     - Configure react-router-dom with routes:
-      - `/` â†’ Dashboard
-      - `/inbox` â†’ Inbox
-      - `/projects`, `/projects/:id` â†’ Projects list/detail
-      - `/areas`, `/areas/:id` â†’ Areas list/detail
-      - `/resources`, `/resources/:id` â†’ Resources list/detail
-      - `/archive` â†’ Archive
-      - `/templates` â†’ Templates
-      - `/review` â†’ Weekly Review
-      - `/settings` â†’ Settings
-    - _Requirements: R9.1, R9.5; ui-guidelines.md Â§4_
+      - `/` → Dashboard
+      - `/inbox` → Inbox
+      - `/projects`, `/projects/:id` → Projects list/detail
+      - `/areas`, `/areas/:id` → Areas list/detail
+      - `/resources`, `/resources/:id` → Resources list/detail
+      - `/archive` → Archive
+      - `/templates` → Templates
+      - `/review` → Weekly Review
+      - `/settings` → Settings
+    - _Requirements: R9.1, R9.5; ui-guidelines.md §4_
 
   - [x] 0.14 Create AppShell layout component
     - Create `frontend/src/components/layout/AppShell.tsx`
-    - Implement sidebar (232px at â‰¥1280px, 64px icon rail at 768-1279px)
+    - Implement sidebar (232px at ≥1280px, 64px icon rail at 768-1279px)
     - Sidebar items: Dashboard, Inbox (with count pill), Projects, Areas, Resources, Archive, divider, Templates, Weekly review, Settings
     - Active item uses `aria-current="page"` with `--accent-soft` background
     - Implement header with search placeholder and Quick Capture button placeholder
     - Main content area with `max-width: 1240px`
-    - _Requirements: R1.1, R9.5; ui-guidelines.md Â§4_
+    - _Requirements: R1.1, R9.5; ui-guidelines.md §4_
 
   - [x] 0.15 Configure API client with X-Calm-X header
     - Create `frontend/src/api/client.ts` with axios instance
@@ -143,7 +143,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - [x] 0.17 Configure sonner for toasts
     - Add `<Toaster />` to App component
     - Position bottom-right, minimum duration 3000ms
-    - _Requirements: R15.6; ui-guidelines.md Â§2_
+    - _Requirements: R15.6; ui-guidelines.md §2_
 
   - [x] 0.18 Create dev script to run both servers
     - Create script (npm script or shell script) that:
@@ -176,7 +176,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Verify migration runs without error
     - _Requirements: R13.1, R13.7, R16.2_
 
-    **NOTE: Schema changes after initial deployment MUST use new migrations (002_â€¦). NEVER edit migrations that have been applied to a database.**
+    **NOTE: Schema changes after initial deployment MUST use new migrations (002_…). NEVER edit migrations that have been applied to a database.**
 
 - [x] 0.20 Checkpoint: Foundation complete
   - Verify both servers start without errors
@@ -190,12 +190,12 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Variants: `primary` (accent fill), `secondary` (surface + border), `ghost` (transparent, accent text), `danger` (transparent, danger text)
     - Sizes: `default` (44px), `sm` (36px)
     - Icon-only buttons require `aria-label`
-    - _Requirements: R15.7; ui-guidelines.md Â§5_
+    - _Requirements: R15.7; ui-guidelines.md §5_
 
   - [ ] 1.2 Create Card component
     - Surface background, 1px border, 12px radius, shadow, 20px padding
     - Clickable cards use `<Link>` not `div onClick`
-    - _Requirements: ui-guidelines.md Â§5_
+    - _Requirements: ui-guidelines.md §5_
 
   - [ ] 1.3 Create StatusBadge component
     - Props: `status: 'overdue' | 'approaching' | 'on-track'`, `date: string`
@@ -203,60 +203,60 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Icons: AlertCircle (overdue), Clock (approaching), CheckCircle2 (on-track)
     - `aria-label`: "overdue", "approaching deadline", "on track"
     - Renders nothing for completed tasks
-    - _Requirements: R4.2, R8.13, R8.14, R8.15, R9.4; ui-guidelines.md Â§5_
+    - _Requirements: R4.2, R8.13, R8.14, R8.15, R9.4; ui-guidelines.md §5_
 
   - [ ] 1.4 Create RelativeDate component
     - Renders `<time datetime="YYYY-MM-DD" title="Thu, 29 Oct 2026">In 3 days</time>`
     - Dotted underline style
-    - Formatting rules per ui-guidelines.md Â§7:
-      - 0 â†’ "Today"
-      - +1/-1 â†’ "Tomorrow"/"Yesterday"
-      - +2...+90 â†’ "In N days"
-      - -2...-90 â†’ "N days ago"
-      - Beyond Â±90 â†’ Absolute date (add year if not current)
-    - _Requirements: R8.19; ui-guidelines.md Â§7_
+    - Formatting rules per ui-guidelines.md §7:
+      - 0 → "Today"
+      - +1/-1 → "Tomorrow"/"Yesterday"
+      - +2...+90 → "In N days"
+      - -2...-90 → "N days ago"
+      - Beyond ±90 → Absolute date (add year if not current)
+    - _Requirements: R8.19; ui-guidelines.md §7_
 
   - [ ] 1.5 Create ProgressBar component
     - `role="progressbar"`, `aria-valuenow/min/max`, `aria-label`
     - 6-8px height, `--track` background, `--accent` fill
     - Percentage label displayed next to bar
     - Uses shared `calculateProgress()` function
-    - _Requirements: R4.3, R14.4; ui-guidelines.md Â§5_
+    - _Requirements: R4.3, R14.4; ui-guidelines.md §5_
 
   - [ ] 1.6 Create EmptyState component
     - Short title, one sentence guidance, optional primary action button
     - Dashed border when replacing a list
-    - _Requirements: R9.7, R12.10; ui-guidelines.md Â§5_
+    - _Requirements: R9.7, R12.10; ui-guidelines.md §5_
 
   - [ ] 1.7 Create ConfirmDialog component
     - Based on shadcn AlertDialog
     - Used only for destructive/irreversible actions
     - Destructive button uses `danger` styling
     - Button text states the action (e.g., "Delete project")
-    - _Requirements: R1.4, R7.10; ui-guidelines.md Â§5, Â§6_
+    - _Requirements: R1.4, R7.10; ui-guidelines.md §5, §6_
 
   - [ ] 1.8 Create Kbd component
     - Shortcut hint display, 12px font, bordered style
-    - _Requirements: R15.10; ui-guidelines.md Â§5_
+    - _Requirements: R15.10; ui-guidelines.md §5_
 
   - [ ] 1.9 Create PriorityChip component
     - Neutral chip with `--surface-2` background
     - Text: "High", "Medium", or "Low"
     - Priority never uses status colors
-    - _Requirements: R8.2; ui-guidelines.md Â§5_
+    - _Requirements: R8.2; ui-guidelines.md §5_
 
   - [ ] 1.10 Create TagChip component
     - Display: `#name`
     - `--surface-2` background, 4px radius, 12-13px font
-    - _Requirements: R8.11; ui-guidelines.md Â§5_
+    - _Requirements: R8.11; ui-guidelines.md §5_
 
   - [ ] 1.11 Create Skeleton component
     - Loading placeholder that matches final layout
     - Shown after 200ms delay
-    - _Requirements: R15.5; ui-guidelines.md Â§6_
+    - _Requirements: R15.5; ui-guidelines.md §6_
 
   - [ ] 1.12 Create date utilities in utils/date.ts
-    - Implement `formatRelativeDate()` per ui-guidelines.md Â§7 rules
+    - Implement `formatRelativeDate()` per ui-guidelines.md §7 rules
     - Implement `formatAbsoluteDate()` for tooltips
     - Implement `getLocalToday()` returning YYYY-MM-DD in client timezone
     - Use date-fns for date manipulation
@@ -271,7 +271,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Test Button variants and sizes render correctly
     - Test StatusBadge renders correct icon/color for each status
     - Test StatusBadge renders nothing when task is complete
-    - Test RelativeDate formats dates correctly per Â§7 rules
+    - Test RelativeDate formats dates correctly per §7 rules
     - Test ProgressBar displays correct percentage
     - Test Skeleton appears after 200ms delay
     - _Requirements: N/A (quality assurance)_
@@ -360,7 +360,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Title field required
     - Optional fields based on type: description, notes, goal/deadline (Project), maintenance_notes (Area)
     - Validation errors inline
-    - _Requirements: R1.2; ui-guidelines.md Â§5_
+    - _Requirements: R1.2; ui-guidelines.md §5_
 
   - [ ] 2.11 Create ItemListView component
     - Create `frontend/src/pages/Projects.tsx`, `Areas.tsx`, `Resources.tsx`
@@ -368,7 +368,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Include progress bar for Projects
     - Link each card to detail view
     - Empty state when no items
-    - _Requirements: R1.1, R4.3; ui-guidelines.md Â§4, Â§5_
+    - _Requirements: R1.1, R4.3; ui-guidelines.md §4, §5_
 
   - [ ] 2.12 Create ItemDetailView component
     - Create `frontend/src/pages/ProjectDetail.tsx`, `AreaDetail.tsx`, `ResourceDetail.tsx`
@@ -377,27 +377,27 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Area: show maintenance notes
     - Resource: show reference links placeholder
     - Include Notes section
-    - _Requirements: R4.1, R4.2, R5.1, R6.1; ui-guidelines.md Â§4_
+    - _Requirements: R4.1, R4.2, R5.1, R6.1; ui-guidelines.md §4_
 
   - [ ] 2.13 Implement inline editing in ItemDetailView
     - Inline edit for title (click to edit, Enter to save, Escape to cancel)
     - Inline edit for description, notes (textarea)
     - Inline edit for type-specific fields: goal, deadline (date picker), maintenance_notes
     - Validation errors appear under the field
-    - _Requirements: ui-guidelines.md Â§6_
+    - _Requirements: ui-guidelines.md §6_
 
   - [ ] 2.14 Implement "Ready for completion" banner for Projects
     - Display success banner when all tasks complete AND at least one task exists
     - Include "Complete project" action button
-    - _Requirements: R4.7; ui-guidelines.md Â§6_
+    - _Requirements: R4.7; ui-guidelines.md §6_
 
   - [ ] 2.15 Implement "Mark complete" / "Reopen" actions
     - Add "Mark project complete" button that calls complete endpoint
     - On completion, prompt "Archive this project?" (Yes archives, No keeps active with completed status)
     - Add "Reopen project" button for completed projects
-    - _Requirements: R1.6, R4.10, R4.11; ui-guidelines.md Â§6_
+    - _Requirements: R1.6, R4.10, R4.11; ui-guidelines.md §6_
 
-  - [ ] 2.16 Implement item actions menu (â‹¯)
+  - [ ] 2.16 Implement item actions menu (⋯)
     - Add dropdown menu with: Convert type, Archive, Delete
     - Convert type opens TypeConversionDialog (placeholder for Phase 5)
     - Archive calls archive endpoint
@@ -405,10 +405,10 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - _Requirements: R1.4, R1.5, R7.1_
 
   - [ ] 2.17 Implement Archive banner for read-only items
-    - When viewing archived item, show "Read-only Â· Archived on {date}" banner
+    - When viewing archived item, show "Read-only · Archived on {date}" banner
     - Include Restore and Delete buttons
     - Disable all editing controls (inputs, buttons) but keep data visible
-    - _Requirements: R7.2, R7.7; ui-guidelines.md Â§6_
+    - _Requirements: R7.2, R7.7; ui-guidelines.md §6_
 
   - [ ] 2.18 Property test: Archived Items Are Read-Only (P10)
     - **Property 10: Archived Items Are Read-Only (Except Deletion)**
@@ -576,7 +576,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Implement useMoveTask(), useCompleteTask(), useIncompleteTask()
     - Implement useReorderTasks()
     - Implement optimistic updates with rollback on error
-    - _Requirements: ui-guidelines.md Â§6_
+    - _Requirements: ui-guidelines.md §6_
 
   - [ ] 3.21 Create Subtask API hooks
     - Implement useSubtasks(), useCreateSubtask(), useUpdateSubtask(), useDeleteSubtask()
@@ -595,7 +595,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - StatusBadge on right for due date
     - Min height 52px, selected row uses `--accent-soft`
     - Completed rows: muted text, line-through
-    - _Requirements: R8.1, R8.5, R8.13, R8.14, R8.15; ui-guidelines.md Â§5_
+    - _Requirements: R8.1, R8.5, R8.13, R8.14, R8.15; ui-guidelines.md §5_
 
   - [ ] 3.24 Create TaskList component with drag-and-drop
     - List of TaskRow components
@@ -604,7 +604,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Keyboard: focus handle, Space to lift, arrows to move, Space to drop, Escape to cancel
     - Announce moves to screen readers
     - Completed tasks grouped under collapsible "Show N completed"
-    - _Requirements: R4.9, R5.7; ui-guidelines.md Â§6_
+    - _Requirements: R4.9, R5.7; ui-guidelines.md §6_
 
   - [ ] 3.25 Create TaskDrawer component
     - Opens via `?task=:taskId` URL parameter (survives refresh, Back closes)
@@ -613,11 +613,11 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Details: Project/Area name, Priority (select), Due date (date picker with RelativeDate), Tags (combobox)
     - Subtasks section: progress bar + checklist + "Add subtask" input
     - Description section (textarea)
-    - Footer: "Move toâ€¦" combobox, "Delete task" button
+    - Footer: "Move to…" combobox, "Delete task" button
     - Escape closes and returns focus to row
-    - _Requirements: R8.1, R8.3, R8.4, R8.11; ui-guidelines.md Â§5_
+    - _Requirements: R8.1, R8.3, R8.4, R8.11; ui-guidelines.md §5_
 
-  - [ ] 3.26 Implement "Move toâ€¦" combobox in TaskDrawer
+  - [ ] 3.26 Implement "Move to…" combobox in TaskDrawer
     - List non-archived Projects and Areas plus Inbox option
     - On selection, call move endpoint
     - _Requirements: R3.4, R3.5_
@@ -633,13 +633,13 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - "Yes" calls /incomplete endpoint
     - "No" keeps task complete (cancel action)
     - R8.6-R8.10 synchronization reflected immediately in UI
-    - _Requirements: R8.9; ui-guidelines.md Â§6_
+    - _Requirements: R8.9; ui-guidelines.md §6_
 
   - [ ] 3.29 Implement optimistic updates with rollback
     - Checkbox toggles update UI immediately
     - Use TanStack Query onMutate to snapshot and update optimistically
     - On error, rollback from snapshot and show error toast
-    - _Requirements: R13.8; ui-guidelines.md Â§6_
+    - _Requirements: R13.8; ui-guidelines.md §6_
 
   - [ ] 3.30 Add Tasks section to Item detail views
     - Display TaskList on Project and Area detail pages
@@ -648,7 +648,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
 
   - [ ] 3.31 Property test: Progress Calculation Consistency (P1)
     - **Property 1: Progress Calculation Consistency**
-    - Test `(200*M + N) // (2*N)` for all M â‰¤ N
+    - Test `(200*M + N) // (2*N)` for all M ≤ N
     - Test N=0 returns 0
     - **Validates: Requirements R4.3, R4.4, R14.1**
 
@@ -724,7 +724,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Include Quick Capture form pinned at top
     - Display task count in header
     - Empty state: "Inbox zero. Everything has a home."
-    - _Requirements: R3.1, R3.6; ui-guidelines.md Â§10_
+    - _Requirements: R3.1, R3.6; ui-guidelines.md §10_
 
   - [ ] 4.2 Implement Quick Capture form
     - Single title input field
@@ -732,7 +732,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Show toast "Added to Inbox" with link
     - _Requirements: R3.2, R3.3_
 
-  - [ ] 4.3 Add "Move toâ€¦" button on each Inbox task row
+  - [ ] 4.3 Add "Move to…" button on each Inbox task row
     - Combobox listing non-archived Projects and Areas
     - Support bulk-select checkbox for moving multiple tasks
     - _Requirements: R3.4, R3.5_
@@ -741,12 +741,12 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Opens with Q shortcut from any page
     - Same behavior as inline form
     - Modal dialog that focuses input
-    - _Requirements: R3.2; ui-guidelines.md Â§8_
+    - _Requirements: R3.2; ui-guidelines.md §8_
 
   - [ ] 4.5 Implement useShortcuts hook
     - Ignore events from input, textarea, select elements
     - Support Q, /, Ctrl+K, ?, Escape shortcuts
-    - _Requirements: R15.10; ui-guidelines.md Â§8_
+    - _Requirements: R15.10; ui-guidelines.md §8_
 
   - [ ] 4.6 Create DashboardService
     - Create `backend/services/dashboard_service.py`
@@ -766,11 +766,11 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - [ ] 4.8 Create Dashboard page
     - Display six summary cards in 3-column grid (2 columns below 1280px)
     - Cards: Inbox, Projects, Areas, Resources, Archives, Overall progress
-    - All five PARA/Inbox cards visible without scrolling at 1280Ã—800
-    - _Requirements: R1.1, R3.6, R9.1, R9.2; ui-guidelines.md Â§4_
+    - All five PARA/Inbox cards visible without scrolling at 1280×800
+    - _Requirements: R1.1, R3.6, R9.1, R9.2; ui-guidelines.md §4_
 
   - [ ] 4.9 Implement Dashboard summary cards
-    - Inbox: task count, "Process inbox â†’" link
+    - Inbox: task count, "Process inbox →" link
     - Projects: active count, open task count, nearest deadline
     - Areas: count, open task count
     - Resources: count, reference link count
@@ -798,7 +798,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - [ ] 4.13 Update Sidebar with Inbox count pill
     - Show task count next to Inbox nav item
     - At 768-1279px (collapsed rail), show count as dot/pill
-    - _Requirements: R3.6; ui-guidelines.md Â§4_
+    - _Requirements: R3.6; ui-guidelines.md §4_
 
   - [ ] 4.14 Property test: Dashboard Progress Excludes Ineligible Projects (P13)
     - **Property 13: Dashboard Progress Excludes Ineligible Projects**
@@ -824,12 +824,12 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - [ ] 5.1 Implement TypeConversionService
     - Create `backend/services/type_conversion_service.py`
     - Implement `convert(item_id, payload: TypeConversionPayload)` handling all 6 paths:
-      - Project â†’ Area: hide deadline/goal/status, keep tasks
-      - Project â†’ Resource: hide deadline/goal/status, move tasks to Inbox
-      - Area â†’ Project: restore/set deadline/goal, keep tasks
-      - Area â†’ Resource: hide maintenance_notes, move tasks to Inbox
-      - Resource â†’ Project: restore/set deadline/goal
-      - Resource â†’ Area: restore/set maintenance_notes
+      - Project → Area: hide deadline/goal/status, keep tasks
+      - Project → Resource: hide deadline/goal/status, move tasks to Inbox
+      - Area → Project: restore/set deadline/goal, keep tasks
+      - Area → Resource: hide maintenance_notes, move tasks to Inbox
+      - Resource → Project: restore/set deadline/goal
+      - Resource → Area: restore/set maintenance_notes
     - Delete resource_links when converting FROM Resource (R2.7)
     - Delete resource_links when converting TO Resource (R2.8)
     - _Requirements: R1.5, R2.1, R2.2, R2.3, R2.4, R2.5, R2.6, R2.7, R2.8_
@@ -845,7 +845,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
       - "Links to Y resources will be removed"
     - Optional fields for deadline/goal when converting to Project
     - Optional field for maintenance_notes when converting to Area
-    - _Requirements: R2.2, R2.4, R2.7, R2.8; ui-guidelines.md Â§5_
+    - _Requirements: R2.2, R2.4, R2.7, R2.8; ui-guidelines.md §5_
 
   - [ ] 5.4 Create SQLAlchemy models for ReferenceLink and ResourceLink
     - ReferenceLink: id, item_id, url, sort_order, created_at
@@ -885,7 +885,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
 
   - [ ] 5.10 Create Resource Links UI
     - Display linked Projects/Areas in Resource detail view
-    - "Link toâ€¦" combobox listing non-archived Projects and Areas
+    - "Link to…" combobox listing non-archived Projects and Areas
     - Unlink button for each linked item
     - _Requirements: R6.4_
 
@@ -975,24 +975,24 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - _Requirements: R9.6, R9.7_
 
   - [ ] 6.8 Create Command Palette using cmdk
-    - Open with Ctrl/âŒ˜+K or / (focus search)
+    - Open with Ctrl/⌘+K or / (focus search)
     - Groups: Navigation, Actions, Search results
     - Actions: New project, Quick capture, Start weekly review
     - Search results grouped by Projects, Areas, Resources, Tasks
     - Archived items show "(Archived)" label
-    - _Requirements: R9.6, R9.7; ui-guidelines.md Â§2, Â§4_
+    - _Requirements: R9.6, R9.7; ui-guidelines.md §2, §4_
 
   - [ ] 6.9 Create Shortcut Help dialog
     - Opens with ? shortcut
-    - List all shortcuts from ui-guidelines.md Â§8
-    - _Requirements: R15.10; ui-guidelines.md Â§8_
+    - List all shortcuts from ui-guidelines.md §8
+    - _Requirements: R15.10; ui-guidelines.md §8_
 
   - [ ] 6.10 Wire up all shortcuts
-    - Q â†’ Quick capture dialog
-    - / â†’ Focus search (command palette)
-    - Ctrl/âŒ˜+K â†’ Command palette
-    - ? â†’ Shortcut help
-    - Escape â†’ Close overlays
+    - Q → Quick capture dialog
+    - / → Focus search (command palette)
+    - Ctrl/⌘+K → Command palette
+    - ? → Shortcut help
+    - Escape → Close overlays
     - _Requirements: R15.10_
 
   - [ ] 6.11 Property test: Tag Filter Uses OR Logic (P11)
@@ -1146,10 +1146,10 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
 
   - [ ] 9.5 Create Weekly Review page with focused layout
     - No sidebar, full-width layout
-    - Top bar: "Weekly review Â· Started today", "Changes save as you go.", "Exit review" button
+    - Top bar: "Weekly review · Started today", "Changes save as you go.", "Exit review" button
     - Stepper showing 5 steps: Inbox, Projects, Areas, Resources, Summary
     - Back/Next navigation in sticky footer
-    - _Requirements: R10.1, R10.2; ui-guidelines.md Â§4_
+    - _Requirements: R10.1, R10.2; ui-guidelines.md §4_
 
   - [ ] 9.6 Implement Inbox review step
     - Show one task at a time with "Task n of N" progress
@@ -1256,7 +1256,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Theme preference: System, Light, Dark radio buttons
     - Apply theme immediately on change
     - Persist to backend UserPreference table
-    - _Requirements: R16.5; ui-guidelines.md Â§3_
+    - _Requirements: R16.5; ui-guidelines.md §3_
 
   - [ ] 10.9 Implement threshold setting UI
     - Number input for approaching_deadline_threshold (1-30)
@@ -1284,7 +1284,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
 
   - [ ] 10.13 Property test: Backup Retention Policy (P17)
     - **Property 17: Backup Retention Policy**
-    - After backup operation, verify â‰¤7 backup files exist
+    - After backup operation, verify ≤7 backup files exist
     - Oldest files removed first
     - **Validates: Requirements R13.6**
 
@@ -1315,31 +1315,31 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - [ ] 11.1 Implement focus trap for dialogs and drawers
     - Tab cycles within dialog/drawer when open
     - Focus returns to trigger element when closed
-    - _Requirements: R15.7; ui-guidelines.md Â§6_
+    - _Requirements: R15.7; ui-guidelines.md §6_
 
   - [ ] 11.2 Implement focus management after deletion
     - After deleting a row, move focus to next row
-    - _Requirements: ui-guidelines.md Â§6_
+    - _Requirements: ui-guidelines.md §6_
 
   - [ ] 11.3 Verify contrast in both themes
-    - Body text â‰¥ 4.5:1 contrast ratio
-    - Large text and UI boundaries â‰¥ 3:1
+    - Body text ≥ 4.5:1 contrast ratio
+    - Large text and UI boundaries ≥ 3:1
     - Verify all status colors meet requirements
-    - _Requirements: ui-guidelines.md Â§9_
+    - _Requirements: ui-guidelines.md §9_
 
   - [ ] 11.4 Verify accessible elements
     - All interactive elements use semantic HTML (button, a, input with label)
     - No div onClick patterns
     - Icon-only buttons have aria-label
     - Decorative icons have aria-hidden="true"
-    - _Requirements: R15.7; ui-guidelines.md Â§9_
+    - _Requirements: R15.7; ui-guidelines.md §9_
 
   - [ ] 11.5 Verify landmarks
     - `<nav aria-label="Main">` for sidebar
     - `<header>` for app header
     - `<main>` for content area
     - `<aside aria-label="Task details">` for drawer
-    - _Requirements: ui-guidelines.md Â§9_
+    - _Requirements: ui-guidelines.md §9_
 
   - [ ] 11.6 Implement responsive 768-1279px layout
     - Sidebar collapses to 64px icon rail
@@ -1347,12 +1347,12 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Inbox count stays visible as pill
     - Dashboard cards in 2 columns
     - Task drawer overlays content from right (sheet mode)
-    - _Requirements: R15.4; ui-guidelines.md Â§4_
+    - _Requirements: R15.4; ui-guidelines.md §4_
 
   - [ ] 11.7 Verify touch targets
     - Minimum 36px for all interactive elements
     - 44px for primary actions and nav items
-    - _Requirements: ui-guidelines.md Â§9_
+    - _Requirements: ui-guidelines.md §9_
 
   - [ ] 11.8 REGRESSION TEST: SPA fallback serves static files correctly
     - Request /favicon.ico, verify file served
@@ -1391,7 +1391,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
 - Each phase ends with a runnable application and checkpoint for verification
 - All frontend components must follow ui-guidelines.md design tokens and patterns
 - Use `calculateProgress()` utility everywhere - never inline the formula
-- Schema changes after initial deployment MUST use new migrations (002_â€¦). NEVER edit migrations that have been applied to a database.
+- Schema changes after initial deployment MUST use new migrations (002_…). NEVER edit migrations that have been applied to a database.
 
 ## Task Dependency Graph
 
