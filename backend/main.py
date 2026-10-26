@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import ValidationError as PydanticValidationError
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import IntegrityError
 
 from backend.config import load_config
@@ -57,19 +57,28 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
     )
     app.add_middleware(CSRFProtectionMiddleware, port=config.port, dev_origins=config.dev_origins)
 
-    # --- Exception handlers ---
-    @app.exception_handler(PydanticValidationError)
-    async def pydantic_validation_handler(request: Request, exc: PydanticValidationError):
+    # --- Exception handlers (design.md error contract) ---
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_handler(request: Request, exc: RequestValidationError):
+        # Pydantic v2 request-body validation — 400 with field map
+        fields: dict[str, list[str]] = {}
+        for error in exc.errors():
+            loc = ".".join(str(p) for p in error.get("loc", []) if p != "body")
+            fields.setdefault(loc, []).append(error.get("msg", "invalid"))
         return JSONResponse(
-            status_code=422,
-            content={"error": "validation_error", "detail": exc.errors()},
+            status_code=400,
+            content={
+                "error": "Validation failed",
+                "type": "validation_error",
+                "fields": fields,
+            },
         )
 
     @app.exception_handler(IntegrityError)
     async def integrity_error_handler(request: Request, exc: IntegrityError):
         return JSONResponse(
             status_code=409,
-            content={"error": "conflict", "detail": str(exc.orig)},
+            content={"error": str(exc.orig), "type": "conflict"},
         )
 
     @app.exception_handler(CalmXException)
@@ -77,11 +86,7 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
         status_code = EXCEPTION_STATUS_MAP.get(type(exc), 500)
         return JSONResponse(
             status_code=status_code,
-            content={
-                "error": get_exception_type_name(exc),
-                "message": exc.message,
-                "detail": exc.detail,
-            },
+            content={"error": exc.message, "type": get_exception_type_name(exc)},
         )
 
     # --- Static files ---
@@ -142,4 +147,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 

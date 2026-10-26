@@ -1,4 +1,4 @@
-"""Tests for exceptions.py."""
+﻿"""Tests for exceptions.py."""
 import pytest
 
 from backend.exceptions import (
@@ -56,10 +56,12 @@ def test_status_map_covers_all_subclasses():
 
 def test_status_codes():
     assert EXCEPTION_STATUS_MAP[NotFoundError] == 404
-    assert EXCEPTION_STATUS_MAP[ValidationError] == 422
+    assert EXCEPTION_STATUS_MAP[ValidationError] == 400
+    assert EXCEPTION_STATUS_MAP[ImportValidationError] == 400
+    assert EXCEPTION_STATUS_MAP[LimitExceededError] == 400
+    assert EXCEPTION_STATUS_MAP[ArchivedItemError] == 403
     assert EXCEPTION_STATUS_MAP[ConflictError] == 409
-    assert EXCEPTION_STATUS_MAP[ArchivedItemError] == 409
-    assert EXCEPTION_STATUS_MAP[LimitExceededError] == 409
+    assert EXCEPTION_STATUS_MAP[ImportFailedError] == 500
 
 
 def test_get_exception_type_name():
@@ -70,3 +72,4 @@ def test_get_exception_type_name():
     assert get_exception_type_name(LimitExceededError("x")) == "limit_exceeded_error"
     assert get_exception_type_name(ImportValidationError("x")) == "import_validation_error"
     assert get_exception_type_name(ImportFailedError("x")) == "import_failed_error"
+

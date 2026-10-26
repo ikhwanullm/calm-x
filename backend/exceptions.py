@@ -1,4 +1,4 @@
-"""Application-wide exception hierarchy for Calm-X."""
+﻿"""Application-wide exception hierarchy for Calm-X."""
 from __future__ import annotations
 
 
@@ -12,48 +12,47 @@ class CalmXException(Exception):
 
 
 class ValidationError(CalmXException):
-    """Raised when input data fails business-rule validation."""
+    """Raised when input data fails business-rule validation (400)."""
 
 
 class ImportValidationError(CalmXException):
-    """Raised when an import file has structural or data issues."""
+    """Raised when an import file has structural or data issues (400)."""
 
 
 class LimitExceededError(CalmXException):
-    """Raised when a numeric limit (e.g. max items) would be exceeded."""
+    """Raised when a numeric limit (e.g. max items) would be exceeded (400)."""
 
 
 class ArchivedItemError(CalmXException):
-    """Raised when an operation is attempted on an archived item."""
+    """Raised when an operation is attempted on an archived item (403)."""
 
 
 class NotFoundError(CalmXException):
-    """Raised when a requested resource does not exist."""
+    """Raised when a requested resource does not exist (404)."""
 
 
 class ConflictError(CalmXException):
-    """Raised on uniqueness or state conflicts (e.g. duplicate tag name)."""
+    """Raised on uniqueness or state conflicts, e.g. duplicate tag name (409)."""
 
 
 class ImportFailedError(CalmXException):
-    """Raised when an import operation fails after partial processing."""
+    """Raised when an import operation fails after partial processing (500)."""
 
 
-# HTTP status codes for each exception type
+# HTTP status codes per design.md error contract
 EXCEPTION_STATUS_MAP: dict[type[CalmXException], int] = {
-    ValidationError: 422,
-    ImportValidationError: 422,
-    LimitExceededError: 409,
-    ArchivedItemError: 409,
+    ValidationError: 400,
+    ImportValidationError: 400,
+    LimitExceededError: 400,
+    ArchivedItemError: 403,
     NotFoundError: 404,
     ConflictError: 409,
-    ImportFailedError: 422,
+    ImportFailedError: 500,
 }
 
 
 def get_exception_type_name(exc: CalmXException) -> str:
     """Return the snake_case type name for use in error response bodies."""
-    name = type(exc).__name__
-    # Convert CamelCase to snake_case
     import re
+    name = type(exc).__name__
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
