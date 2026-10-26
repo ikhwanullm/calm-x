@@ -13,3 +13,6 @@ export type { ProgressBarProps } from './ProgressBar'
 
 export { EmptyState } from './EmptyState'
 export type { EmptyStateProps, EmptyStateAction } from './EmptyState'
+
+export { ConfirmDialog } from './ConfirmDialog'
+export type { ConfirmDialogProps } from './ConfirmDialog'
