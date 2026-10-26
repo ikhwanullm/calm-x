@@ -132,4 +132,15 @@ describe('ItemDetailView', () => {
     render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
     expect(screen.queryByText(/Ready to complete/i)).toBeNull()
   })
+
+  // 2.17: Full archive banner
+  it('shows Restore and Delete buttons in archive banner', () => {
+    vi.mocked(useItem).mockReturnValueOnce({
+      data: { ...mockProject, archived_at: '2024-06-01T00:00:00Z' },
+      isLoading: false, isError: false,
+    } as any)
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    expect(screen.getByRole('button', { name: 'Restore' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Delete permanently' })).toBeTruthy()
+  })
 })

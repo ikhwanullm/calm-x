@@ -14,7 +14,7 @@ import {
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { ProgressBar, StatusBadge, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
-import { getLocalToday } from '@/utils/date'
+import { getLocalToday, formatRelativeDate } from '@/utils/date'
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
@@ -102,13 +102,31 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         </ol>
       </nav>
 
-      {/* Archive read-only notice (minimal — full banner in task 2.17) */}
+      {/* 2.17: Full archive banner */}
       {archived && (
         <div
-          className="mb-4 px-4 py-2 rounded-control border border-warn-fg bg-warn-bg text-warn-fg text-sm"
+          className="mb-4 px-4 py-3 rounded-control border border-warn-fg bg-warn-bg text-sm flex items-center justify-between gap-4"
           role="status"
         >
-          Read-only · Archived
+          <span className="text-warn-fg font-medium">
+            Read-only · Archived on {formatRelativeDate(item.archived_at!, today)}
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => restoreItem.mutate(item.id)}
+              className="text-sm font-medium text-warn-fg hover:underline"
+            >
+              Restore
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-sm text-danger-fg hover:underline"
+            >
+              Delete permanently
+            </button>
+          </div>
         </div>
       )}
 
