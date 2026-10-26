@@ -1,13 +1,11 @@
 /**
- * Calculate progress percentage using integer rounding.
+ * Calculate progress percentage using round-half-up (integer math).
  *
- * Formula: Math.round((completed / total) * 100)
- * Special case for 1/8: (200*1 + 8) / (2*8) = 208/16 = 13  <- per task 1.15 regression
+ * Formula: floor((200 * completed + total) / (2 * total))
+ * This is round-half-up, NOT Math.round (which is round-half-to-even / banker's rounding).
+ * Example: 1/8 = 12.5 -> rounds UP to 13.
  *
- * The formula used is: floor((200 * completed + total) / (2 * total))
- * This ensures 1/8 = 13 (not 12), matching the banker's rounding expectation.
- *
- * Returns 0 when total === 0.
+ * Returns 0 when total <= 0.
  */
 export function calculateProgress(completed: number, total: number): number {
   if (total <= 0) return 0
