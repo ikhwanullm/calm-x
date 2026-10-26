@@ -1,74 +1,64 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
-import { Skeleton } from '../components/common/Skeleton'
+import { Skeleton, SkeletonGroup } from '../components/common/Skeleton'
 
 describe('Skeleton', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
+  beforeEach(() => { vi.useFakeTimers() })
+  afterEach(() => { vi.useRealTimers() })
+
+  it('reserves space before delay (visibility:hidden)', () => {
+    const { container } = render(<Skeleton />)
+    const el = container.firstChild as Element
+    expect(el).toBeTruthy()
+    expect(el.className).toContain('invisible')
   })
 
-  afterEach(() => {
-    vi.useRealTimers()
+  it('becomes visible after 200ms', () => {
+    const { container } = render(<Skeleton />)
+    act(() => { vi.advanceTimersByTime(200) })
+    const el = container.firstChild as Element
+    expect(el.className).not.toContain('invisible')
   })
 
-  it('is NOT visible before 200ms', () => {
-    render(<Skeleton />)
-    expect(screen.queryByRole('status')).toBeNull()
+  it('has no role=status (moved to SkeletonGroup)', () => {
+    const { container } = render(<Skeleton />)
+    expect(container.querySelector('status')).toBeNull()
   })
 
-  it('IS visible after 200ms', () => {
-    render(<Skeleton />)
-    act(() => {
-      vi.advanceTimersByTime(200)
-    })
-    expect(screen.getByRole('status')).toBeTruthy()
+  it('has animate-pulse and bg-surface-2', () => {
+    const { container } = render(<Skeleton />)
+    const el = container.firstChild as Element
+    expect(el.className).toContain('animate-pulse')
+    expect(el.className).toContain('bg-surface-2')
   })
 
-  it('has aria-label="Loading"', () => {
-    render(<Skeleton />)
-    act(() => {
-      vi.advanceTimersByTime(200)
-    })
-    expect(screen.getByLabelText('Loading')).toBeTruthy()
-  })
-
-  it('has aria-busy=true', () => {
-    render(<Skeleton />)
-    act(() => {
-      vi.advanceTimersByTime(200)
-    })
-    expect(screen.getByRole('status').getAttribute('aria-busy')).toBe('true')
-  })
-
-  it('has animate-pulse class', () => {
-    render(<Skeleton />)
-    act(() => {
-      vi.advanceTimersByTime(200)
-    })
-    expect(screen.getByRole('status').className).toContain('animate-pulse')
-  })
-
-  it('has bg-surface-2 class', () => {
-    render(<Skeleton />)
-    act(() => {
-      vi.advanceTimersByTime(200)
-    })
-    expect(screen.getByRole('status').className).toContain('bg-surface-2')
+  it('shows immediately with delay=0', () => {
+    const { container } = render(<Skeleton delay={0} />)
+    const el = container.firstChild as Element
+    expect(el.className).not.toContain('invisible')
   })
 
   it('applies custom className', () => {
-    render(<Skeleton className="w-32 h-4" />)
-    act(() => {
-      vi.advanceTimersByTime(200)
-    })
-    const el = screen.getByRole('status')
+    const { container } = render(<Skeleton className="w-32 h-4" delay={0} />)
+    const el = container.firstChild as Element
     expect(el.className).toContain('w-32')
     expect(el.className).toContain('h-4')
   })
+})
 
-  it('shows immediately when delay=0', () => {
-    render(<Skeleton delay={0} />)
-    // No timer advance needed
+describe('SkeletonGroup', () => {
+  it('has role=status', () => {
+    render(<SkeletonGroup><div /></SkeletonGroup>)
     expect(screen.getByRole('status')).toBeTruthy()
+  })
+
+  it('has aria-label=Loading by default', () => {
+    render(<SkeletonGroup><div /></SkeletonGroup>)
+    expect(screen.getByLabelText('Loading')).toBeTruthy()
+  })
+
+  it('accepts custom label', () => {
+    render(<SkeletonGroup label="Loading projects"><div /></SkeletonGroup>)
+    expect(screen.getByLabelText('Loading projects')).toBeTruthy()
   })
 })

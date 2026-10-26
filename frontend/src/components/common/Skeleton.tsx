@@ -1,16 +1,19 @@
+import React from 'react'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface SkeletonProps {
-  /** Width class, e.g. "w-full", "w-32" */
+  /** Tailwind width/height classes */
   className?: string
-  /** Override delay in ms (default 200). Useful for testing. */
+  /** Delay in ms before placeholder becomes visible (default 200) */
   delay?: number
 }
 
 /**
- * Loading placeholder — shown after 200ms delay to prevent flash for fast loads.
- * Use className to set width/height matching the content it replaces.
+ * Single skeleton placeholder.
+ * - Reserves space immediately (no layout shift) using visibility:hidden.
+ * - Becomes visible after `delay` ms (default 200ms).
+ * - No role="status" -- wrap multiple Skeletons in a SkeletonGroup.
  */
 export function Skeleton({ className, delay = 200 }: SkeletonProps) {
   const [visible, setVisible] = useState(delay === 0)
@@ -21,17 +24,35 @@ export function Skeleton({ className, delay = 200 }: SkeletonProps) {
     return () => clearTimeout(timer)
   }, [delay])
 
-  if (!visible) return null
-
   return (
     <div
       className={cn(
         'animate-pulse rounded bg-surface-2',
+        !visible && 'invisible',
         className
       )}
-      role="status"
-      aria-label="Loading"
-      aria-busy="true"
     />
+  )
+}
+
+export interface SkeletonGroupProps {
+  /** Accessible loading label */
+  label?: string
+  children: React.ReactNode
+}
+
+/**
+ * Wraps one or more Skeletons with a single role="status" landmark.
+ * Use this whenever you render skeletons as a loading state.
+ */
+export function SkeletonGroup({ label = 'Loading', children }: SkeletonGroupProps) {
+  return (
+    <div
+      role="status"
+      aria-label={label}
+      aria-busy="true"
+    >
+      {children}
+    </div>
   )
 }
