@@ -41,6 +41,12 @@ components and patterns. Do not invent new colors, font sizes or one-off styles.
 | Dates | **date-fns** | All relative/absolute formatting goes through `utils/date.ts`. |
 | Theme | Class strategy (`.dark` on `<html>`) | Small `ThemeProvider` with values `system | light | dark`. |
 
+**shadcn component overrides:** Every shadcn component generated into `components/ui/` must be adjusted after generation:
+
+- Replace all `hsl(var(--...)))` patterns with plain `var(--...)` — shadcn generates hsl wrappers that conflict with Calm-X direct hex tokens.
+- Replace `bg-accent text-accent-foreground` (hover state) with `bg-surface-2 text-text`.
+- Replace `bg-muted` with `bg-surface-2`.
+- Replace `text-muted-foreground` with `text-muted`.
 ## 3. Design tokens
 
 Define tokens once as CSS variables in `frontend/src/index.css` and expose them
