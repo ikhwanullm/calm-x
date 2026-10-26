@@ -1,3 +1,7 @@
+import { useParams } from 'react-router-dom'
+import { ItemDetailView } from '@/components/items/ItemDetailView'
+
 export default function AreaDetailPage() {
-  return <main>Area detail</main>
+  const { id } = useParams<{ id: string }>()
+  return <ItemDetailView id={Number(id)} listPath="/areas" listLabel="Areas" />
 }
