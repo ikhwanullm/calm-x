@@ -1,4 +1,4 @@
-import type { Config } from 'tailwindcss'
+﻿import type { Config } from 'tailwindcss'
 
 const config: Config = {
   darkMode: 'class',
@@ -9,6 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ---- Calm-X design tokens (ui-guidelines.md §3) ----
         bg: 'var(--bg)',
         surface: 'var(--surface)',
         'surface-2': 'var(--surface-2)',
@@ -26,6 +27,24 @@ const config: Config = {
         'ok-bg': 'var(--ok-bg)',
         'ok-fg': 'var(--ok-fg)',
         track: 'var(--track)',
+
+        // ---- shadcn/ui key aliases (map directly to tokens, no hsl() wrapper) ----
+        // Generated shadcn components use these names; they resolve to the same tokens.
+        background: 'var(--bg)',
+        foreground: 'var(--text)',
+        card: 'var(--surface)',
+        'card-foreground': 'var(--text)',
+        popover: 'var(--surface)',
+        'popover-foreground': 'var(--text)',
+        primary: 'var(--accent)',
+        'primary-foreground': 'var(--accent-fg)',
+        secondary: 'var(--surface-2)',
+        'secondary-foreground': 'var(--text)',
+        'muted-foreground': 'var(--muted)',
+        destructive: 'var(--danger-fg)',
+        'destructive-foreground': 'var(--accent-fg)',
+        input: 'var(--border)',
+        ring: 'var(--accent)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
