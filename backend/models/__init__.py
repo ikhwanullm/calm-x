@@ -8,3 +8,5 @@ from backend.models.item import (  # noqa: F401
     ReferenceLink,
     ResourceLink,
 )
+
+from backend.models.preference import UserPreference  # noqa: F401
