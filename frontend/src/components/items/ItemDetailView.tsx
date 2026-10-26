@@ -8,12 +8,20 @@ import {
   useCompleteProject,
   useReopenProject,
   useArchiveItem,
+  useRestoreItem,
+  useDeleteItem,
 } from '@/hooks/useItems'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { ProgressBar, StatusBadge, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
 import { getLocalToday } from '@/utils/date'
 import { cn } from '@/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface ItemDetailViewProps {
   id: number
@@ -28,10 +36,13 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
   const completeProject = useCompleteProject()
   const reopenProject = useReopenProject()
   const archiveItem = useArchiveItem()
+  const restoreItem = useRestoreItem()
+  const deleteItem = useDeleteItem()
   const navigate = useNavigate()
   const today = getLocalToday()
 
   const [showArchivePrompt, setShowArchivePrompt] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   if (isLoading) {
     return (
@@ -62,6 +73,12 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
 
   const handleArchiveConfirm = () => {
     archiveItem.mutate(item.id, {
+      onSuccess: () => navigate(listPath),
+    })
+  }
+
+  const handleDeleteConfirm = () => {
+    deleteItem.mutate(item.id, {
       onSuccess: () => navigate(listPath),
     })
   }
@@ -109,32 +126,81 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         </div>
       )}
 
-      {/* Title — inline edit */}
-      <InlineTitle
-        item={item}
-        disabled={archived}
-        onSave={(title) => updateItem.mutate({ title })}
-      />
+      {/* Header row: title + 2.16 actions menu */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          {/* Title — inline edit */}
+          <InlineTitle
+            item={item}
+            disabled={archived}
+            onSave={(title) => updateItem.mutate({ title })}
+          />
 
-      {/* 2.15: Mark complete / Reopen actions */}
-      {isProject(item) && !archived && item.project_status === 'active' && (
-        <button
-          type="button"
-          onClick={handleCompleteProject}
-          className="mt-3 text-sm text-accent-text hover:underline"
-        >
-          Mark project complete
-        </button>
-      )}
-      {isProject(item) && !archived && item.project_status === 'completed' && (
-        <button
-          type="button"
-          onClick={() => reopenProject.mutate(item.id)}
-          className="mt-3 text-sm text-muted hover:text-accent-text hover:underline"
-        >
-          Reopen project
-        </button>
-      )}
+          {/* 2.15: Mark complete / Reopen actions */}
+          {isProject(item) && !archived && item.project_status === 'active' && (
+            <button
+              type="button"
+              onClick={handleCompleteProject}
+              className="mt-3 text-sm text-accent-text hover:underline"
+            >
+              Mark project complete
+            </button>
+          )}
+          {isProject(item) && !archived && item.project_status === 'completed' && (
+            <button
+              type="button"
+              onClick={() => reopenProject.mutate(item.id)}
+              className="mt-3 text-sm text-muted hover:text-accent-text hover:underline"
+            >
+              Reopen project
+            </button>
+          )}
+        </div>
+
+        {/* 2.16: Item actions menu (⋯) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Item actions"
+              className="flex-shrink-0 mt-1 p-1.5 rounded-control text-muted hover:text-text hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+            >
+              <span aria-hidden="true" className="text-base leading-none tracking-widest">···</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {archived ? (
+              <>
+                <DropdownMenuItem onSelect={() => restoreItem.mutate(item.id)}>
+                  Restore
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => setShowDeleteConfirm(true)}
+                  className="text-danger-fg focus:text-danger-fg"
+                >
+                  Delete permanently
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem
+                  onSelect={() => {
+                    archiveItem.mutate(item.id, { onSuccess: () => navigate(listPath) })
+                  }}
+                >
+                  Archive
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => setShowDeleteConfirm(true)}
+                  className="text-danger-fg focus:text-danger-fg"
+                >
+                  Delete {item.type}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Project deadline status */}
       {isProject(item) && item.project_deadline && (
@@ -214,6 +280,17 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         destructive={false}
         onConfirm={handleArchiveConfirm}
         onCancel={() => setShowArchivePrompt(false)}
+      />
+
+      {/* 2.16: Delete confirm dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title={`Delete ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}?`}
+        description={`This will permanently delete "${item.title}" and all its tasks. This cannot be undone.`}
+        confirmLabel={`Delete ${item.type}`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
     </div>
   )

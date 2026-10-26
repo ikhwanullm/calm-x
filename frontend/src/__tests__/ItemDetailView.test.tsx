@@ -11,6 +11,8 @@ import {
   useCompleteProject,
   useReopenProject,
   useArchiveItem,
+  useRestoreItem,
+  useDeleteItem,
 } from '../hooks/useItems'
 
 const mockProject = {
@@ -39,6 +41,8 @@ vi.mock('../hooks/useItems', () => ({
   useCompleteProject: vi.fn(),
   useReopenProject: vi.fn(),
   useArchiveItem: vi.fn(),
+  useRestoreItem: vi.fn(),
+  useDeleteItem: vi.fn(),
 }))
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -61,6 +65,8 @@ describe('ItemDetailView', () => {
     vi.mocked(useCompleteProject).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
     vi.mocked(useReopenProject).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
     vi.mocked(useArchiveItem).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
+    vi.mocked(useRestoreItem).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
+    vi.mocked(useDeleteItem).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
   })
 
   it('renders item title', () => {
