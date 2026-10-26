@@ -16,3 +16,10 @@ export type { EmptyStateProps, EmptyStateAction } from './EmptyState'
 
 export { ConfirmDialog } from './ConfirmDialog'
 export type { ConfirmDialogProps } from './ConfirmDialog'
+
+export { Kbd } from './Kbd'
+export type { KbdProps } from './Kbd'
+export { PriorityChip } from './PriorityChip'
+export type { PriorityChipProps, Priority } from './PriorityChip'
+export { TagChip } from './TagChip'
+export type { TagChipProps } from './TagChip'
