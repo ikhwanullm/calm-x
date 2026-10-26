@@ -288,7 +288,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 2. Phase 2: Items (Projects, Areas, Resources)
-  - [~] 2.1 Create SQLAlchemy ORM models for Items
+  - [x] 2.1 Create SQLAlchemy ORM models for Items
     - Create `backend/models/item.py` with `Item` model
     - Fields: id, type (project/area/resource), title, description, notes, archived_at, created_at, updated_at
     - Project fields: project_goal, project_deadline, project_status, project_completed_at
@@ -297,20 +297,20 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Use UTCDateTime for all timestamp columns
     - _Requirements: R1.3, R4.1, R5.1, R6.1_
 
-  - [~] 2.2 Create Pydantic schemas for Items
+  - [x] 2.2 Create Pydantic schemas for Items
     - Create `backend/schemas/item.py` with ItemBase, ItemCreate, ItemUpdate
     - Create type-specific response schemas: ProjectResponse, AreaResponse, ResourceResponse
     - Include computed fields: task_count, completed_task_count, progress_percentage
     - Implement field validators for title stripping
     - _Requirements: Field Constraints table_
 
-  - [~] 2.3 Implement ArchivedItemGuard
+  - [x] 2.3 Implement ArchivedItemGuard
     - Create `backend/services/guards.py`
     - Implement `guard_not_archived(item: Item)` that raises ArchivedItemError if archived
     - Implement `guard_task_item_not_archived(session, task: Task)` for task operations
     - _Requirements: R7.1, R7.2_
 
-  - [~] 2.4 Implement ItemService
+  - [x] 2.4 Implement ItemService
     - Create `backend/services/item_service.py`
     - Implement `create_item()` with type-specific field handling
     - Implement `update_item()` with archived guard
@@ -318,17 +318,17 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Implement `get_item()` and `list_items()` with filters
     - _Requirements: R1.2, R1.3, R1.4, R4.1, R5.1, R6.1, R7.9_
 
-  - [~] 2.5 Implement archive and restore operations in ItemService
+  - [x] 2.5 Implement archive and restore operations in ItemService
     - Implement `archive_item()` to set archived_at timestamp
     - Implement `restore_item()` to clear archived_at timestamp
     - _Requirements: R5.6, R6.7, R7.1, R7.6_
 
-  - [~] 2.6 Implement project completion operations in ItemService
+  - [x] 2.6 Implement project completion operations in ItemService
     - Implement `complete_project()` to set status="completed" and project_completed_at
     - Implement `reopen_project()` to set status="active" and clear project_completed_at
     - _Requirements: R4.10, R4.11_
 
-  - [~] 2.7 Create Items API router
+  - [x] 2.7 Create Items API router
     - Create `backend/api/items.py`
     - GET `/api/items` - List items with type and archived filters
     - GET `/api/items/{id}` - Get item details
@@ -341,19 +341,19 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - POST `/api/items/{id}/reopen` - Reopen project
     - _Requirements: R1.1, R1.2, R1.3, R1.4, R7.1, R7.6, R7.9, R4.10, R4.11_
 
-  - [~] 2.8 Create TypeScript interfaces for Items
+  - [x] 2.8 Create TypeScript interfaces for Items
     - Create `frontend/src/types/models.ts`
     - Define Project, Area, Resource interfaces with discriminated union Item type
     - Define ItemType, ProjectStatus enums
     - _Requirements: N/A (type safety)_
 
-  - [~] 2.9 Create Item API hooks
+  - [x] 2.9 Create Item API hooks
     - Create `frontend/src/hooks/useItems.ts`
     - Implement useItems(), useItem(), useCreateItem(), useUpdateItem(), useDeleteItem()
     - Implement useArchiveItem(), useRestoreItem(), useCompleteProject(), useReopenProject()
     - _Requirements: N/A (data fetching)_
 
-  - [~] 2.10 Create NewItemDialog component
+  - [x] 2.10 Create NewItemDialog component
     - Create dialog for creating new Items
     - Type selection required (Project, Area, Resource radio buttons)
     - When Project selected, show "Start from template" option (disabled placeholder until Phase 8)
@@ -362,7 +362,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Validation errors inline
     - _Requirements: R1.2; ui-guidelines.md §5_
 
-  - [~] 2.11 Create ItemListView component
+  - [x] 2.11 Create ItemListView component
     - Create `frontend/src/pages/Projects.tsx`, `Areas.tsx`, `Resources.tsx`
     - Display list of items as cards
     - Include progress bar for Projects
@@ -370,7 +370,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Empty state when no items
     - _Requirements: R1.1, R4.3; ui-guidelines.md §4, §5_
 
-  - [~] 2.12 Create ItemDetailView component
+  - [x] 2.12 Create ItemDetailView component
     - Create `frontend/src/pages/ProjectDetail.tsx`, `AreaDetail.tsx`, `ResourceDetail.tsx`
     - Display item header with title, description
     - Project: show deadline with StatusBadge, goal, progress card
@@ -379,49 +379,49 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Include Notes section
     - _Requirements: R4.1, R4.2, R5.1, R6.1; ui-guidelines.md §4_
 
-  - [~] 2.13 Implement inline editing in ItemDetailView
+  - [x] 2.13 Implement inline editing in ItemDetailView
     - Inline edit for title (click to edit, Enter to save, Escape to cancel)
     - Inline edit for description, notes (textarea)
     - Inline edit for type-specific fields: goal, deadline (date picker), maintenance_notes
     - Validation errors appear under the field
     - _Requirements: ui-guidelines.md §6_
 
-  - [~] 2.14 Implement "Ready for completion" banner for Projects
+  - [x] 2.14 Implement "Ready for completion" banner for Projects
     - Display success banner when all tasks complete AND at least one task exists
     - Include "Complete project" action button
     - _Requirements: R4.7; ui-guidelines.md §6_
 
-  - [~] 2.15 Implement "Mark complete" / "Reopen" actions
+  - [x] 2.15 Implement "Mark complete" / "Reopen" actions
     - Add "Mark project complete" button that calls complete endpoint
     - On completion, prompt "Archive this project?" (Yes archives, No keeps active with completed status)
     - Add "Reopen project" button for completed projects
     - _Requirements: R1.6, R4.10, R4.11; ui-guidelines.md §6_
 
-  - [~] 2.16 Implement item actions menu (⋯)
+  - [x] 2.16 Implement item actions menu (⋯)
     - Add dropdown menu with: Convert type, Archive, Delete
     - Convert type opens TypeConversionDialog (placeholder for Phase 5)
     - Archive calls archive endpoint
     - Delete shows ConfirmDialog before deletion
     - _Requirements: R1.4, R1.5, R7.1_
 
-  - [~] 2.17 Implement Archive banner for read-only items
+  - [x] 2.17 Implement Archive banner for read-only items
     - When viewing archived item, show "Read-only · Archived on {date}" banner
     - Include Restore and Delete buttons
     - Disable all editing controls (inputs, buttons) but keep data visible
     - _Requirements: R7.2, R7.7; ui-guidelines.md §6_
 
-  - [~] 2.18 Property test: Archived Items Are Read-Only (P10)
+  - [x] 2.18 Property test: Archived Items Are Read-Only (P10)
     - **Property 10: Archived Items Are Read-Only (Except Deletion)**
     - Test that update operations on archived items raise ArchivedItemError
     - Test that delete operations on archived items succeed
     - **Validates: Requirements R7.1, R7.2, R7.9**
 
-  - [~] 2.19 Property test: Resource Link Cleanup on Item Deletion (P23)
+  - [x] 2.19 Property test: Resource Link Cleanup on Item Deletion (P23)
     - **Property 23: Resource Link Cleanup on Item Deletion**
     - Test that deleting an Item removes all entries from resource_links where the Item was either resource_id or linked_item_id
     - **Validates: Requirements R2.9**
 
-  - [~] 2.20 REGRESSION TEST: Deleting a Project deletes its tasks (Inbox unchanged)
+  - [x] 2.20 REGRESSION TEST: Deleting a Project deletes its tasks (Inbox unchanged)
     - Create project with tasks
     - Record Inbox task count
     - Delete project
@@ -429,7 +429,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Verify Inbox count unchanged
     - _Requirements: R1.4_
 
-- [~] 2.21 Checkpoint: Items complete
+- [-] 2.21 Checkpoint: Items complete
   - Create, view, edit, archive, restore, and delete Projects, Areas, Resources in browser
   - Verify archive banner appears for archived items with controls disabled
   - Verify delete confirmation dialog appears
