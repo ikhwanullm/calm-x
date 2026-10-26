@@ -41,6 +41,14 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
 
   const archived = isArchived(item)
 
+  // Ready-for-completion condition (R4.7)
+  const isReadyForCompletion =
+    isProject(item) &&
+    item.task_count > 0 &&
+    item.completed_task_count === item.task_count &&
+    item.project_status === 'active' &&
+    !archived
+
   return (
     <div className="max-w-2xl">
       {/* Breadcrumb */}
@@ -59,6 +67,20 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
           role="status"
         >
           Read-only · Archived
+        </div>
+      )}
+
+      {/* 2.14: Ready-for-completion banner */}
+      {isReadyForCompletion && (
+        <div className="mb-4 px-4 py-3 rounded-control border border-ok-fg bg-ok-bg text-ok-fg text-sm flex items-center justify-between">
+          <span>All tasks done. Ready to complete this project.</span>
+          <button
+            type="button"
+            onClick={() => { /* handleCompleteProject — wired in task 2.15 */ }}
+            className="text-sm font-medium underline hover:no-underline"
+          >
+            Complete project
+          </button>
         </div>
       )}
 

@@ -90,4 +90,28 @@ describe('ItemDetailView', () => {
     render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
     expect(screen.getByRole('status')).toBeTruthy()
   })
+
+  // 2.14: Ready-for-completion banner
+  it('shows ready-for-completion banner when all tasks done', () => {
+    vi.mocked(useItem).mockReturnValueOnce({
+      data: {
+        ...mockProject,
+        task_count: 5,
+        completed_task_count: 5,
+        project_status: 'active' as const,
+      },
+      isLoading: false, isError: false,
+    } as any)
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    expect(screen.getByText(/Ready to complete/i)).toBeTruthy()
+  })
+
+  it('does not show ready banner when not all tasks done', () => {
+    vi.mocked(useItem).mockReturnValueOnce({
+      data: { ...mockProject, task_count: 5, completed_task_count: 3, project_status: 'active' as const },
+      isLoading: false, isError: false,
+    } as any)
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    expect(screen.queryByText(/Ready to complete/i)).toBeNull()
+  })
 })
