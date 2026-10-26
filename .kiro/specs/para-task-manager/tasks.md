@@ -287,7 +287,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Verify accessibility (focus states, aria attributes)
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 2. Phase 2: Items (Projects, Areas, Resources)
+- [x] 2. Phase 2: Items (Projects, Areas, Resources)
   - [x] 2.1 Create SQLAlchemy ORM models for Items
     - Create `backend/models/item.py` with `Item` model
     - Fields: id, type (project/area/resource), title, description, notes, archived_at, created_at, updated_at
@@ -429,7 +429,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Verify Inbox count unchanged
     - _Requirements: R1.4_
 
-- [-] 2.21 Checkpoint: Items complete
+- [x] 2.21 Checkpoint: Items complete
   - Create, view, edit, archive, restore, and delete Projects, Areas, Resources in browser
   - Verify archive banner appears for archived items with controls disabled
   - Verify delete confirmation dialog appears
