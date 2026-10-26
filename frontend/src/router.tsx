@@ -12,6 +12,8 @@ import ArchivePage from './pages/ArchivePage'
 import TemplatesPage from './pages/TemplatesPage'
 import WeeklyReviewPage from './pages/WeeklyReviewPage'
 import SettingsPage from './pages/SettingsPage'
+// DEV-only component gallery for visual verification
+import DevComponentsPage from './pages/DevComponentsPage'
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +31,7 @@ export const router = createBrowserRouter([
       { path: '/templates', element: <TemplatesPage /> },
       { path: '/review', element: <WeeklyReviewPage /> },
       { path: '/settings', element: <SettingsPage /> },
+    ...(import.meta.env.DEV ? [{ path: '/dev/components', element: <DevComponentsPage /> }] : []),
     ],
   },
 ])

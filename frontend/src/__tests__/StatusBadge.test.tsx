@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { StatusBadge } from '../components/common/StatusBadge'
 
-const TEST_DATE = '2026-11-01'
-
 describe('StatusBadge', () => {
   it('renders nothing when isComplete=true', () => {
     const { container } = render(
