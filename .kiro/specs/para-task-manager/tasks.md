@@ -185,7 +185,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Verify API client sends X-Calm-X header
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 1. Phase 1: Base Components
+- [x] 1. Phase 1: Base Components
   - [x] 1.1 Create Button component
     - Variants: `primary` (accent fill), `secondary` (surface + border), `ghost` (transparent, accent text), `danger` (transparent, danger text)
     - Sizes: `default` (44px), `sm` (36px)
@@ -267,7 +267,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Use integer math formula: `(200 * completed + total) // (2 * total)` when total > 0, else 0
     - _Requirements: R4.3, R14.1_
 
-  - [-] 1.14 Unit tests for all base components
+  - [x] 1.14 Unit tests for all base components
     - Test Button variants and sizes render correctly
     - Test StatusBadge renders correct icon/color for each status
     - Test StatusBadge renders nothing when task is complete
@@ -276,12 +276,12 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Test Skeleton appears after 200ms delay
     - _Requirements: N/A (quality assurance)_
 
-  - [~] 1.15 Unit test: calculateProgress(1, 8) returns 13
+  - [x] 1.15 Unit test: calculateProgress(1, 8) returns 13
     - REGRESSION TEST: Verify 1/8 = 12.5% rounds to 13%
     - Test both utils/progress.ts (frontend) function
     - _Requirements: R4.3, R14.1_
 
-- [~] 1.16 Checkpoint: Base components complete
+- [x] 1.16 Checkpoint: Base components complete
   - Create a test page or Storybook showing all components
   - Verify all components render correctly in light and dark themes
   - Verify accessibility (focus states, aria attributes)
