@@ -5,7 +5,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import React from 'react'
 import { ItemDetailView } from '../components/items/ItemDetailView'
-import { useItem, useUpdateItem } from '../hooks/useItems'
+import {
+  useItem,
+  useUpdateItem,
+  useCompleteProject,
+  useReopenProject,
+  useArchiveItem,
+} from '../hooks/useItems'
 
 const mockProject = {
   id: 1,
@@ -30,6 +36,9 @@ const mockMutate = vi.fn()
 vi.mock('../hooks/useItems', () => ({
   useItem: vi.fn(),
   useUpdateItem: vi.fn(),
+  useCompleteProject: vi.fn(),
+  useReopenProject: vi.fn(),
+  useArchiveItem: vi.fn(),
 }))
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -49,6 +58,9 @@ describe('ItemDetailView', () => {
       isError: false,
     } as any)
     vi.mocked(useUpdateItem).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
+    vi.mocked(useCompleteProject).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
+    vi.mocked(useReopenProject).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
+    vi.mocked(useArchiveItem).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
   })
 
   it('renders item title', () => {

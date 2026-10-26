@@ -1,10 +1,16 @@
-import React, { useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { isProject, isArea, isArchived } from '@/types/models'
 import type { Item } from '@/types/models'
-import { useItem, useUpdateItem } from '@/hooks/useItems'
+import {
+  useItem,
+  useUpdateItem,
+  useCompleteProject,
+  useReopenProject,
+  useArchiveItem,
+} from '@/hooks/useItems'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
-import { ProgressBar, StatusBadge, Skeleton, SkeletonGroup } from '@/components/common'
+import { ProgressBar, StatusBadge, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
 import { getLocalToday } from '@/utils/date'
 import { cn } from '@/lib/utils'
@@ -19,7 +25,13 @@ interface ItemDetailViewProps {
 export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps) {
   const { data: item, isLoading, isError } = useItem(id)
   const updateItem = useUpdateItem(id)
+  const completeProject = useCompleteProject()
+  const reopenProject = useReopenProject()
+  const archiveItem = useArchiveItem()
+  const navigate = useNavigate()
   const today = getLocalToday()
+
+  const [showArchivePrompt, setShowArchivePrompt] = useState(false)
 
   if (isLoading) {
     return (
@@ -40,6 +52,19 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
   }
 
   const archived = isArchived(item)
+
+  // R1.6: Complete project → prompt to archive
+  const handleCompleteProject = () => {
+    completeProject.mutate(item.id, {
+      onSuccess: () => setShowArchivePrompt(true),
+    })
+  }
+
+  const handleArchiveConfirm = () => {
+    archiveItem.mutate(item.id, {
+      onSuccess: () => navigate(listPath),
+    })
+  }
 
   // Ready-for-completion condition (R4.7)
   const isReadyForCompletion =
@@ -76,7 +101,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
           <span>All tasks done. Ready to complete this project.</span>
           <button
             type="button"
-            onClick={() => { /* handleCompleteProject — wired in task 2.15 */ }}
+            onClick={handleCompleteProject}
             className="text-sm font-medium underline hover:no-underline"
           >
             Complete project
@@ -90,6 +115,26 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         disabled={archived}
         onSave={(title) => updateItem.mutate({ title })}
       />
+
+      {/* 2.15: Mark complete / Reopen actions */}
+      {isProject(item) && !archived && item.project_status === 'active' && (
+        <button
+          type="button"
+          onClick={handleCompleteProject}
+          className="mt-3 text-sm text-accent-text hover:underline"
+        >
+          Mark project complete
+        </button>
+      )}
+      {isProject(item) && !archived && item.project_status === 'completed' && (
+        <button
+          type="button"
+          onClick={() => reopenProject.mutate(item.id)}
+          className="mt-3 text-sm text-muted hover:text-accent-text hover:underline"
+        >
+          Reopen project
+        </button>
+      )}
 
       {/* Project deadline status */}
       {isProject(item) && item.project_deadline && (
@@ -156,6 +201,19 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         multiline
         disabled={archived}
         onSave={(v) => updateItem.mutate({ notes: v })}
+      />
+
+      {/* 2.15: Archive prompt after completing project (R1.6) */}
+      <ConfirmDialog
+        open={showArchivePrompt}
+        onOpenChange={setShowArchivePrompt}
+        title="Archive this project?"
+        description="The project has been marked complete. Would you like to archive it now?"
+        confirmLabel="Archive"
+        cancelLabel="Keep active"
+        destructive={false}
+        onConfirm={handleArchiveConfirm}
+        onCancel={() => setShowArchivePrompt(false)}
       />
     </div>
   )
