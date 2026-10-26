@@ -23,3 +23,6 @@ export { PriorityChip } from './PriorityChip'
 export type { PriorityChipProps, Priority } from './PriorityChip'
 export { TagChip } from './TagChip'
 export type { TagChipProps } from './TagChip'
+
+export { Skeleton } from './Skeleton'
+export type { SkeletonProps } from './Skeleton'
