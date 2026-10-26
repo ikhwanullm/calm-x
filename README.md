@@ -30,6 +30,14 @@ npm install
 
 ### Run both servers together (recommended)
 
+Copy the example environment file on first run:
+
+```bash
+cp .env.example .env
+```
+
+Then start both servers:
+
 ```bash
 cd frontend
 npm run dev:full
