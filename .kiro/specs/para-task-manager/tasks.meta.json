@@ -7,6 +7,241 @@
         "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
         "timestamp": 1792988494369
       }
+    ],
+    "0.2 Create backend skeleton structure": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989118454
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989206268
+      }
+    ],
+    "0.3 Implement config.py with pydantic-settings": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989211015
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989291316
+      }
+    ],
+    "0.4 Implement database.py with SQLite PRAGMA and programmatic Alembic": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989295696
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989391051
+      }
+    ],
+    "0.5 Implement UTCDateTime TypeDecorator": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989395051
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989452726
+      }
+    ],
+    "0.6 Implement exceptions.py with unified error handling": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989456534
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989526925
+      }
+    ],
+    "0.7 Implement CSRF middleware": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989531939
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989609721
+      }
+    ],
+    "0.8 Implement main.py with port check and SPA fallback": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989613708
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989758216
+      }
+    ],
+    "0.9 Initialize React frontend with Vite": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792989762653
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792991452194
+      }
+    ],
+    "0.10 Configure Tailwind CSS with design tokens": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792991457692
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792991632620
+      }
+    ],
+    "0.11 Set up shadcn/ui and Inter font": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792991638229
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792991919557
+      }
+    ],
+    "0.12 Implement ThemeProvider with system/light/dark": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792991923985
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992099240
+      }
+    ],
+    "0.13 Set up React Router with all routes": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992104695
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992210816
+      }
+    ],
+    "0.14 Create AppShell layout component": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992217472
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992422285
+      }
+    ],
+    "0.15 Configure API client with X-Calm-X header": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992427764
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992556411
+      }
+    ],
+    "0.16 Configure TanStack Query client": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992434381
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992563217
+      }
+    ],
+    "0.17 Configure sonner for toasts": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992438319
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992567987
+      }
+    ],
+    "0.18 Create dev script to run both servers": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992574168
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992768759
+      }
+    ],
+    "0.19 Create initial Alembic migration with COMPLETE schema": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992578458
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992773105
+      }
+    ],
+    "0.20 Checkpoint: Foundation complete": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992778977
+      },
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992819364
+      }
+    ],
+    "0. Phase 0: Foundation": [
+      {
+        "executionId": "f52a3417-89c5-4997-9f91-08c000a5090d",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792992819493
+      }
     ]
   }
 }
