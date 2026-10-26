@@ -1,4 +1,4 @@
-"""Application configuration via pydantic-settings."""
+﻿"""Application configuration via pydantic-settings."""
 from __future__ import annotations
 
 import argparse
@@ -51,6 +51,16 @@ class Config(BaseSettings):
         if not (1024 <= port <= 65535):
             raise ValueError(f"Port must be between 1024 and 65535, got {port}")
         return port
+
+    @field_validator("dev_origins", mode="before")
+    @classmethod
+    def parse_dev_origins(cls, v: object) -> list[str]:
+        """Accept a comma-separated string (from env var) or a list."""
+        if isinstance(v, str):
+            return [o.strip() for o in v.split(",") if o.strip()]
+        if isinstance(v, list):
+            return [str(o).strip() for o in v if str(o).strip()]
+        return []
 
 
 def load_config() -> Config:

@@ -1,4 +1,4 @@
-"""Tests for CSRF middleware."""
+﻿"""Tests for CSRF middleware."""
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -6,9 +6,9 @@ from fastapi.testclient import TestClient
 from backend.middleware.csrf import CSRFProtectionMiddleware
 
 
-def make_app(port: int = 8080) -> FastAPI:
+def make_app(port: int = 8080, dev_origins: list | None = None) -> FastAPI:
     app = FastAPI()
-    app.add_middleware(CSRFProtectionMiddleware, port=port)
+    app.add_middleware(CSRFProtectionMiddleware, port=port, dev_origins=dev_origins)
 
     @app.get("/ping")
     def ping():
@@ -76,9 +76,12 @@ def test_post_127_origin_accepted(client):
     assert resp.status_code == 200
 
 
-def test_dev_origins_from_env(monkeypatch):
-    monkeypatch.setenv("CALM_X_DEV_ORIGINS", "http://localhost:5173")
-    client = TestClient(make_app(), raise_server_exceptions=False)
+def test_dev_origins_passed_via_constructor():
+    """dev_origins from config accepted via constructor (not os.environ)."""
+    client = TestClient(
+        make_app(dev_origins=["http://localhost:5173"]),
+        raise_server_exceptions=False,
+    )
     resp = client.post(
         "/data",
         headers={"X-Calm-X": "1", "Origin": "http://localhost:5173"},
@@ -86,6 +89,15 @@ def test_dev_origins_from_env(monkeypatch):
     assert resp.status_code == 200
 
 
+def test_dev_origin_rejected_when_not_configured(client):
+    """A dev origin NOT in the allowed list is rejected even with X-Calm-X header."""
+    resp = client.post(
+        "/data",
+        headers={"X-Calm-X": "1", "Origin": "http://localhost:5173"},
+    )
+    assert resp.status_code == 403
+
+
 def test_options_allowed_without_header(client):
     resp = client.options("/data")
-    assert resp.status_code in (200, 405)  # middleware passes, FastAPI may 405
+    assert resp.status_code in (200, 405)

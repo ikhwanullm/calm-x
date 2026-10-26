@@ -1,4 +1,4 @@
-"""Calm-X application entry point."""
+﻿"""Calm-X application entry point."""
 from __future__ import annotations
 
 import logging
@@ -55,7 +55,7 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
         TrustedHostMiddleware,
         allowed_hosts=["localhost", "127.0.0.1"],
     )
-    app.add_middleware(CSRFProtectionMiddleware, port=config.port)
+    app.add_middleware(CSRFProtectionMiddleware, port=config.port, dev_origins=config.dev_origins)
 
     # --- Exception handlers ---
     @app.exception_handler(PydanticValidationError)
@@ -99,7 +99,7 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
     # --- SPA fallback ---
     @app.get("/{full_path:path}", include_in_schema=False)
     async def spa_fallback(full_path: str):
-        # API routes are not handled here — they must be registered before this
+        # API routes are not handled here â€” they must be registered before this
         index_html = dist_path / "index.html"
         # Serve specific static files if they exist
         candidate = dist_path / full_path
@@ -142,3 +142,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

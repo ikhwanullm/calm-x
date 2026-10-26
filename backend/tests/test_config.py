@@ -1,4 +1,4 @@
-"""Tests for backend/config.py."""
+﻿"""Tests for backend/config.py."""
 import pytest
 from backend.config import Config, load_config
 
@@ -39,3 +39,26 @@ def test_load_config_returns_config():
     cfg = load_config()
     assert isinstance(cfg, Config)
     assert cfg.port == 8080
+
+
+def test_dev_origins_default_empty():
+    cfg = Config()
+    assert cfg.dev_origins == []
+
+
+def test_dev_origins_from_comma_string():
+    cfg = Config(dev_origins="http://localhost:5173,http://127.0.0.1:5173")
+    assert "http://localhost:5173" in cfg.dev_origins
+    assert "http://127.0.0.1:5173" in cfg.dev_origins
+
+
+def test_dev_origins_strips_spaces():
+    cfg = Config(dev_origins=" http://localhost:5173 , http://127.0.0.1:5173 ")
+    for origin in cfg.dev_origins:
+        assert not origin.startswith(" ")
+        assert not origin.endswith(" ")
+
+
+def test_dev_origins_from_list():
+    cfg = Config(dev_origins=["http://localhost:5173"])
+    assert cfg.dev_origins == ["http://localhost:5173"]
