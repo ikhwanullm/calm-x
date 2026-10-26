@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Calm-X Project detail</title>
+<script src="./runtime.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="--bg: {{t.bg}}; --surface: {{t.surface}}; --surface2: {{t.surface2}}; --border: {{t.border}}; --text: {{t.text}}; --muted: {{t.muted}}; --accent: {{t.accent}}; --accent-fg: {{t.accentFg}}; --accent-soft: {{t.accentSoft}}; --accent-text: {{t.accentText}}; --danger-bg: {{t.dangerBg}}; --danger-fg: {{t.dangerFg}}; --warn-bg: {{t.warnBg}}; --warn-fg: {{t.warnFg}}; --ok-bg: {{t.okBg}}; --ok-fg: {{t.okFg}}; --track: {{t.track}}; --shadow: {{t.shadow}}; position: relative; min-height: 100vh; box-sizing: border-box; display: flex; flex-wrap: wrap; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.5;">
+
+  <nav aria-label="Main" style="flex: 1 1 232px; box-sizing: border-box; padding: 20px 12px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px;">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 12px 20px;">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" fill="var(--accent)"></rect><path d="M8 15.5c2-2.6 4-2.6 6 0s4 2.6 6 0" fill="none" stroke="var(--accent-fg)" stroke-width="2" stroke-linecap="round"></path></svg>
+      <span style="font-size: 16px; font-weight: 650; letter-spacing: -0.01em;">Calm-X</span>
+    </div>
+    <a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+      Dashboard
+    </a>
+    <a href="#tasks" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+      <span style="flex: 1;">Inbox</span>
+      <span style="min-width: 22px; height: 22px; padding: 0 7px; box-sizing: border-box; border-radius: 999px; background: var(--surface2); color: var(--text); font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">4</span>
+    </a>
+    <a href="Project.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; text-decoration: none; background: var(--accent-soft); color: var(--accent-text); font-weight: 600;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle></svg>
+      Projects
+    </a>
+    <a href="#tasks" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>
+      Areas
+    </a>
+    <a href="#tasks" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>
+      Resources
+    </a>
+    <a href="#tasks" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="5" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg>
+      Archive
+    </a>
+    <div style="height: 1px; background: var(--border); margin: 12px 12px;"></div>
+    <a href="#tasks" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="7" rx="1"></rect><rect x="3" y="14" width="9" height="7" rx="1"></rect><rect x="16" y="14" width="5" height="7" rx="1"></rect></svg>
+      Templates
+    </a>
+    <a href="Review.dc.html" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path><path d="m9 15.5 2 2 4-4"></path></svg>
+      Weekly review
+    </a>
+    <a href="#tasks" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></svg>
+      Settings
+    </a>
+  </nav>
+
+  <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column;">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 32px; background: var(--surface); border-bottom: 1px solid var(--border);">
+      <label style="flex: 1 1 280px; max-width: 520px; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--muted);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;">Search</span>
+        <input type="search" placeholder="Search projects, areas, resources, tasks…" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: var(--text); font: inherit;">
+        <kbd style="font-family: inherit; font-size: 12px; color: var(--muted); border: 1px solid var(--border); border-radius: 4px; padding: 0 6px; background: var(--surface);">/</kbd>
+      </label>
+      <div style="flex: 1 1 0; min-width: 0;"></div>
+      <button type="button" style="display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-fg); font: inherit; font-weight: 600; cursor: pointer;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+        Quick capture
+        <kbd style="font-family: inherit; font-size: 12px; border-radius: 4px; padding: 0 6px; background: rgba(255,255,255,0.18);">Q</kbd>
+      </button>
+    </header>
+
+    <div style="flex: 1; display: flex; flex-wrap: wrap; align-items: stretch;">
+      <main style="flex: 999 1 520px; min-width: 0; box-sizing: border-box; padding: 28px 32px 40px; display: flex; flex-direction: column; gap: 24px;">
+        <nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px;">
+          <a href="Main.dc.html" style="color: var(--muted); text-decoration: none;">Dashboard</a>
+          <span aria-hidden="true">/</span>
+          <a href="#tasks" style="color: var(--muted); text-decoration: none;">Projects</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" style="color: var(--text); font-weight: 500;">Portfolio site</span>
+        </nav>
+
+        <div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 10px; min-width: 0; flex: 1 1 360px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+              <h1 style="margin: 0; font-size: 26px; line-height: 1.25; font-weight: 650; letter-spacing: -0.02em;">Portfolio site</h1>
+              <span style="height: 24px; padding: 0 9px; border-radius: 999px; background: var(--surface2); color: var(--muted); font-size: 12px; font-weight: 600; display: inline-flex; align-items: center;">Active</span>
+              <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-fg); font-size: 12px; font-weight: 600;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                <time datetime="2026-10-29" title="Thu, 29 Oct 2026">Due in 3 days</time>
+              </span>
+            </div>
+            <p style="margin: 0; color: var(--muted); max-width: 640px;"><span style="color: var(--text); font-weight: 600;">Goal:</span> Publish a portfolio with three case studies to support freelance applications.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" style="height: 44px; padding: 0 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer;">Mark project complete</button>
+            <button type="button" aria-label="More project actions" style="width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.75"></circle><circle cx="12" cy="12" r="1.75"></circle><circle cx="19" cy="12" r="1.75"></circle></svg>
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow);">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;">
+            <span style="font-weight: 600;">Progress</span>
+            <span style="color: var(--muted); font-variant-numeric: tabular-nums;"><span style="color: var(--text); font-weight: 650;">{{pct}}%</span> · {{doneCount}} of {{total}} tasks</span>
+          </div>
+          <div role="progressbar" aria-label="Project progress" aria-valuenow="{{pct}}" aria-valuemin="0" aria-valuemax="100" style="height: 8px; border-radius: 999px; background: var(--track); overflow: hidden;"><div style="width: {{pct}}%; height: 100%; border-radius: 999px; background: var(--accent);"></div></div>
+          <sc-if value="{{allDone}}" hint-placeholder-val="{{ false }}">
+            <div role="status" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 4px; padding: 10px 12px; border-radius: 8px; background: var(--ok-bg); color: var(--ok-fg);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>
+              <span style="flex: 1; font-weight: 600;">Ready for completion. All tasks are done.</span>
+              <button type="button" style="height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--ok-fg); color: var(--surface); font: inherit; font-weight: 600; cursor: pointer;">Complete project</button>
+            </div>
+          </sc-if>
+        </div>
+
+        <section id="tasks" aria-labelledby="tasks-title" style="border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 12px 20px; border-bottom: 1px solid var(--border);">
+            <h2 id="tasks-title" style="margin: 0; font-size: 15px; font-weight: 650;">Tasks <span style="color: var(--muted); font-weight: 500;">{{openCount}} open</span></h2>
+            <button type="button" style="display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--accent-text); font: inherit; font-weight: 600; cursor: pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+              Add task
+            </button>
+          </div>
+          <ul style="list-style: none; margin: 0; padding: 0;">
+            <sc-for list="{{openTasks}}" as="task" hint-placeholder-count="2">
+              <li style="display: flex; align-items: center; gap: 8px; padding: 4px 16px 4px 8px; border-bottom: 1px solid var(--border); background: {{task.rowBg}};">
+                <button type="button" aria-label="Reorder {{task.title}}" style="width: 28px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: grab; display: inline-flex; align-items: center; justify-content: center;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="5" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="9" cy="19" r="1.6"></circle><circle cx="15" cy="5" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="15" cy="19" r="1.6"></circle></svg>
+                </button>
+                <input type="checkbox" checked="{{task.complete}}" onChange="{{task.toggle}}" aria-label="{{task.checkLabel}}" style="width: 18px; height: 18px; margin: 0; accent-color: var(--accent); cursor: pointer;">
+                <button type="button" onClick="{{task.open}}" style="flex: 1; min-width: 0; min-height: 52px; padding: 6px 4px; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: center; gap: 2px;">
+                  <span style="font-weight: 500;">{{task.title}}</span>
+                  <span style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); font-size: 12px;">
+                    <span>{{task.priority}} priority</span>
+                    <sc-if value="{{task.hasSubs}}" hint-placeholder-val="{{ true }}">
+                      <span style="display: inline-flex; align-items: center; gap: 4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12 4 4L20 4"></path><path d="M4 20h16"></path></svg>{{task.subText}} subtasks</span>
+                    </sc-if>
+                    <sc-for list="{{task.tagList}}" as="tag" hint-placeholder-count="1">
+                      <span style="padding: 0 6px; border-radius: 4px; background: var(--surface2); color: var(--muted);">#{{tag.name}}</span>
+                    </sc-for>
+                  </span>
+                </button>
+                <sc-if value="{{task.dueSoon}}" hint-placeholder-val="{{ true }}">
+                  <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-fg); font-size: 12px; font-weight: 600; white-space: nowrap;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                    <time datetime="{{task.iso}}" title="{{task.abs}}">{{task.rel}}</time>
+                  </span>
+                </sc-if>
+                <sc-if value="{{task.dueOk}}" hint-placeholder-val="{{ false }}">
+                  <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--ok-bg); color: var(--ok-fg); font-size: 12px; font-weight: 600; white-space: nowrap;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>
+                    <time datetime="{{task.iso}}" title="{{task.abs}}">{{task.rel}}</time>
+                  </span>
+                </sc-if>
+              </li>
+            </sc-for>
+          </ul>
+          <sc-if value="{{noOpen}}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; padding: 20px; color: var(--muted); text-align: center;">No open tasks. Nice work.</p>
+          </sc-if>
+          <button type="button" onClick="{{toggleDone}}" aria-expanded="{{showDone}}" style="width: 100%; min-height: 44px; padding: 0 20px; border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 500; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate({{chevron}}deg);"><path d="m9 18 6-6-6-6"></path></svg>
+            {{doneLabel}}
+          </button>
+          <sc-if value="{{showDone}}" hint-placeholder-val="{{ false }}">
+            <ul style="list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border);">
+              <sc-for list="{{doneTasks}}" as="task" hint-placeholder-count="3">
+                <li style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 44px; border-bottom: 1px solid var(--border); background: {{task.rowBg}};">
+                  <input type="checkbox" checked="{{task.complete}}" onChange="{{task.toggle}}" aria-label="{{task.checkLabel}}" style="width: 18px; height: 18px; margin: 0; accent-color: var(--accent); cursor: pointer;">
+                  <button type="button" onClick="{{task.open}}" style="flex: 1; min-width: 0; min-height: 44px; border: 0; background: transparent; color: var(--muted); font: inherit; text-align: left; text-decoration: line-through; cursor: pointer;">{{task.title}}</button>
+                </li>
+              </sc-for>
+            </ul>
+          </sc-if>
+        </section>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+          <section aria-labelledby="notes-title" style="display: flex; flex-direction: column; gap: 8px; padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow);">
+            <h2 id="notes-title" style="margin: 0; font-size: 15px; font-weight: 650;">Notes</h2>
+            <p style="margin: 0; color: var(--muted);">Keep each case study under 1,200 words. Lead with the outcome, then the process. Ask for a quote from each client before publishing.</p>
+          </section>
+          <section aria-labelledby="links-title" style="display: flex; flex-direction: column; gap: 8px; padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow);">
+            <h2 id="links-title" style="margin: 0; font-size: 15px; font-weight: 650;">Reference links</h2>
+            <a href="#links-title" style="color: var(--accent-text); text-decoration: none; font-weight: 500;">Portfolio wireframes <span style="color: var(--muted); font-weight: 400;">· figma.com</span></a>
+            <a href="#links-title" style="color: var(--accent-text); text-decoration: none; font-weight: 500;">Hosting dashboard <span style="color: var(--muted); font-weight: 400;">· netlify.com</span></a>
+            <a href="#links-title" style="color: var(--accent-text); text-decoration: none; font-weight: 500;">Image compression guide <span style="color: var(--muted); font-weight: 400;">· web.dev</span></a>
+          </section>
+          <section aria-labelledby="res-title" style="display: flex; flex-direction: column; gap: 8px; padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow);">
+            <h2 id="res-title" style="margin: 0; font-size: 15px; font-weight: 650;">Linked resources</h2>
+            <a href="#res-title" style="display: flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; font-weight: 500;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>Writing case studies</a>
+            <a href="#res-title" style="display: flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; font-weight: 500;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>Web performance</a>
+          </section>
+        </div>
+      </main>
+
+      <sc-if value="{{hasSel}}" hint-placeholder-val="{{ true }}">
+        <aside aria-label="Task details" style="flex: 1 1 360px; max-width: 460px; box-sizing: border-box; padding: 20px 24px 28px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;">Task</span>
+            <button type="button" onClick="{{closeDrawer}}" aria-label="Close task details" style="width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+          </div>
+
+          <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <input type="checkbox" checked="{{sel.complete}}" onChange="{{sel.toggle}}" aria-label="{{sel.checkLabel}}" style="width: 20px; height: 20px; margin: 4px 0 0; accent-color: var(--accent); cursor: pointer;">
+            <h2 style="margin: 0; font-size: 19px; line-height: 1.35; font-weight: 650; text-decoration: {{sel.deco}};">{{sel.title}}</h2>
+          </div>
+
+          <dl style="margin: 0; display: grid; grid-template-columns: 96px minmax(0, 1fr); row-gap: 12px; column-gap: 12px; align-items: center;">
+            <dt style="color: var(--muted);">Project</dt>
+            <dd style="margin: 0; font-weight: 500;">Portfolio site</dd>
+            <dt style="color: var(--muted);">Priority</dt>
+            <dd style="margin: 0;"><span style="height: 24px; padding: 0 9px; border-radius: 999px; background: var(--surface2); font-size: 12px; font-weight: 600; display: inline-flex; align-items: center;">{{sel.priority}}</span></dd>
+            <dt style="color: var(--muted);">Due</dt>
+            <dd style="margin: 0;">
+              <sc-if value="{{sel.dueSoon}}" hint-placeholder-val="{{ true }}">
+                <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-fg); font-size: 12px; font-weight: 600;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                  <time datetime="{{sel.iso}}" title="{{sel.abs}}">{{sel.rel}}</time>
+                </span>
+              </sc-if>
+              <sc-if value="{{sel.dueOk}}" hint-placeholder-val="{{ false }}">
+                <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--ok-bg); color: var(--ok-fg); font-size: 12px; font-weight: 600;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>
+                  <time datetime="{{sel.iso}}" title="{{sel.abs}}">{{sel.rel}}</time>
+                </span>
+              </sc-if>
+              <sc-if value="{{sel.noBadge}}" hint-placeholder-val="{{ false }}">
+                <span style="color: var(--muted);">{{sel.dueText}}</span>
+              </sc-if>
+            </dd>
+            <dt style="color: var(--muted);">Tags</dt>
+            <dd style="margin: 0; display: flex; flex-wrap: wrap; gap: 6px;">
+              <sc-for list="{{sel.tagList}}" as="tag" hint-placeholder-count="2">
+                <span style="padding: 1px 8px; border-radius: 4px; background: var(--surface2); color: var(--muted); font-size: 13px;">#{{tag.name}}</span>
+              </sc-for>
+              <sc-if value="{{sel.noTags}}" hint-placeholder-val="{{ false }}">
+                <span style="color: var(--muted);">None</span>
+              </sc-if>
+            </dd>
+          </dl>
+
+          <section aria-labelledby="sub-title" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <h3 id="sub-title" style="margin: 0; font-size: 14px; font-weight: 650;">Subtasks</h3>
+              <span style="color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums;">{{sel.subText}} · {{sel.subPct}}%</span>
+            </div>
+            <div role="progressbar" aria-label="Subtask progress" aria-valuenow="{{sel.subPct}}" aria-valuemin="0" aria-valuemax="100" style="height: 6px; border-radius: 999px; background: var(--track); overflow: hidden;"><div style="width: {{sel.subPct}}%; height: 100%; border-radius: 999px; background: var(--accent);"></div></div>
+            <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;">
+              <sc-for list="{{sel.subs}}" as="sub" hint-placeholder-count="4">
+                <li>
+                  <label style="display: flex; align-items: center; gap: 10px; min-height: 40px; cursor: pointer;">
+                    <input type="checkbox" checked="{{sub.done}}" onChange="{{sub.toggle}}" style="width: 18px; height: 18px; margin: 0; accent-color: var(--accent);">
+                    <span style="text-decoration: {{sub.deco}}; color: {{sub.color}};">{{sub.title}}</span>
+                  </label>
+                </li>
+              </sc-for>
+            </ul>
+            <sc-if value="{{sel.noSubs}}" hint-placeholder-val="{{ false }}">
+              <p style="margin: 0; color: var(--muted); font-size: 13px;">No subtasks yet. Break this task into steps to track progress.</p>
+            </sc-if>
+            <button type="button" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; border: 1px dashed var(--border); border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-weight: 500; cursor: pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+              Add subtask
+            </button>
+          </section>
+
+          <section aria-labelledby="desc-title" style="display: flex; flex-direction: column; gap: 6px;">
+            <h3 id="desc-title" style="margin: 0; font-size: 14px; font-weight: 650;">Description</h3>
+            <p style="margin: 0; color: var(--muted);">{{sel.description}}</p>
+          </section>
+
+          <div style="margin-top: auto; display: flex; gap: 8px; padding-top: 16px; border-top: 1px solid var(--border);">
+            <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer;">Move to…</button>
+            <div style="flex: 1;"></div>
+            <button type="button" style="height: 40px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; color: var(--danger-fg); font: inherit; font-weight: 600; cursor: pointer;">Delete task</button>
+          </div>
+        </aside>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    var done = function (title, priority) {
+      return { title: title, priority: priority, complete: true, tags: [], subs: [], kind: '', rel: '', abs: '', iso: '', description: 'Completed.' };
+    };
+    var list = [
+      { title: 'Draft case study #2', priority: 'High', complete: false, tags: ['writing', 'client-work'], kind: 'soon', rel: 'In 2 days', abs: 'Wed, 28 Oct 2026', iso: '2026-10-28',
+        description: 'Second case study: the booking-flow redesign. Cover the problem, the process and one measurable outcome.',
+        subs: [ { title: 'Outline the structure', done: true }, { title: 'Gather screenshots', done: true }, { title: 'Write the first draft', done: false }, { title: 'Get client feedback', done: false } ] },
+      { title: 'Compress hero images', priority: 'Medium', complete: false, tags: ['dev'], kind: 'ok', rel: 'In 5 days', abs: 'Sat, 31 Oct 2026', iso: '2026-10-31',
+        description: 'Convert hero images to WebP and keep each under 200 KB.', subs: [] },
+      done('Choose a domain name', 'Medium'),
+      done('Set up hosting', 'Medium'),
+      done('Design homepage layout', 'High'),
+      done('Write the About page', 'Medium'),
+      done('Publish case study #1', 'High'),
+      done('Add a contact form', 'Low'),
+      done('Set up analytics', 'Low'),
+      done('Create a favicon', 'Low')
+    ];
+    this.state = { tasks: list.map(function (tk, i) { tk.id = 't' + (i + 1); tk.subs = tk.subs.map(function (s, j) { s.id = tk.id + 's' + j; return s; }); return tk; }), sel: 't1', showDone: false };
+  }
+  pct(m, n) {
+    return n === 0 ? 0 : Math.floor((200 * m + n) / (2 * n));
+  }
+  update(id, fn) {
+    this.setState((st) => ({ tasks: st.tasks.map((tk) => (tk.id === id ? fn(tk) : tk)) }));
+  }
+  toggleTask(id) {
+    this.update(id, (tk) => {
+      var next = !tk.complete;
+      return Object.assign({}, tk, { complete: next, subs: tk.subs.map((s) => Object.assign({}, s, { done: next })) });
+    });
+  }
+  toggleSub(id, subId) {
+    this.update(id, (tk) => {
+      var subs = tk.subs.map((s) => (s.id === subId ? Object.assign({}, s, { done: !s.done }) : s));
+      var all = subs.length > 0 && subs.every((s) => s.done);
+      return Object.assign({}, tk, { subs: subs, complete: all });
+    });
+  }
+  renderVals() {
+    var LIGHT = { bg: '#F6F6F3', surface: '#FFFFFF', surface2: '#EFEFEA', border: '#E3E3DE', text: '#1B1B19', muted: '#5C5C57', accent: '#3B5BDB', accentFg: '#FFFFFF', accentSoft: '#EEF2FF', accentText: '#3049B8', dangerBg: '#FEF1F0', dangerFg: '#B42318', warnBg: '#FFF4E0', warnFg: '#8A4B00', okBg: '#EBF8F0', okFg: '#106B3E', track: '#E8E8E3', shadow: '0 1px 2px rgba(20,20,18,0.05)' };
+    var DARK = { bg: '#131312', surface: '#1B1B1A', surface2: '#2A2A27', border: '#2F2F2C', text: '#ECECE8', muted: '#A6A6A0', accent: '#8EA2FF', accentFg: '#10142B', accentSoft: '#1F2547', accentText: '#AEBBFF', dangerBg: '#3A1614', dangerFg: '#FFA59C', warnBg: '#352509', warnFg: '#F7C35F', okBg: '#0F2A1B', okFg: '#7BDCA6', track: '#2C2C29', shadow: 'none' };
+    var dark = this.props.dark ?? false;
+    var st = this.state;
+    var view = st.tasks.map((tk) => {
+      var n = tk.subs.length;
+      var m = tk.subs.filter((s) => s.done).length;
+      var badge = tk.complete ? '' : tk.kind;
+      return {
+        id: tk.id, title: tk.title, priority: tk.priority, complete: tk.complete, description: tk.description,
+        iso: tk.iso, abs: tk.abs, rel: tk.rel,
+        dueSoon: badge === 'soon', dueOk: badge === 'ok', noBadge: badge === '',
+        dueText: tk.complete ? 'Done' : 'No due date',
+        hasSubs: n > 0, noSubs: n === 0, subText: m + '/' + n, subPct: n === 0 ? (tk.complete ? 100 : 0) : this.pct(m, n),
+        tagList: tk.tags.map((x) => ({ name: x })), noTags: tk.tags.length === 0,
+        deco: tk.complete ? 'line-through' : 'none',
+        rowBg: st.sel === tk.id ? 'var(--accent-soft)' : 'transparent',
+        checkLabel: (tk.complete ? 'Mark incomplete: ' : 'Mark complete: ') + tk.title,
+        toggle: () => this.toggleTask(tk.id),
+        open: () => this.setState({ sel: tk.id }),
+        subs: tk.subs.map((s) => ({ title: s.title, done: s.done, deco: s.done ? 'line-through' : 'none', color: s.done ? 'var(--muted)' : 'var(--text)', toggle: () => this.toggleSub(tk.id, s.id) }))
+      };
+    });
+    var open = view.filter((v) => !v.complete);
+    var done = view.filter((v) => v.complete);
+    var sel = view.find((v) => v.id === st.sel) || null;
+    return {
+      t: dark ? DARK : LIGHT,
+      openTasks: open,
+      doneTasks: done,
+      openCount: open.length,
+      noOpen: open.length === 0,
+      doneCount: done.length,
+      total: view.length,
+      pct: this.pct(done.length, view.length),
+      allDone: view.length > 0 && done.length === view.length,
+      showDone: st.showDone,
+      chevron: st.showDone ? 90 : 0,
+      doneLabel: st.showDone ? 'Hide completed' : 'Show ' + done.length + ' completed',
+      toggleDone: () => this.setState({ showDone: !this.state.showDone }),
+      completeAll: () => this.setState((s) => ({ tasks: s.tasks.map((tk) => Object.assign({}, tk, { complete: true, subs: tk.subs.map((x) => Object.assign({}, x, { done: true })) })) })),
+      hasSel: sel !== null,
+      sel: sel || view[0],
+      closeDrawer: () => this.setState({ sel: null })
+    };
+  }
+}
+</script>
+</body>
+</html>
