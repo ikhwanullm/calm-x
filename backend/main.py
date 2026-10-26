@@ -8,10 +8,10 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import IntegrityError
 
 from backend.config import load_config
@@ -36,21 +36,37 @@ def check_port_available(port: int) -> bool:
             return False
 
 
-def create_app(config=None, extra_routers=None) -> FastAPI:
-    """Application factory.
+def _safe_static_file(full_path: str, dist_path: Path) -> FileResponse | None:
+    """Return a FileResponse only if the resolved path is inside dist_path.
 
-    Args:
-        config: Application config. Loaded from environment if not provided.
-        extra_routers: Optional list of APIRouter instances to mount before the
-            SPA fallback route. Routers passed here are registered first so they
-            take priority over the catch-all ``/{full_path:path}`` route.
+    Guards against:
+    - Path traversal (../../etc/passwd, ..%2f..)
+    - Absolute paths on Windows (C:\\...)
+    - Any path that resolves outside dist_path
     """
+    if not dist_path.exists():
+        return None
+    # Reject obviously dangerous patterns early
+    if full_path.startswith("/") or (len(full_path) > 1 and full_path[1] == ":"):
+        return None
+    candidate = (dist_path / full_path).resolve()
+    try:
+        candidate.relative_to(dist_path.resolve())
+    except ValueError:
+        return None
+    if candidate.exists() and candidate.is_file():
+        return FileResponse(str(candidate))
+    return None
+
+
+def create_app(config=None, extra_routers=None) -> FastAPI:
+    """Application factory."""
     if config is None:
         config = load_config()
 
     app = FastAPI(title="Calm-X", version="0.1.0", docs_url="/api/docs")
 
-    # --- Middleware (order matters: outermost added last) ---
+    # --- Middleware ---
     app.add_middleware(
         TrustedHostMiddleware,
         allowed_hosts=["localhost", "127.0.0.1"],
@@ -60,7 +76,6 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
     # --- Exception handlers (design.md error contract) ---
     @app.exception_handler(RequestValidationError)
     async def request_validation_handler(request: Request, exc: RequestValidationError):
-        # Pydantic v2 request-body validation — 400 with field map
         fields: dict[str, list[str]] = {}
         for error in exc.errors():
             loc = ".".join(str(p) for p in error.get("loc", []) if p != "body")
@@ -104,18 +119,30 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
     # --- SPA fallback ---
     @app.get("/{full_path:path}", include_in_schema=False)
     async def spa_fallback(full_path: str):
-        # API routes are not handled here â€” they must be registered before this
+        # Paths beginning with "api" or "api/" are API routes that were not found.
+        # Return 404 JSON — never serve index.html for API paths.
+        if full_path == "api" or full_path.startswith("api/"):
+            return JSONResponse(
+                status_code=404,
+                content={"error": f"API route not found: /{full_path}", "type": "not_found"},
+            )
+
+        # Try to serve a specific static file (with path traversal protection)
+        file_resp = _safe_static_file(full_path, dist_path)
+        if file_resp is not None:
+            return file_resp
+
+        # Fallback to index.html for SPA client-side routing
         index_html = dist_path / "index.html"
-        # Serve specific static files if they exist
-        candidate = dist_path / full_path
-        if candidate.exists() and candidate.is_file():
-            return FileResponse(str(candidate))
-        # Fallback to index.html for SPA routing
         if index_html.exists():
             return FileResponse(str(index_html))
+
         return JSONResponse(
             status_code=503,
-            content={"error": "frontend_not_built", "detail": "Run `npm run build` in frontend/"},
+            content={
+                "error": "Frontend not built. Run `npm run build` in frontend/.",
+                "type": "not_found",
+            },
         )
 
     return app
@@ -147,5 +174,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-

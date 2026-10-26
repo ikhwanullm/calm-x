@@ -119,4 +119,64 @@ def test_spa_fallback_no_dist(tmp_path):
     client = TestClient(app, base_url="http://localhost:8080", raise_server_exceptions=False)
     resp = client.get("/some/spa/route")
     assert resp.status_code == 503
-    assert "frontend_not_built" in resp.json()["error"]
+    assert resp.json()["type"] == "not_found"
+
+
+# --- SPA fallback security tests ---
+
+def test_spa_api_path_returns_404_json(tmp_path):
+    """Paths starting with 'api/' must return 404 JSON, never index.html."""
+    cfg = Config(port=8080, frontend_dist=str(tmp_path / "dist"))
+    app = create_app(cfg)
+    client = TestClient(app, base_url="http://localhost:8080", raise_server_exceptions=False)
+    resp = client.get("/api/nonexistent")
+    assert resp.status_code == 404
+    body = resp.json()
+    assert body["type"] == "not_found"
+
+
+def test_spa_path_traversal_rejected(tmp_path):
+    """Path traversal attempts must not escape dist_path."""
+    from backend.main import _safe_static_file
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<html/>")
+    # Attempt to read a file outside dist
+    secret = tmp_path / "secret.txt"
+    secret.write_text("TOP SECRET")
+    result = _safe_static_file("../secret.txt", dist)
+    assert result is None
+
+
+def test_spa_absolute_path_rejected(tmp_path):
+    """Absolute paths (Windows and Unix) must be rejected."""
+    from backend.main import _safe_static_file
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    result_win = _safe_static_file("C:\\Windows\\System32\\cmd.exe", dist)
+    result_unix = _safe_static_file("/etc/passwd", dist)
+    assert result_win is None
+    assert result_unix is None
+
+
+def test_spa_spa_route_returns_index_html(tmp_path):
+    """/projects/5 (unknown SPA route) returns index.html."""
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<html/>")
+    cfg = Config(port=8080, frontend_dist=str(dist))
+    app = create_app(cfg)
+    client = TestClient(app, base_url="http://localhost:8080", raise_server_exceptions=False)
+    resp = client.get("/projects/5")
+    assert resp.status_code == 200
+
+
+def test_spa_static_file_served(tmp_path):
+    """/favicon.svg returns the actual file if it exists in dist."""
+    from backend.main import _safe_static_file
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "favicon.svg").write_text("<svg/>")
+    result = _safe_static_file("favicon.svg", dist)
+    assert result is not None
+
