@@ -3,28 +3,36 @@ import { formatRelativeDate, formatAbsoluteDate } from '@/utils/date'
 export interface RelativeDateProps {
   /** ISO date string YYYY-MM-DD */
   date: string
-  /** Override "today" for testing — defaults to client's local today */
+  /** Override 'today' for testing -- defaults to client's local today */
   today?: string
+  /**
+   * When true, label starts lowercase for mid-sentence use.
+   * Per ui-guidelines §7: 'in 3 days', 'yesterday', 'today'
+   */
+  inline?: boolean
 }
 
-/**
- * Renders a <time> element with:
- *   - datetime="YYYY-MM-DD"
- *   - title="Thu, 29 Oct 2026"  (absolute date on hover)
- *   - text: relative label per ui-guidelines §7
- * Styled with a dotted underline.
- */
-export function RelativeDate({ date, today }: RelativeDateProps) {
+
+export function RelativeDate({ date, today, inline = false }: RelativeDateProps) {
   const label = formatRelativeDate(date, today)
   const title = formatAbsoluteDate(date)
+
+  const displayLabel = inline
+    ? `${label.charAt(0).toLowerCase()}${label.slice(1)}`
+    : label
+
+  const ariaLabel = inline
+    ? `${displayLabel}, ${title}`
+    : `${label}, ${title}`
 
   return (
     <time
       dateTime={date}
       title={title}
-      className="underline decoration-dotted cursor-default"
+      aria-label={ariaLabel}
+      className='underline decoration-dotted cursor-default'
     >
-      {label}
+      {displayLabel}
     </time>
   )
 }

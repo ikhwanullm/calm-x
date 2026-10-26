@@ -29,27 +29,23 @@ describe('formatRelativeDate', () => {
   })
 
   it('returns absolute date without year for same year beyond 90 days', () => {
-    const result = formatRelativeDate('2025-01-01', today)  // more than 90 days ago, same year
-    expect(result).toBe('1 Jan')
+    expect(formatRelativeDate('2025-01-01', today)).toBe('1 Jan')
   })
 
   it('returns absolute date with year for different year beyond 90 days', () => {
-    const result = formatRelativeDate('2024-06-01', today)
-    expect(result).toContain('2024')
+    expect(formatRelativeDate('2024-06-01', today)).toContain('2024')
   })
 })
 
 describe('formatAbsoluteDate', () => {
   it('returns formatted date string', () => {
-    const result = formatAbsoluteDate('2026-10-29')
-    expect(result).toBe('Thu, 29 Oct 2026')
+    expect(formatAbsoluteDate('2026-10-29')).toBe('Thu, 29 Oct 2026')
   })
 })
 
 describe('getLocalToday', () => {
   it('returns YYYY-MM-DD format', () => {
-    const result = getLocalToday()
-    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(getLocalToday()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 })
 
@@ -77,5 +73,23 @@ describe('RelativeDate component', () => {
   it('has dotted underline class', () => {
     render(<RelativeDate date="2025-10-15" today="2025-10-15" />)
     expect(screen.getByRole('time').className).toContain('decoration-dotted')
+  })
+
+  it('has aria-label combining relative and absolute date', () => {
+    render(<RelativeDate date="2025-10-16" today="2025-10-15" />)
+    const el = screen.getByRole('time')
+    expect(el.getAttribute('aria-label')).toMatch(/Tomorrow/)
+    expect(el.getAttribute('aria-label')).toMatch(/Oct 2025/)
+  })
+
+  it('inline prop lowercases the label', () => {
+    render(<RelativeDate date="2025-10-16" today="2025-10-15" inline />)
+    expect(screen.getByRole('time').textContent).toBe('tomorrow')
+  })
+
+  it('inline prop lowercases aria-label too', () => {
+    render(<RelativeDate date="2025-10-16" today="2025-10-15" inline />)
+    const label = screen.getByRole('time').getAttribute('aria-label')
+    expect(label?.charAt(0)).toBe('t')  // lowercase 'tomorrow'
   })
 })
