@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { apiClient } from '../api/client'
+import { apiClient, extractApiError } from '../api/client'
 
 describe('API client', () => {
   it('has baseURL set to /api', () => {
@@ -21,5 +21,18 @@ describe('API client', () => {
       (headers as Record<string, unknown>)['Content-Type'] ??
       (headers.common as Record<string, unknown> | undefined)?.['Content-Type']
     expect(String(ct)).toContain('application/json')
+  })
+})
+
+describe('extractApiError helper', () => {
+  it('returns message from plain Error', () => {
+    const result = extractApiError(new Error('Something went wrong'))
+    expect(result.message).toBe('Something went wrong')
+    expect(result.type).toBe('unknown_error')
+  })
+
+  it('returns message for unknown type', () => {
+    const result = extractApiError('string error')
+    expect(result.type).toBe('unknown_error')
   })
 })

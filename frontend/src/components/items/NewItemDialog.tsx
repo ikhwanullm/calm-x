@@ -8,6 +8,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useCreateItem } from '@/hooks/useItems'
+import { extractApiError } from '@/api/client'
+import { extractApiError } from '@/api/client'
 import type { ItemType } from '@/types/models'
 import { cn } from '@/lib/utils'
 
@@ -57,15 +59,22 @@ export function NewItemDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!validate()) return
-    await createItem.mutateAsync(
-      { type, title: title.trim() },
-      {
-        onSuccess: (item) => {
-          onCreated?.(item.id)
-          handleClose()
-        },
+    try {
+      const item = await createItem.mutateAsync({ type, title: title.trim() })
+      onCreated?.(item.id)
+      handleClose()
+    } catch (err) {
+      const apiErr = extractApiError(err)
+      if (apiErr.fields) {
+        // Show server validation errors inline under the relevant fields
+        const newErrors: Record<string, string> = {}
+        for (const [field, messages] of Object.entries(apiErr.fields)) {
+          newErrors[field === '' ? 'title' : field] = messages[0] ?? 'Invalid'
+        }
+        setErrors(newErrors)
       }
-    )
+      // notify.error is called by useCreateItem.onError for non-field errors
+    }
   }
 
   return (
