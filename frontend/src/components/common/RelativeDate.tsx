@@ -1,12 +1,30 @@
+import { formatRelativeDate, formatAbsoluteDate } from '@/utils/date'
+
 export interface RelativeDateProps {
-  date: string // YYYY-MM-DD
+  /** ISO date string YYYY-MM-DD */
+  date: string
+  /** Override "today" for testing — defaults to client's local today */
+  today?: string
 }
 
-/** Stub — replaced by full implementation in task 1.4. */
-export function RelativeDate({ date }: RelativeDateProps) {
+/**
+ * Renders a <time> element with:
+ *   - datetime="YYYY-MM-DD"
+ *   - title="Thu, 29 Oct 2026"  (absolute date on hover)
+ *   - text: relative label per ui-guidelines §7
+ * Styled with a dotted underline.
+ */
+export function RelativeDate({ date, today }: RelativeDateProps) {
+  const label = formatRelativeDate(date, today)
+  const title = formatAbsoluteDate(date)
+
   return (
-    <time dateTime={date} title={date} className="underline decoration-dotted">
-      {date}
+    <time
+      dateTime={date}
+      title={title}
+      className="underline decoration-dotted cursor-default"
+    >
+      {label}
     </time>
   )
 }
