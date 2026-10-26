@@ -10,3 +10,6 @@ export { RelativeDate } from './RelativeDate'
 export type { RelativeDateProps } from './RelativeDate'
 export { ProgressBar } from './ProgressBar'
 export type { ProgressBarProps } from './ProgressBar'
+
+export { EmptyState } from './EmptyState'
+export type { EmptyStateProps, EmptyStateAction } from './EmptyState'
