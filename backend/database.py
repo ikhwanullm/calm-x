@@ -1,4 +1,4 @@
-﻿"""Database engine, session, and migration bootstrap."""
+"""Database engine, session, and migration bootstrap."""
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,4 @@
-﻿# Implementation Plan: Calm-X PARA Task Manager
+# Implementation Plan: Calm-X PARA Task Manager
 
 ## Overview
 

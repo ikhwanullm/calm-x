@@ -1,4 +1,4 @@
-﻿"""Application-wide exception hierarchy for Calm-X."""
+"""Application-wide exception hierarchy for Calm-X."""
 from __future__ import annotations
 
 

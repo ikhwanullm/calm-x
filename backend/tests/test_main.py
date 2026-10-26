@@ -1,4 +1,4 @@
-﻿"""Tests for main.py."""
+"""Tests for main.py."""
 import pytest
 from fastapi.testclient import TestClient
 

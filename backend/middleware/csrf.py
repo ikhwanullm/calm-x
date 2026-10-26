@@ -1,4 +1,4 @@
-﻿"""CSRF protection middleware for Calm-X.
+"""CSRF protection middleware for Calm-X.
 
 Strategy:
 - All non-GET/HEAD/OPTIONS requests must include ``X-Calm-X: 1`` header.

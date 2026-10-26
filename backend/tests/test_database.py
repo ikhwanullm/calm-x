@@ -1,4 +1,4 @@
-﻿"""Tests for database.py."""
+"""Tests for database.py."""
 import tempfile
 from pathlib import Path
 

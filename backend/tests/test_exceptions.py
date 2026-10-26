@@ -1,4 +1,4 @@
-﻿"""Tests for exceptions.py."""
+"""Tests for exceptions.py."""
 import pytest
 
 from backend.exceptions import (

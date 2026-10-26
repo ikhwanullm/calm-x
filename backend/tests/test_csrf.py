@@ -1,4 +1,4 @@
-﻿"""Tests for CSRF middleware."""
+"""Tests for CSRF middleware."""
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
