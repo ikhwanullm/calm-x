@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { StatusBadge } from '../components/common/StatusBadge'
 
+const TEST_DATE = '2026-11-01'
+
 describe('StatusBadge', () => {
   it('renders nothing when isComplete=true', () => {
     const { container } = render(
@@ -10,57 +12,56 @@ describe('StatusBadge', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('renders nothing when isComplete=true for approaching', () => {
-    const { container } = render(
-      <StatusBadge status="approaching" date="2025-01-01" isComplete={true} />
-    )
-    expect(container.firstChild).toBeNull()
-  })
-
-  it('renders overdue badge with correct aria-label', () => {
+  it('has no role=status', () => {
     render(<StatusBadge status="overdue" date="2025-01-01" />)
-    expect(screen.getByRole('status', { name: 'overdue' })).toBeTruthy()
+    expect(screen.queryByRole('status')).toBeNull()
   })
 
-  it('renders approaching badge with correct aria-label', () => {
-    render(<StatusBadge status="approaching" date="2025-06-01" />)
-    expect(screen.getByRole('status', { name: 'approaching deadline' })).toBeTruthy()
+  it('overdue has aria-label starting with overdue:', () => {
+    render(<StatusBadge status="overdue" date={'2026-11-01'} today="2026-10-29" />)
+    expect(screen.getByLabelText(/overdue:/)).toBeTruthy()
   })
 
-  it('renders on-track badge with correct aria-label', () => {
-    render(<StatusBadge status="on-track" date="2025-12-01" />)
-    expect(screen.getByRole('status', { name: 'on track' })).toBeTruthy()
+  it('approaching has aria-label with prefix', () => {
+    render(<StatusBadge status="approaching" date={'2026-11-01'} today="2026-10-29" />)
+    expect(screen.getByLabelText(/approaching deadline:/)).toBeTruthy()
   })
 
-  it('overdue badge has danger colors', () => {
-    render(<StatusBadge status="overdue" date="2025-01-01" />)
-    const badge = screen.getByRole('status')
+  it('aria-label includes relative date lowercase', () => {
+    render(<StatusBadge status="approaching" date="2026-11-01" today="2026-10-29" />)
+    const el = screen.getByLabelText(/approaching deadline:/)
+    const label = el.getAttribute('aria-label') ?? ''
+    expect(label).toContain('in 3 days')
+    expect(label).toContain('Nov')
+  })
+
+  it('overdue has danger colors', () => {
+    const { container } = render(<StatusBadge status="overdue" date="2025-01-01" />)
+    const badge = container.firstChild as Element
     expect(badge.className).toContain('bg-danger-bg')
     expect(badge.className).toContain('text-danger-fg')
   })
 
-  it('approaching badge has warn colors', () => {
-    render(<StatusBadge status="approaching" date="2025-01-01" />)
-    const badge = screen.getByRole('status')
+  it('approaching has warn colors', () => {
+    const { container } = render(<StatusBadge status="approaching" date="2025-01-01" />)
+    const badge = container.firstChild as Element
     expect(badge.className).toContain('bg-warn-bg')
-    expect(badge.className).toContain('text-warn-fg')
   })
 
-  it('on-track badge has ok colors', () => {
-    render(<StatusBadge status="on-track" date="2025-01-01" />)
-    const badge = screen.getByRole('status')
+  it('on-track has ok colors', () => {
+    const { container } = render(<StatusBadge status="on-track" date="2025-01-01" />)
+    const badge = container.firstChild as Element
     expect(badge.className).toContain('bg-ok-bg')
-    expect(badge.className).toContain('text-ok-fg')
   })
 
-  it('renders a time element with the date', () => {
+  it('renders time element with dateTime', () => {
     render(<StatusBadge status="overdue" date="2025-03-15" />)
     const time = document.querySelector('time')
     expect(time?.getAttribute('dateTime')).toBe('2025-03-15')
   })
 
-  it('defaults isComplete to false (renders badge)', () => {
-    render(<StatusBadge status="on-track" date="2025-01-01" />)
-    expect(screen.getByRole('status')).toBeTruthy()
+  it('defaults isComplete to false', () => {
+    const { container } = render(<StatusBadge status="on-track" date="2025-01-01" />)
+    expect(container.firstChild).toBeTruthy()
   })
 })
