@@ -53,4 +53,26 @@ describe('Button', () => {
     render(<Button className="custom-class">X</Button>)
     expect(screen.getByRole('button').className).toContain('custom-class')
   })
+
+  it('has type=button by default', () => {
+    render(<Button>X</Button>)
+    expect(screen.getByRole('button').getAttribute('type')).toBe('button')
+  })
+
+  it('type can be overridden to submit', () => {
+    render(<Button type="submit">X</Button>)
+    expect(screen.getByRole('button').getAttribute('type')).toBe('submit')
+  })
+
+  it('icon-only default size has w-11 class', () => {
+    render(<Button iconOnly size="default" aria-label="Action">X</Button>)
+    expect(screen.getByRole('button').className).toContain('w-11')
+  })
+
+  it('icon-only sm size has w-9 class', () => {
+    render(<Button iconOnly size="sm" aria-label="Action">X</Button>)
+    const cls = screen.getByRole('button').className
+    expect(cls).toContain('w-9')
+    expect(cls).not.toContain('w-11')
+  })
 })

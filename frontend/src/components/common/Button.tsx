@@ -33,6 +33,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = 'primary',
       size = 'default',
       iconOnly = false,
+      type = 'button',
       className,
       children,
       ...props
@@ -42,6 +43,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        type={type}
         className={cn(
           // Base
           'inline-flex items-center justify-center gap-2',
@@ -53,7 +55,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           variantClasses[variant],
           sizeClasses[size],
           // Icon-only: square, no horizontal padding
-          iconOnly && 'px-0 w-11 data-[size=sm]:w-9',
+          iconOnly && (size === 'sm' ? 'px-0 w-9' : 'px-0 w-11'),
           className
         )}
         {...props}
