@@ -139,3 +139,39 @@ def restore_item(session: Session, item_id: int) -> ItemResponse:
     item.updated_at = now_utc()
     session.flush()
     return _to_response(session, item)
+
+
+def complete_project(session: Session, item_id: int) -> ItemResponse:
+    """Mark a project as completed. Status-only — does NOT complete tasks.
+
+    Per R4.10: completing a project changes its status; it does not close tasks.
+    After calling this, the caller should prompt the user to archive (R1.6).
+    """
+    item = session.get(Item, item_id)
+    if item is None:
+        raise NotFoundError(f"Item {item_id} not found")
+    guard_not_archived(item)
+    if item.type != "project":
+        raise ConflictError(f"Item {item_id} is not a project")
+    item.project_status = "completed"
+    item.project_completed_at = now_utc()
+    item.updated_at = now_utc()
+    session.flush()
+    return _to_response(session, item)
+
+
+def reopen_project(session: Session, item_id: int) -> ItemResponse:
+    """Reopen a completed project (set status back to active)."""
+    item = session.get(Item, item_id)
+    if item is None:
+        raise NotFoundError(f"Item {item_id} not found")
+    guard_not_archived(item)
+    if item.type != "project":
+        raise ConflictError(f"Item {item_id} is not a project")
+    if item.project_status != "completed":
+        raise ConflictError(f"Project {item_id} is not completed")
+    item.project_status = "active"
+    item.project_completed_at = None
+    item.updated_at = now_utc()
+    session.flush()
+    return _to_response(session, item)

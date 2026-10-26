@@ -137,3 +137,53 @@ def test_restore_active_item_raises(db_session):
     item = _project(db_session)
     with pytest.raises(ConflictError):
         item_service.restore_item(db_session, item.id)
+
+
+# ---------------------------------------------------------------------------
+# Project completion
+# ---------------------------------------------------------------------------
+
+def test_complete_project(db_session):
+    item = _project(db_session)
+    resp = item_service.complete_project(db_session, item.id)
+    assert resp.project_status == "completed"
+
+
+def test_complete_project_does_not_complete_tasks(db_session):
+    """R4.10: completing a project does not complete its tasks."""
+    item = _project(db_session)
+    task = Task(
+        item_id=item.id, title="Open task",
+        description="", notes="",
+        priority="medium", is_complete=0, sort_order=0,
+        created_at=now_utc(), updated_at=now_utc(),
+    )
+    db_session.add(task)
+    db_session.flush()
+    item_service.complete_project(db_session, item.id)
+    db_session.refresh(task)
+    assert task.is_complete == 0  # task is still open
+
+
+def test_complete_non_project_raises(db_session):
+    area = Item(
+        type="area", title="Work", description="", notes="",
+        created_at=now_utc(), updated_at=now_utc(),
+    )
+    db_session.add(area)
+    db_session.flush()
+    with pytest.raises(ConflictError):
+        item_service.complete_project(db_session, area.id)
+
+
+def test_reopen_project(db_session):
+    item = _project(db_session, project_status="completed")
+    resp = item_service.reopen_project(db_session, item.id)
+    assert resp.project_status == "active"
+    assert resp.project_completed_at is None
+
+
+def test_reopen_active_project_raises(db_session):
+    item = _project(db_session)
+    with pytest.raises(ConflictError):
+        item_service.reopen_project(db_session, item.id)
