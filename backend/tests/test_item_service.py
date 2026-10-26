@@ -38,20 +38,20 @@ def _project(session, title="Test Project", **kw):
 # ---------------------------------------------------------------------------
 
 def test_create_project(db_session):
-    data = ProjectCreate(title="My Project", project_goal="Goal")
+    data = ProjectCreate(type="project", title="My Project", project_goal="Goal")
     resp = item_service.create_item(db_session, data)
     assert resp.title == "My Project"
     assert resp.type == "project"
 
 
 def test_create_area(db_session):
-    data = AreaCreate(title="Work", area_maintenance_notes="Weekly review")
+    data = AreaCreate(type="area", title="Work", area_maintenance_notes="Weekly review")
     resp = item_service.create_item(db_session, data)
     assert resp.type == "area"
 
 
 def test_create_resource(db_session):
-    data = ResourceCreate(title="Docs")
+    data = ResourceCreate(type="resource", title="Docs")
     resp = item_service.create_item(db_session, data)
     assert resp.type == "resource"
 
@@ -105,8 +105,8 @@ def test_list_items_include_archived(db_session):
 
 
 def test_list_items_type_filter(db_session):
-    item_service.create_item(db_session, ProjectCreate(title="P"))
-    item_service.create_item(db_session, AreaCreate(title="A"))
+    item_service.create_item(db_session, ProjectCreate(type="project", title="P"))
+    item_service.create_item(db_session, AreaCreate(type="area", title="A"))
     results = item_service.list_items(db_session, type_filter="project")
     assert all(r.type == "project" for r in results)
 

@@ -74,25 +74,19 @@ def create_item(
 
 
 def update_item(session: Session, item_id: int, data: ItemUpdate) -> Item:
-    """Partially update an item (archived items are rejected)."""
+    """Partially update an item. Uses exclude_unset so only provided fields change.
+
+    Nullable fields (project_deadline, project_goal, area_maintenance_notes)
+    can be explicitly set to None by including them in the request.
+    Title cannot be set to None or empty.
+    """
     item = _get_or_404(session, item_id)
     _guard_not_archived(item)
 
-    if data.title is not None:
-        item.title = data.title
-    if data.description is not None:
-        item.description = data.description
-    if data.notes is not None:
-        item.notes = data.notes
-
-    if item.type == "project":
-        if data.project_goal is not None:
-            item.project_goal = data.project_goal
-        if data.project_deadline is not None:
-            item.project_deadline = data.project_deadline
-    elif item.type == "area":
-        if data.area_maintenance_notes is not None:
-            item.area_maintenance_notes = data.area_maintenance_notes
+    # Only update fields that were explicitly provided in the request body
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(item, field, value)
 
     item.updated_at = _now_utc()
     session.flush()

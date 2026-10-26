@@ -72,6 +72,18 @@ def init_database(db_path: Path) -> None:
     logger.info("Database initialised at %s", db_path)
 
 
+
+def make_session() -> Session:
+    """Create a Session without auto-commit.
+
+    Caller is responsible for session.commit()/rollback()/close().
+    Used by FastAPI endpoints that commit explicitly before returning a response.
+    """
+    if _SessionFactory is None:
+        raise RuntimeError("Database not initialised. Call init_database() first.")
+    return _SessionFactory()
+
+
 def _run_migrations(db_url: str) -> None:
     """Run Alembic migrations programmatically (no alembic.ini required)."""
     from pathlib import Path as _Path

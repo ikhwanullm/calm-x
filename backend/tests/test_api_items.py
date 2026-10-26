@@ -42,20 +42,20 @@ HEADERS = {"X-Calm-X": "1"}
 
 
 def test_create_project(client):
-    resp = client.post("/api/items/", json={"type": "project", "title": "My Project"}, headers=HEADERS)
+    resp = client.post("/api/items", json={"type": "project", "title": "My Project"}, headers=HEADERS)
     assert resp.status_code == 201
     assert resp.json()["type"] == "project"
     assert resp.json()["title"] == "My Project"
 
 
 def test_create_area(client):
-    resp = client.post("/api/items/", json={"type": "area", "title": "Work"}, headers=HEADERS)
+    resp = client.post("/api/items", json={"type": "area", "title": "Work"}, headers=HEADERS)
     assert resp.status_code == 201
     assert resp.json()["type"] == "area"
 
 
 def test_get_item(client):
-    create_resp = client.post("/api/items/", json={"type": "resource", "title": "Docs"}, headers=HEADERS)
+    create_resp = client.post("/api/items", json={"type": "resource", "title": "Docs"}, headers=HEADERS)
     item_id = create_resp.json()["id"]
     resp = client.get(f"/api/items/{item_id}")
     assert resp.status_code == 200
@@ -68,22 +68,22 @@ def test_get_item_not_found(client):
 
 
 def test_list_items(client):
-    client.post("/api/items/", json={"type": "project", "title": "P1"}, headers=HEADERS)
-    client.post("/api/items/", json={"type": "area", "title": "A1"}, headers=HEADERS)
-    resp = client.get("/api/items/")
+    client.post("/api/items", json={"type": "project", "title": "P1"}, headers=HEADERS)
+    client.post("/api/items", json={"type": "area", "title": "A1"}, headers=HEADERS)
+    resp = client.get("/api/items")
     assert resp.status_code == 200
     assert len(resp.json()) == 2
 
 
 def test_list_items_type_filter(client):
-    client.post("/api/items/", json={"type": "project", "title": "P1"}, headers=HEADERS)
-    client.post("/api/items/", json={"type": "area", "title": "A1"}, headers=HEADERS)
-    resp = client.get("/api/items/?type=project")
+    client.post("/api/items", json={"type": "project", "title": "P1"}, headers=HEADERS)
+    client.post("/api/items", json={"type": "area", "title": "A1"}, headers=HEADERS)
+    resp = client.get("/api/items?type=project")
     assert all(item["type"] == "project" for item in resp.json())
 
 
 def test_update_item(client):
-    create_resp = client.post("/api/items/", json={"type": "project", "title": "Old"}, headers=HEADERS)
+    create_resp = client.post("/api/items", json={"type": "project", "title": "Old"}, headers=HEADERS)
     item_id = create_resp.json()["id"]
     resp = client.put(f"/api/items/{item_id}", json={"title": "New"}, headers=HEADERS)
     assert resp.status_code == 200
@@ -91,7 +91,7 @@ def test_update_item(client):
 
 
 def test_delete_item(client):
-    create_resp = client.post("/api/items/", json={"type": "project", "title": "ToDelete"}, headers=HEADERS)
+    create_resp = client.post("/api/items", json={"type": "project", "title": "ToDelete"}, headers=HEADERS)
     item_id = create_resp.json()["id"]
     resp = client.delete(f"/api/items/{item_id}", headers=HEADERS)
     assert resp.status_code == 204
@@ -100,7 +100,7 @@ def test_delete_item(client):
 
 
 def test_archive_item(client):
-    create_resp = client.post("/api/items/", json={"type": "project", "title": "P"}, headers=HEADERS)
+    create_resp = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS)
     item_id = create_resp.json()["id"]
     resp = client.post(f"/api/items/{item_id}/archive", headers=HEADERS)
     assert resp.status_code == 200
@@ -108,7 +108,7 @@ def test_archive_item(client):
 
 
 def test_restore_item(client):
-    create_resp = client.post("/api/items/", json={"type": "project", "title": "P"}, headers=HEADERS)
+    create_resp = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS)
     item_id = create_resp.json()["id"]
     client.post(f"/api/items/{item_id}/archive", headers=HEADERS)
     resp = client.post(f"/api/items/{item_id}/restore", headers=HEADERS)
@@ -117,7 +117,7 @@ def test_restore_item(client):
 
 
 def test_complete_project(client):
-    create_resp = client.post("/api/items/", json={"type": "project", "title": "P"}, headers=HEADERS)
+    create_resp = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS)
     item_id = create_resp.json()["id"]
     resp = client.post(f"/api/items/{item_id}/complete", headers=HEADERS)
     assert resp.status_code == 200
@@ -125,7 +125,7 @@ def test_complete_project(client):
 
 
 def test_reopen_project(client):
-    create_resp = client.post("/api/items/", json={"type": "project", "title": "P"}, headers=HEADERS)
+    create_resp = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS)
     item_id = create_resp.json()["id"]
     client.post(f"/api/items/{item_id}/complete", headers=HEADERS)
     resp = client.post(f"/api/items/{item_id}/reopen", headers=HEADERS)
@@ -135,7 +135,7 @@ def test_reopen_project(client):
 
 def test_update_archived_returns_409(client):
     """Updating an archived item returns 403 (ArchivedItemError)."""
-    create_resp = client.post("/api/items/", json={"type": "project", "title": "P"}, headers=HEADERS)
+    create_resp = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS)
     item_id = create_resp.json()["id"]
     client.post(f"/api/items/{item_id}/archive", headers=HEADERS)
     resp = client.put(f"/api/items/{item_id}", json={"title": "No"}, headers=HEADERS)
@@ -144,8 +144,46 @@ def test_update_archived_returns_409(client):
 
 def test_delete_archived_item_succeeds(client):
     """R7.9: deleting an archived item must succeed."""
-    create_resp = client.post("/api/items/", json={"type": "project", "title": "P"}, headers=HEADERS)
+    create_resp = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS)
     item_id = create_resp.json()["id"]
     client.post(f"/api/items/{item_id}/archive", headers=HEADERS)
     resp = client.delete(f"/api/items/{item_id}", headers=HEADERS)
     assert resp.status_code == 204
+
+
+
+def test_post_without_type_returns_400(client):
+    resp = client.post('/api/items', json={'title': 'No type'}, headers=HEADERS)
+    assert resp.status_code == 400
+    body = resp.json()
+    assert body['type'] == 'validation_error'
+    # discriminator error appears in fields (key may be '' or 'type')
+    assert 'fields' in body
+
+
+def test_update_sets_deadline_to_null(client):
+    r = client.post('/api/items', json={'type': 'project', 'title': 'P', 'project_deadline': '2026-12-31'}, headers=HEADERS)
+    assert r.status_code == 201
+    item_id = r.json()['id']
+    resp = client.put(f'/api/items/{item_id}', json={'project_deadline': None}, headers=HEADERS)
+    assert resp.status_code == 200
+    assert resp.json()['project_deadline'] is None
+
+
+def test_response_area_has_no_project_fields(client):
+    r = client.post('/api/items', json={'type': 'area', 'title': 'My Area'}, headers=HEADERS)
+    assert r.status_code == 201
+    body = r.json()
+    assert 'project_goal' not in body
+    assert 'project_deadline' not in body
+    assert body['type'] == 'area'
+
+
+def test_error_not_swallowed_as_2xx(client):
+    from unittest.mock import patch
+    from backend.exceptions import ConflictError
+    with patch('backend.api.items.item_service.create_item') as mock:
+        mock.side_effect = ConflictError('Simulated conflict')
+        resp = client.post('/api/items', json={'type': 'project', 'title': 'X'}, headers=HEADERS)
+    assert resp.status_code == 409
+    assert resp.json()['type'] == 'conflict_error'

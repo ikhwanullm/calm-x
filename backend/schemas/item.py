@@ -23,7 +23,7 @@ def _calculate_progress(completed: int, total: int) -> int:
 # ---------------------------------------------------------------------------
 
 class ProjectCreate(BaseModel):
-    type: Literal["project"] = "project"
+    type: Literal["project"]
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(default="", max_length=5000)
     notes: str = Field(default="", max_length=10000)
@@ -37,7 +37,7 @@ class ProjectCreate(BaseModel):
 
 
 class AreaCreate(BaseModel):
-    type: Literal["area"] = "area"
+    type: Literal["area"]
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(default="", max_length=5000)
     notes: str = Field(default="", max_length=10000)
@@ -50,7 +50,7 @@ class AreaCreate(BaseModel):
 
 
 class ResourceCreate(BaseModel):
-    type: Literal["resource"] = "resource"
+    type: Literal["resource"]
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(default="", max_length=5000)
     notes: str = Field(default="", max_length=10000)
@@ -80,7 +80,6 @@ class ItemUpdate(BaseModel):
     notes: Optional[str] = Field(default=None, max_length=10000)
     project_goal: Optional[str] = Field(default=None, max_length=500)
     project_deadline: Optional[date] = None
-    project_status: Optional[Literal["active", "completed"]] = None
     area_maintenance_notes: Optional[str] = Field(default=None, max_length=1000)
 
     @field_validator("title", mode="before")

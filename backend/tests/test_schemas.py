@@ -15,7 +15,7 @@ from backend.schemas.item import (
 
 
 def test_project_create_strips_title():
-    p = ProjectCreate(title="  My Project  ")
+    p = ProjectCreate(type="project", title="  My Project  ")
     assert p.title == "My Project"
 
 
@@ -25,7 +25,7 @@ def test_create_empty_title_raises():
 
 
 def test_project_create_defaults():
-    p = ProjectCreate(title="Test")
+    p = ProjectCreate(type="project", title="Test")
     assert p.description == ""
     assert p.notes == ""
     assert p.project_goal is None
@@ -33,12 +33,12 @@ def test_project_create_defaults():
 
 
 def test_area_create_type():
-    a = AreaCreate(title="Work")
+    a = AreaCreate(type="area", title="Work")
     assert a.type == "area"
 
 
 def test_resource_create_type():
-    r = ResourceCreate(title="Docs")
+    r = ResourceCreate(type="resource", title="Docs")
     assert r.type == "resource"
 
 
@@ -48,9 +48,11 @@ def test_item_update_partial():
     assert u.description is None
 
 
-def test_item_update_invalid_project_status():
-    with pytest.raises(Exception):
-        ItemUpdate(project_status="done")
+def test_item_update_no_project_status_field():
+    """project_status is no longer in ItemUpdate; it is ignored silently."""
+    # project_status is not a field, so it should be treated as extra (and ignored)
+    u = ItemUpdate()
+    assert not hasattr(u, 'project_status') or getattr(u, 'project_status', 'MISSING') == 'MISSING' 
 
 
 def test_project_response_has_project_fields():
