@@ -1,4 +1,4 @@
-"""Tests for database.py."""
+﻿"""Tests for database.py."""
 import tempfile
 from pathlib import Path
 
@@ -73,3 +73,20 @@ def test_get_session_raises_if_not_init():
                 pass
     finally:
         db_module._SessionFactory = old
+
+
+def test_listener_on_instance_not_class(tmp_path):
+    """PRAGMA listener registered on engine instance, not Engine class."""
+    from sqlalchemy import create_engine as _create_engine, text as _text
+    from backend.database import get_engine
+
+    db1 = tmp_path / "e1.db"
+    db2 = tmp_path / "e2.db"
+    # get_engine registers listener on instance
+    get_engine(f"sqlite:///{db1}")
+    # A bare engine (no listener) must NOT get WAL / FK from a class-level handler
+    bare = _create_engine(f"sqlite:///{db2}")
+    with bare.connect() as conn:
+        fk = conn.execute(_text("PRAGMA foreign_keys")).scalar()
+    # bare engine has no listener → foreign_keys should be 0 (SQLite default)
+    assert fk == 0, "Listener leaked to bare engine — still registered on class"

@@ -1,4 +1,4 @@
-"""Database engine, session, and migration bootstrap."""
+﻿"""Database engine, session, and migration bootstrap."""
 from __future__ import annotations
 
 import logging
@@ -6,8 +6,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Generator
 
-from sqlalchemy import Engine, event, text
+from sqlalchemy import event, text
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 logger = logging.getLogger(__name__)
@@ -34,9 +35,10 @@ def _configure_sqlite(dbapi_connection, connection_record):  # noqa: ANN001
 
 
 def get_engine(db_url: str) -> Engine:
-    """Create (or return cached) SQLAlchemy engine with SQLite pragmas."""
+    """Create a SQLAlchemy engine with SQLite pragmas on the instance."""
     engine = create_engine(db_url, echo=False)
-    event.listen(Engine, "connect", _configure_sqlite)
+    # Register on instance, not Engine class — avoids duplicate listeners
+    event.listen(engine, "connect", _configure_sqlite)
     return engine
 
 
@@ -83,5 +85,6 @@ def _run_migrations(db_url: str) -> None:
     alembic_cfg.set_main_option("script_location", str(migrations_dir))
     alembic_cfg.set_main_option("sqlalchemy.url", db_url)
     alembic_cfg.set_main_option("prepend_sys_path", ".")
+    alembic_cfg.set_main_option("path_separator", "os")
 
     command.upgrade(alembic_cfg, "head")
