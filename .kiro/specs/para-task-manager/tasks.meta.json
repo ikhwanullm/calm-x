@@ -242,6 +242,1422 @@
         "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
         "timestamp": 1792992819493
       }
+    ],
+    "1.1 Create Button component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996339068
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996373363
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996621287
+      }
+    ],
+    "1.2 Create Card component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996339270
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996627341
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996789068
+      }
+    ],
+    "1.3 Create StatusBadge component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996339405
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996797043
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996927442
+      }
+    ],
+    "1.4 Create RelativeDate component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996339548
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996932979
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792997124794
+      }
+    ],
+    "1.5 Create ProgressBar component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996339689
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792997137859
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792997346687
+      }
+    ],
+    "1.6 Create EmptyState component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996339826
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792997353444
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792997475142
+      }
+    ],
+    "1.7 Create ConfirmDialog component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996339992
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792997482992
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792997802751
+      }
+    ],
+    "1.8 Create Kbd component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996340118
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792997809171
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998003376
+      }
+    ],
+    "1.9 Create PriorityChip component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996340258
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998009436
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998014120
+      }
+    ],
+    "1.10 Create TagChip component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996340405
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998020212
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998026122
+      }
+    ],
+    "1.11 Create Skeleton component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996340612
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998031615
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998152166
+      }
+    ],
+    "1.12 Create date utilities in utils/date.ts": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996340784
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998158945
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998171511
+      }
+    ],
+    "1.13 Create progress utilities in utils/progress.ts": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996340952
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998178925
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998184995
+      }
+    ],
+    "1.14 Unit tests for all base components": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996341105
+      },
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792998192388
+      }
+    ],
+    "1.15 Unit test: calculateProgress(1, 8) returns 13": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996341244
+      }
+    ],
+    "1.16 Checkpoint: Base components complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996341388
+      }
+    ],
+    "2.1 Create SQLAlchemy ORM models for Items": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996341555
+      }
+    ],
+    "2.2 Create Pydantic schemas for Items": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996341687
+      }
+    ],
+    "2.3 Implement ArchivedItemGuard": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996341825
+      }
+    ],
+    "2.4 Implement ItemService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996341955
+      }
+    ],
+    "2.5 Implement archive and restore operations in ItemService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996342079
+      }
+    ],
+    "2.6 Implement project completion operations in ItemService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996342235
+      }
+    ],
+    "2.7 Create Items API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996342351
+      }
+    ],
+    "2.8 Create TypeScript interfaces for Items": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996342489
+      }
+    ],
+    "2.9 Create Item API hooks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996342623
+      }
+    ],
+    "2.10 Create NewItemDialog component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996342761
+      }
+    ],
+    "2.11 Create ItemListView component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996342904
+      }
+    ],
+    "2.12 Create ItemDetailView component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996343033
+      }
+    ],
+    "2.13 Implement inline editing in ItemDetailView": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996343203
+      }
+    ],
+    "2.14 Implement \"Ready for completion\" banner for Projects": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996343349
+      }
+    ],
+    "2.15 Implement \"Mark complete\" / \"Reopen\" actions": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996343538
+      }
+    ],
+    "2.16 Implement item actions menu (⋯)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996343675
+      }
+    ],
+    "2.17 Implement Archive banner for read-only items": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996343883
+      }
+    ],
+    "2.18 Property test: Archived Items Are Read-Only (P10)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996344076
+      }
+    ],
+    "2.19 Property test: Resource Link Cleanup on Item Deletion (P23)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996344247
+      }
+    ],
+    "2.20 REGRESSION TEST: Deleting a Project deletes its tasks (Inbox unchanged)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996344471
+      }
+    ],
+    "2.21 Checkpoint: Items complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996344607
+      }
+    ],
+    "3.1 Create SQLAlchemy ORM models for Tasks and Subtasks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996344755
+      }
+    ],
+    "3.2 Create SQLAlchemy ORM models for Tags and TaskTags": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996344905
+      }
+    ],
+    "3.3 Create SQLAlchemy ORM model for UserPreference": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996345040
+      }
+    ],
+    "3.4 Create Pydantic schemas for Tasks and Subtasks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996345189
+      }
+    ],
+    "3.5 Implement ProgressService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996345329
+      }
+    ],
+    "3.6 Implement TimestampService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996345463
+      }
+    ],
+    "3.7 Implement UserPreferenceService (read-only)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996345589
+      }
+    ],
+    "3.8 Implement TagService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996345717
+      }
+    ],
+    "3.9 Create Tags API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996345856
+      }
+    ],
+    "3.10 Create Settings API router (read-only)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996346008
+      }
+    ],
+    "3.11 Implement TaskService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996346185
+      }
+    ],
+    "3.12 Implement task movement in TaskService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996346433
+      }
+    ],
+    "3.13 Implement task completion with subtask cascade": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996346678
+      }
+    ],
+    "3.14 Implement task reordering": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996346841
+      }
+    ],
+    "3.15 Implement SubtaskService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996346988
+      }
+    ],
+    "3.16 Implement subtask completion synchronization": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996347133
+      }
+    ],
+    "3.17 Create Tasks API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996347275
+      }
+    ],
+    "3.18 Create Subtasks API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996347401
+      }
+    ],
+    "3.19 Create TypeScript interfaces for Tasks and Subtasks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996347543
+      }
+    ],
+    "3.20 Create Task API hooks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996347671
+      }
+    ],
+    "3.21 Create Subtask API hooks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996347803
+      }
+    ],
+    "3.22 Create Tag API hooks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996347935
+      }
+    ],
+    "3.23 Create TaskRow component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996348076
+      }
+    ],
+    "3.24 Create TaskList component with drag-and-drop": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996348218
+      }
+    ],
+    "3.25 Create TaskDrawer component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996348385
+      }
+    ],
+    "3.26 Implement \"Move to…\" combobox in TaskDrawer": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996348597
+      }
+    ],
+    "3.27 Implement Tag combobox in TaskDrawer": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996348748
+      }
+    ],
+    "3.28 Implement subtask sync UI with confirmation prompt": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996348880
+      }
+    ],
+    "3.29 Implement optimistic updates with rollback": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996349011
+      }
+    ],
+    "3.30 Add Tasks section to Item detail views": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996349162
+      }
+    ],
+    "3.31 Property test: Progress Calculation Consistency (P1)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996349291
+      }
+    ],
+    "3.32 Property test: Task Completion Cascades to Subtasks (P2)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996349436
+      }
+    ],
+    "3.33 Property test: Task Incompletion Cascades to Subtasks (P3)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996349575
+      }
+    ],
+    "3.34 Property test: All Subtasks Complete Triggers Task Completion (P4)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996349726
+      }
+    ],
+    "3.35 Property test: Subtask Incompletion Propagates to Task (P5)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996349872
+      }
+    ],
+    "3.36 Property test: Adding Subtask to Complete Task (P6)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996350003
+      }
+    ],
+    "3.37 Property test: Task Ownership Exclusivity (P14)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996350156
+      }
+    ],
+    "3.38 Property test: Deadline Status Badge Correctness Frontend (P15)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996350304
+      }
+    ],
+    "3.39 Property test: Task Maximum Per Item Enforced (P21)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996350459
+      }
+    ],
+    "3.40 REGRESSION TEST: /incomplete endpoint persists is_complete=false": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996350695
+      }
+    ],
+    "3.41 Unit test: Backend calculateProgress(1, 8) returns 13": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996350838
+      }
+    ],
+    "3.42 Checkpoint: Tasks & Subtasks complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996350997
+      }
+    ],
+    "4.1 Create InboxView page": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996351140
+      }
+    ],
+    "4.2 Implement Quick Capture form": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996351277
+      }
+    ],
+    "4.3 Add \"Move to…\" button on each Inbox task row": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996351423
+      }
+    ],
+    "4.4 Create Quick Capture global dialog": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996351562
+      }
+    ],
+    "4.5 Implement useShortcuts hook": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996351709
+      }
+    ],
+    "4.6 Create DashboardService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996351848
+      }
+    ],
+    "4.7 Create Dashboard API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996351974
+      }
+    ],
+    "4.8 Create Dashboard page": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996352102
+      }
+    ],
+    "4.9 Implement Dashboard summary cards": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996352223
+      }
+    ],
+    "4.10 Implement \"Needs attention\" section": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996352349
+      }
+    ],
+    "4.11 Implement \"Active projects\" section": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996352478
+      }
+    ],
+    "4.12 Add \"Start weekly review\" button": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996352610
+      }
+    ],
+    "4.13 Update Sidebar with Inbox count pill": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996352740
+      }
+    ],
+    "4.14 Property test: Dashboard Progress Excludes Ineligible Projects (P13)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996352875
+      }
+    ],
+    "4.15 REGRESSION TEST: Overdue items appear in Dashboard \"Needs attention\"": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996353011
+      }
+    ],
+    "4.16 Checkpoint: Inbox & Dashboard complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996353147
+      }
+    ],
+    "5.1 Implement TypeConversionService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996353288
+      }
+    ],
+    "5.2 Add convert endpoint to Items API": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996353470
+      }
+    ],
+    "5.3 Create TypeConversionDialog component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996353653
+      }
+    ],
+    "5.4 Create SQLAlchemy models for ReferenceLink and ResourceLink": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996353803
+      }
+    ],
+    "5.5 Create Pydantic schemas for links": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996353940
+      }
+    ],
+    "5.6 Implement ReferenceLinkService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996354072
+      }
+    ],
+    "5.7 Implement ResourceLinkService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996354212
+      }
+    ],
+    "5.8 Create Links API routers": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996354403
+      }
+    ],
+    "5.9 Create Reference Links UI": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996354572
+      }
+    ],
+    "5.10 Create Resource Links UI": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996354777
+      }
+    ],
+    "5.11 Property test: Type Conversion Preserves Common Data (P7)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996355027
+      }
+    ],
+    "5.12 Property test: Type Conversion Hides but Preserves Fields (P8)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996355179
+      }
+    ],
+    "5.13 Property test: Tasks Move to Inbox on Resource Conversion (P9)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996355349
+      }
+    ],
+    "5.14 Property test: Reference Link Maximum Enforced (P19)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996355487
+      }
+    ],
+    "5.15 Property test: Resource Link Maximum Enforced (P20)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996355635
+      }
+    ],
+    "5.16 Property test: Resource Link Cleanup on Type Conversion (P22)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996355782
+      }
+    ],
+    "5.17 Checkpoint: Type Conversion complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996355932
+      }
+    ],
+    "6.1 Create Tag management UI in Settings": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996356065
+      }
+    ],
+    "6.2 Implement filter query builder for tasks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996356203
+      }
+    ],
+    "6.3 Add filter parameters to GET /api/tasks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996356340
+      }
+    ],
+    "6.4 Create FilterPanel component": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996356480
+      }
+    ],
+    "6.5 Display filter results": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996356616
+      }
+    ],
+    "6.6 Implement SearchService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996356755
+      }
+    ],
+    "6.7 Create Search API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996356912
+      }
+    ],
+    "6.8 Create Command Palette using cmdk": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996357059
+      }
+    ],
+    "6.9 Create Shortcut Help dialog": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996357211
+      }
+    ],
+    "6.10 Wire up all shortcuts": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996357388
+      }
+    ],
+    "6.11 Property test: Tag Filter Uses OR Logic (P11)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996357582
+      }
+    ],
+    "6.12 Property test: Combined Filters Use AND Logic (P12)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996357740
+      }
+    ],
+    "6.13 Checkpoint: Filters, Search, Shortcuts complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996357909
+      }
+    ],
+    "7.1 Create ArchiveView page": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996358067
+      }
+    ],
+    "7.2 Implement archive search": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996358231
+      }
+    ],
+    "7.3 Implement archive filters": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996358378
+      }
+    ],
+    "7.4 Implement Restore action": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996358536
+      }
+    ],
+    "7.5 Implement Delete action with confirmation": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996358682
+      }
+    ],
+    "7.6 Checkpoint: Archive View complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996358821
+      }
+    ],
+    "8.1 Create SQLAlchemy models for Templates": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996358959
+      }
+    ],
+    "8.2 Create Pydantic schemas for Templates": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996359140
+      }
+    ],
+    "8.3 Implement TemplateService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996359339
+      }
+    ],
+    "8.4 Implement create project from template": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996359557
+      }
+    ],
+    "8.5 Create Templates API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996359881
+      }
+    ],
+    "8.6 Create Templates page": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996360072
+      }
+    ],
+    "8.7 Create Template editor": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996360262
+      }
+    ],
+    "8.8 Implement \"Create from template\" flow": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996360453
+      }
+    ],
+    "8.9 Enable \"Start from template\" in NewItemDialog": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996360671
+      }
+    ],
+    "8.10 Checkpoint: Templates complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996360879
+      }
+    ],
+    "9.1 Create SQLAlchemy model for WeeklyReview": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996361040
+      }
+    ],
+    "9.2 Create Pydantic schemas for WeeklyReview": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996361198
+      }
+    ],
+    "9.3 Implement WeeklyReviewService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996361341
+      }
+    ],
+    "9.4 Create Weekly Review API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996361505
+      }
+    ],
+    "9.5 Create Weekly Review page with focused layout": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996361656
+      }
+    ],
+    "9.6 Implement Inbox review step": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996361805
+      }
+    ],
+    "9.7 Implement Projects review step": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996361956
+      }
+    ],
+    "9.8 Implement Areas review step": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996362108
+      }
+    ],
+    "9.9 Implement Resources review step": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996362277
+      }
+    ],
+    "9.10 Implement Summary step": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996362440
+      }
+    ],
+    "9.11 Implement immediate save for all review actions": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996362595
+      }
+    ],
+    "9.12 Implement review completion": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996362751
+      }
+    ],
+    "9.13 Property test: Weekly Review Action Persistence (P16)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996362901
+      }
+    ],
+    "9.14 Checkpoint: Weekly Review complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996363052
+      }
+    ],
+    "10.1 Implement UserPreferenceService (update operations)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996363198
+      }
+    ],
+    "10.2 Add PUT to Settings API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996363335
+      }
+    ],
+    "10.3 Implement BackupService": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996363484
+      }
+    ],
+    "10.4 Create Backup API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996363629
+      }
+    ],
+    "10.5 Implement export functionality": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996363766
+      }
+    ],
+    "10.6 Implement import with validation": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996363901
+      }
+    ],
+    "10.7 Create Import/Export API router": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996364039
+      }
+    ],
+    "10.8 Create Settings page": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996364197
+      }
+    ],
+    "10.9 Implement threshold setting UI": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996364356
+      }
+    ],
+    "10.10 Implement Data section in Settings": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996364515
+      }
+    ],
+    "10.11 Implement Backup list in Settings": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996364813
+      }
+    ],
+    "10.12 Update ThemeProvider to use backend preference": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996364973
+      }
+    ],
+    "10.13 Property test: Backup Retention Policy (P17)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996365133
+      }
+    ],
+    "10.14 Property test: Import Merge Generates New IDs (P18)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996365292
+      }
+    ],
+    "10.15 Property test: UTCDateTime Round-Trip Consistency (P24)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996365443
+      }
+    ],
+    "10.16 Property test: CSRF Protection Enforced (P25)": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996365597
+      }
+    ],
+    "10.17 Checkpoint: Settings, Backup, Import/Export complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996365785
+      }
+    ],
+    "11.1 Implement focus trap for dialogs and drawers": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996365935
+      }
+    ],
+    "11.2 Implement focus management after deletion": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996366076
+      }
+    ],
+    "11.3 Verify contrast in both themes": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996366220
+      }
+    ],
+    "11.4 Verify accessible elements": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996366368
+      }
+    ],
+    "11.5 Verify landmarks": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996366525
+      }
+    ],
+    "11.6 Implement responsive 768-1279px layout": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996366687
+      }
+    ],
+    "11.7 Verify touch targets": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996366845
+      }
+    ],
+    "11.8 REGRESSION TEST: SPA fallback serves static files correctly": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996366993
+      }
+    ],
+    "11.9 Create README.md": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996367153
+      }
+    ],
+    "11.10 Final integration tests": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996367318
+      }
+    ],
+    "11.11 Checkpoint: Final - Application complete": [
+      {
+        "executionId": "b17a9e8c-25ad-4fcf-9d02-ea9d5825a72e",
+        "chatSessionId": "sess_470b150e-3d46-4b0f-8b3a-786059377abe",
+        "timestamp": 1792996367487
+      }
     ]
   }
 }
