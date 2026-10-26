@@ -114,3 +114,28 @@ def delete_item(session: Session, item_id: int) -> None:
         raise NotFoundError(f"Item {item_id} not found")
     session.delete(item)
     session.flush()
+
+
+def archive_item(session: Session, item_id: int) -> ItemResponse:
+    """Archive an item. Raises NotFoundError, ArchivedItemError (already archived)."""
+    item = session.get(Item, item_id)
+    if item is None:
+        raise NotFoundError(f"Item {item_id} not found")
+    guard_not_archived(item)  # prevent double-archiving
+    item.archived_at = now_utc()
+    item.updated_at = now_utc()
+    session.flush()
+    return _to_response(session, item)
+
+
+def restore_item(session: Session, item_id: int) -> ItemResponse:
+    """Restore an archived item. Raises NotFoundError, ConflictError (not archived)."""
+    item = session.get(Item, item_id)
+    if item is None:
+        raise NotFoundError(f"Item {item_id} not found")
+    if item.archived_at is None:
+        raise ConflictError(f"Item {item_id} is not archived")
+    item.archived_at = None
+    item.updated_at = now_utc()
+    session.flush()
+    return _to_response(session, item)

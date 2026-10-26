@@ -109,3 +109,31 @@ def test_list_items_type_filter(db_session):
     item_service.create_item(db_session, AreaCreate(title="A"))
     results = item_service.list_items(db_session, type_filter="project")
     assert all(r.type == "project" for r in results)
+
+
+# ---------------------------------------------------------------------------
+# Archive / Restore
+# ---------------------------------------------------------------------------
+
+def test_archive_item(db_session):
+    item = _project(db_session)
+    resp = item_service.archive_item(db_session, item.id)
+    assert resp.archived_at is not None
+
+
+def test_archive_already_archived_raises(db_session):
+    item = _project(db_session, archived_at=now_utc())
+    with pytest.raises(ArchivedItemError):
+        item_service.archive_item(db_session, item.id)
+
+
+def test_restore_item(db_session):
+    item = _project(db_session, archived_at=now_utc())
+    resp = item_service.restore_item(db_session, item.id)
+    assert resp.archived_at is None
+
+
+def test_restore_active_item_raises(db_session):
+    item = _project(db_session)
+    with pytest.raises(ConflictError):
+        item_service.restore_item(db_session, item.id)
