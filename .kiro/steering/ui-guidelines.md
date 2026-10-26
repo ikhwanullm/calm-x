@@ -52,9 +52,7 @@ components and patterns. Do not invent new colors, font sizes or one-off styles.
 > `var(--...)` tokens. Use `hover:opacity-90` or a dedicated hover token (e.g. `hover:bg-surface-2`) instead.
 
 
-> **Opacity modifier rule:** The /N opacity modifier (e.g. g-primary/90) does NOT work with
-> ar(--...) tokens because CSS color-mix() is not universally supported. Use opacity-90 on the
-> element or a dedicated hover token (e.g. hover:opacity-90, hover:bg-surface-2) instead.
+
 ## 3. Design tokens
 
 Define tokens once as CSS variables in `frontend/src/index.css` and expose them
