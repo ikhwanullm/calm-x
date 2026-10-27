@@ -187,3 +187,67 @@ def test_error_not_swallowed_as_2xx(client):
         resp = client.post('/api/items', json={'type': 'project', 'title': 'X'}, headers=HEADERS)
     assert resp.status_code == 409
     assert resp.json()['type'] == 'conflict_error'
+
+
+def test_progress_reflects_task_counts(client):
+    """Fix 1: project response includes correct task_count, completed_task_count, progress_percentage.
+    Test: project with 2 tasks, 1 complete -> task_count=2, completed=1, progress=50"""
+    # Create project
+    proj = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS).json()
+    item_id = proj["id"]
+    # Initially: no tasks
+    assert proj["task_count"] == 0
+    assert proj["progress_percentage"] == 0
+    # Add 2 tasks
+    t1 = client.post("/api/tasks", json={"title": "T1", "item_id": item_id}, headers=HEADERS).json()["id"]
+    t2 = client.post("/api/tasks", json={"title": "T2", "item_id": item_id}, headers=HEADERS).json()["id"]
+    # Complete 1 task
+    client.post(f"/api/tasks/{t1}/complete", headers=HEADERS)
+    # Fetch project detail
+    detail = client.get(f"/api/items/{item_id}").json()
+    assert detail["task_count"] == 2
+    assert detail["completed_task_count"] == 1
+    assert detail["progress_percentage"] == 50
+    # Complete both -> progress 100
+    client.post(f"/api/tasks/{t2}/complete", headers=HEADERS)
+    detail2 = client.get(f"/api/items/{item_id}").json()
+    assert detail2["task_count"] == 2
+    assert detail2["completed_task_count"] == 2
+    assert detail2["progress_percentage"] == 100
+    # Also check in list response
+    items = client.get("/api/items?type=project").json()
+    p = next(i for i in items if i["id"] == item_id)
+    assert p["task_count"] == 2
+    assert p["progress_percentage"] == 100
+
+
+def test_progress_reflects_task_counts(client):
+    """Fix 1: project response includes correct task_count, completed_task_count, progress_percentage.
+    Test: project with 2 tasks, 1 complete -> task_count=2, completed=1, progress=50"""
+    # Create project
+    proj = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS).json()
+    item_id = proj["id"]
+    # Initially: no tasks
+    assert proj["task_count"] == 0
+    assert proj["progress_percentage"] == 0
+    # Add 2 tasks
+    t1 = client.post("/api/tasks", json={"title": "T1", "item_id": item_id}, headers=HEADERS).json()["id"]
+    t2 = client.post("/api/tasks", json={"title": "T2", "item_id": item_id}, headers=HEADERS).json()["id"]
+    # Complete 1 task
+    client.post(f"/api/tasks/{t1}/complete", headers=HEADERS)
+    # Fetch project detail
+    detail = client.get(f"/api/items/{item_id}").json()
+    assert detail["task_count"] == 2
+    assert detail["completed_task_count"] == 1
+    assert detail["progress_percentage"] == 50
+    # Complete both -> progress 100
+    client.post(f"/api/tasks/{t2}/complete", headers=HEADERS)
+    detail2 = client.get(f"/api/items/{item_id}").json()
+    assert detail2["task_count"] == 2
+    assert detail2["completed_task_count"] == 2
+    assert detail2["progress_percentage"] == 100
+    # Also check in list response
+    items = client.get("/api/items?type=project").json()
+    p = next(i for i in items if i["id"] == item_id)
+    assert p["task_count"] == 2
+    assert p["progress_percentage"] == 100

@@ -35,15 +35,17 @@ def list_items(
     include_archived: bool = Query(default=False),
 ):
     """List items. Filter by type and/or include archived."""
-    items = item_service.list_items(session, type_filter=type, include_archived=include_archived)
-    return [item_to_response(item) for item in items]
+    items_with_counts = item_service.list_items(session, type_filter=type, include_archived=include_archived)
+    return [item_to_response(item, task_count=total, completed_task_count=completed)
+            for item, total, completed in items_with_counts]
 
 
 @router.get("/{item_id}", response_model=AnyItemResponse)
 def get_item(item_id: int, session: SessionDep):
     """Get a single item by id."""
     item = item_service.get_item(session, item_id)
-    return item_to_response(item)
+    total, completed = item_service._get_task_counts(session, item_id)
+    return item_to_response(item, task_count=total, completed_task_count=completed)
 
 
 @router.post("", response_model=AnyItemResponse, status_code=201)

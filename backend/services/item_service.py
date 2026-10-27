@@ -4,11 +4,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.exceptions import ArchivedItemError, ConflictError, NotFoundError
-from backend.models.item import Item
+from backend.models.item import Item, Task
 from backend.schemas.item import AreaCreate, ItemUpdate, ProjectCreate, ResourceCreate
 
 
@@ -32,15 +33,45 @@ def list_items(
     session: Session,
     type_filter: Optional[str] = None,
     include_archived: bool = False,
-) -> list[Item]:
-    """Return items, optionally filtered by type and archived status."""
+) -> list[tuple[Item, int, int]]:
+    """Return items with task counts as (item, total_tasks, completed_tasks)."""
     q = select(Item)
     if type_filter is not None:
         q = q.where(Item.type == type_filter)
     if not include_archived:
         q = q.where(Item.archived_at.is_(None))
-    return list(session.execute(q).scalars().all())
+    items = list(session.execute(q).scalars().all())
+    # Attach task counts to each item
+    result = []
+    for item in items:
+        total, completed = _get_task_counts(session, item.id)
+        result.append((item, total, completed))
+    return result
 
+
+
+
+def _get_task_counts(session: Session, item_id: int) -> tuple[int, int]:
+    """Return (total_tasks, completed_tasks) for an item via a single aggregate query."""
+    total = session.execute(
+        select(func.count()).where(Task.item_id == item_id)
+    ).scalar_one()
+    completed = session.execute(
+        select(func.count()).where(Task.item_id == item_id, Task.is_complete == 1)
+    ).scalar_one()
+    return total, completed
+
+
+
+def _get_task_counts(session: Session, item_id: int) -> tuple[int, int]:
+    """Return (total_tasks, completed_tasks) for an item via a single aggregate query."""
+    total = session.execute(
+        select(func.count()).where(Task.item_id == item_id)
+    ).scalar_one()
+    completed = session.execute(
+        select(func.count()).where(Task.item_id == item_id, Task.is_complete == 1)
+    ).scalar_one()
+    return total, completed
 
 def get_item(session: Session, item_id: int) -> Item:
     """Return a single item by id or raise NotFoundError."""
