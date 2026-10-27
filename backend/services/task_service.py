@@ -84,10 +84,14 @@ def create_task(session: Session, data: TaskCreate) -> TaskResponse:
     parent_item = session.get(Item, data.item_id) if data.item_id is not None else None
     guard_task_item_not_archived(parent_item)
 
-    # Enforce 100-task limit on the target item
-    count = _count_item_tasks(session, data.item_id)
-    if count >= MAX_TASKS_PER_ITEM:
-        raise LimitExceededError(MAX_TASKS_ERROR, detail=f"item_id={data.item_id}")
+    # Enforce 100-task limit only on Project/Area items, not Inbox
+    if data.item_id is not None:
+        count = _count_item_tasks(session, data.item_id)
+        if count >= MAX_TASKS_PER_ITEM:
+            raise LimitExceededError(MAX_TASKS_ERROR, detail=f"item_id={data.item_id}")
+        sort_order = count
+    else:
+        sort_order = _count_item_tasks(session, None)
 
     now = now_utc()
     task = Task(
@@ -98,7 +102,7 @@ def create_task(session: Session, data: TaskCreate) -> TaskResponse:
         due_date=data.due_date,
         priority=data.priority,
         is_complete=0,
-        sort_order=count,  # append at end
+        sort_order=sort_order,
         created_at=now,
         updated_at=now,
     )

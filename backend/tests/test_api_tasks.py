@@ -153,3 +153,14 @@ def test_quick_capture_json_body(client):
     assert body["title"] == "Captured task"
     assert body["item_id"] is None
     assert body["priority"] == "medium"
+
+
+def test_inbox_not_limited_at_100(client):
+    """Fix 5: Inbox (item_id=None) can exceed 100 tasks."""
+    # Create 101 Inbox tasks - all should succeed
+    for i in range(101):
+        resp = client.post("/api/tasks", json={"title": f"Inbox {i}"}, headers=HEADERS)
+        assert resp.status_code == 201, f"Task {i} failed: {resp.json()}"
+    # Verify inbox count
+    resp = client.get("/api/tasks/inbox")
+    assert len(resp.json()) == 101
