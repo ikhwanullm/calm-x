@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db_session
+from pydantic import BaseModel
 from backend.schemas.task import (
     TaskCreate,
     TaskMovePayload,
@@ -15,6 +16,10 @@ from backend.schemas.task import (
     TaskUpdate,
 )
 from backend.services import task_service
+
+class QuickCapturePayload(BaseModel):
+    title: str
+
 
 router = APIRouter(tags=["tasks"])
 SessionDep = Annotated[Session, Depends(get_db_session)]
@@ -55,13 +60,12 @@ def create_task(data: TaskCreate, session: SessionDep):
 
 
 @router.post("/tasks/quick-capture", response_model=TaskResponse, status_code=201)
-def quick_capture(session: SessionDep, title: str = Query(..., min_length=1, max_length=200)):
+def quick_capture(data: QuickCapturePayload, session: SessionDep):
     """Quick capture: create a task in the Inbox with Medium priority."""
-    data = TaskCreate(title=title, priority="medium")
-    task = task_service.create_task(session, data)
+    task_data = TaskCreate(title=data.title, priority="medium")
+    task = task_service.create_task(session, task_data)
     session.commit()
     return task
-
 
 @router.put("/tasks/{task_id}", response_model=TaskResponse)
 def update_task(task_id: int, data: TaskUpdate, session: SessionDep):

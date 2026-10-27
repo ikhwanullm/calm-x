@@ -139,3 +139,17 @@ def test_reorder_tasks(client):
     tasks = resp.json()
     assert tasks[0]["id"] == t2
     assert tasks[1]["id"] == t1
+
+
+def test_quick_capture_json_body(client):
+    """Fix 8: quick-capture accepts JSON body {title}, creates Inbox task."""
+    resp = client.post(
+        "/api/tasks/quick-capture",
+        json={"title": "Captured task"},
+        headers=HEADERS,
+    )
+    assert resp.status_code == 201, resp.json()
+    body = resp.json()
+    assert body["title"] == "Captured task"
+    assert body["item_id"] is None
+    assert body["priority"] == "medium"
