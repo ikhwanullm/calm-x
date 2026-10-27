@@ -45,6 +45,7 @@ export function useCreateTask() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: taskKeys.all })
       qc.invalidateQueries({ queryKey: itemKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
       if (vars.item_id) qc.invalidateQueries({ queryKey: taskKeys.forItem(vars.item_id) })
     },
     onError: (err: Error) => {
