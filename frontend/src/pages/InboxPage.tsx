@@ -39,16 +39,6 @@ export default function InboxPage() {
     })
   }, [openTasks])
 
-  // Remove IDs that are no longer in openTasks (e.g. after individual or bulk move)
-  useEffect(() => {
-    setSelectedIds((prev) => {
-      if (prev.size === 0) return prev
-      const validIds = new Set(openTasks.map((t) => t.id))
-      const filtered = new Set([...prev].filter((id) => validIds.has(id)))
-      return filtered.size === prev.size ? prev : filtered
-    })
-  }, [openTasks])
-
   const allOpenSelected = openTasks.length > 0 && openTasks.every((t) => selectedIds.has(t.id))
 
   function toggleSelect(id: number) {
