@@ -234,15 +234,41 @@ def mark_incomplete(session: Session, task_id: int) -> TaskResponse:
 
 
 def reorder_tasks(session: Session, item_id: Optional[int], task_ids: list[int]) -> list[TaskResponse]:
-    """Update sort_order for tasks in an item."""
-    tasks_by_id = {
-        t.id: t
+    """Update sort_order for tasks in an item.
+
+    Guards:
+    - item_id must not be archived (403)
+    - all task_ids must belong to item_id (400)
+    """
+    from backend.exceptions import ValidationError as _VE
+    # Guard: item must not be archived
+    if item_id is not None:
+        item = session.get(Item, item_id)
+        if item is None:
+            raise NotFoundError(f"Item {item_id} not found")
+        if item.archived_at is not None:
+            raise ArchivedItemError(
+                f"Cannot reorder tasks in archived item",
+                detail=f"item_id={item_id}",
+            )
+
+    # Validate: all task_ids must belong to this item
+    item_task_ids = {
+        t.id
         for t in session.execute(
             select(Task).where(Task.item_id == item_id)
         ).scalars().all()
     }
+    invalid = [tid for tid in task_ids if tid not in item_task_ids]
+    if invalid:
+        raise _VE(
+            f"Task IDs {invalid} do not belong to item {item_id}",
+            detail=f"invalid_task_ids={invalid}",
+        )
+
     for order, tid in enumerate(task_ids):
-        if tid in tasks_by_id:
-            tasks_by_id[tid].sort_order = order
+        task = session.get(Task, tid)
+        if task:
+            task.sort_order = order
     session.flush()
     return list_tasks(session, item_id)

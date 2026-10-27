@@ -164,3 +164,25 @@ def test_inbox_not_limited_at_100(client):
     # Verify inbox count
     resp = client.get("/api/tasks/inbox")
     assert len(resp.json()) == 101
+
+
+def test_reorder_archived_item_rejected(client):
+    """Fix 6: reordering tasks in archived item returns 403."""
+    # Create item, add tasks, archive item
+    item_id = _create_item(client, "ReorderTarget")
+    t1 = client.post("/api/tasks", json={"title": "T1", "item_id": item_id}, headers=HEADERS).json()["id"]
+    t2 = client.post("/api/tasks", json={"title": "T2", "item_id": item_id}, headers=HEADERS).json()["id"]
+    client.post(f"/api/items/{item_id}/archive", headers=HEADERS)
+    resp = client.put(f"/api/items/{item_id}/tasks/reorder", json={"task_ids": [t2, t1]}, headers=HEADERS)
+    assert resp.status_code == 403
+
+
+def test_reorder_invalid_task_ids_rejected(client):
+    """Fix 6: task_ids not belonging to item returns 400."""
+    item_id = _create_item(client, "ItemA")
+    other_item_id = _create_item(client, "ItemB")
+    ta = client.post("/api/tasks", json={"title": "TA", "item_id": item_id}, headers=HEADERS).json()["id"]
+    tb = client.post("/api/tasks", json={"title": "TB", "item_id": other_item_id}, headers=HEADERS).json()["id"]
+    # Try to reorder item_id with a task belonging to other_item_id
+    resp = client.put(f"/api/items/{item_id}/tasks/reorder", json={"task_ids": [ta, tb]}, headers=HEADERS)
+    assert resp.status_code == 400
