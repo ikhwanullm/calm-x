@@ -99,6 +99,17 @@ class TaskUpdate(BaseModel):
     is_complete: Optional[bool] = None
     tag_names: Optional[List[str]] = Field(default=None, description="Tag names to assign (replaces existing, max 20)")
 
+    @field_validator('tag_names', mode='before')
+    @classmethod
+    def validate_tags(cls, v: object) -> object:
+        if v is None:
+            return v
+        if isinstance(v, list):
+            if len(v) > 20:
+                raise ValueError('A task can have at most 20 tags')
+            return [str(t).strip().lower() for t in v if str(t).strip()]
+        return v
+
     @field_validator("title", mode="before")
     @classmethod
     def strip_title(cls, v: object) -> object:
