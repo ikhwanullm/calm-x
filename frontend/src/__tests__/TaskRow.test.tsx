@@ -2,6 +2,10 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+vi.mock('../hooks/useSettings', () => ({
+  useDeadlineThreshold: () => 3,
+}))
+
 import { TaskRow } from '../components/tasks/TaskRow'
 import type { TaskRowProps } from '../components/tasks/TaskRow'
 import type { Task } from '../types/models'
