@@ -84,7 +84,7 @@ def convert_item(
         if payload.project_goal is not None:
             item.project_goal = payload.project_goal
         if payload.project_deadline is not None:
-            item.project_deadline = date.fromisoformat(payload.project_deadline)
+            item.project_deadline = payload.project_deadline
 
     elif target_type == "area":
         if payload.area_maintenance_notes is not None:

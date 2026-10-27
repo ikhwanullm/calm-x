@@ -1,7 +1,7 @@
 """Pydantic schemas for Reference Links and Resource Links."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -77,7 +77,7 @@ class TypeConversionPayload(BaseModel):
     target_type: str = Field(..., description="project | area | resource")
     # Optional fields for target-type-specific data
     project_goal: Optional[str] = Field(default=None, max_length=500)
-    project_deadline: Optional[str] = None   # YYYY-MM-DD
+    project_deadline: Optional[date] = None
     area_maintenance_notes: Optional[str] = Field(default=None, max_length=1000)
 
 

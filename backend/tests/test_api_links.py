@@ -279,3 +279,49 @@ def test_convert_active_project_to_area_and_back_stays_active(client):
     client.post(f"/api/items/{item_id}/convert", json={"target_type": "area"}, headers=HEADERS)
     r = client.post(f"/api/items/{item_id}/convert", json={"target_type": "project"}, headers=HEADERS)
     assert r.json()["project_status"] == "active"
+
+
+def test_convert_invalid_deadline_returns_400(client):
+    """Fix 5: invalid project_deadline in conversion payload returns 400."""
+    item_id = _create_item(client, "area", "A")
+    r = client.post(
+        f"/api/items/{item_id}/convert",
+        json={"target_type": "project", "project_deadline": "not-a-date"},
+        headers=HEADERS,
+    )
+    assert r.status_code in (400, 422)
+
+
+def test_convert_valid_deadline_accepted(client):
+    """Fix 5: valid YYYY-MM-DD deadline is accepted."""
+    item_id = _create_item(client, "area", "A")
+    r = client.post(
+        f"/api/items/{item_id}/convert",
+        json={"target_type": "project", "project_deadline": "2025-12-31"},
+        headers=HEADERS,
+    )
+    assert r.status_code == 200
+    assert r.json()["project_deadline"] == "2025-12-31"
+
+
+def test_convert_invalid_deadline_returns_400(client):
+    """Fix 5: invalid project_deadline in conversion payload returns 400."""
+    item_id = _create_item(client, "area", "A")
+    r = client.post(
+        f"/api/items/{item_id}/convert",
+        json={"target_type": "project", "project_deadline": "not-a-date"},
+        headers=HEADERS,
+    )
+    assert r.status_code in (400, 422)
+
+
+def test_convert_valid_deadline_accepted(client):
+    """Fix 5: valid YYYY-MM-DD deadline is accepted."""
+    item_id = _create_item(client, "area", "A")
+    r = client.post(
+        f"/api/items/{item_id}/convert",
+        json={"target_type": "project", "project_deadline": "2025-12-31"},
+        headers=HEADERS,
+    )
+    assert r.status_code == 200
+    assert r.json()["project_deadline"] == "2025-12-31"
