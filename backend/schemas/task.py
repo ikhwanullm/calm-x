@@ -67,11 +67,22 @@ class TaskCreate(BaseModel):
     notes: str = Field(default="", max_length=10000)
     due_date: Optional[date] = None
     priority: Literal["high", "medium", "low"] = "medium"
+    tag_names: List[str] = Field(default_factory=list, max_length=20,
+                                  description="Tag names to assign (max 20)")
 
     @field_validator("title", mode="before")
     @classmethod
     def strip_title(cls, v: object) -> object:
         return _strip_title(v)
+
+    @field_validator("tag_names", mode="before")
+    @classmethod
+    def validate_tags(cls, v: object) -> object:
+        if isinstance(v, list):
+            if len(v) > 20:
+                raise ValueError("A task can have at most 20 tags")
+            return [str(t).strip().lower() for t in v if str(t).strip()]
+        return v or []
 
 
 class TaskUpdate(BaseModel):
@@ -86,6 +97,7 @@ class TaskUpdate(BaseModel):
     due_date: Optional[date] = None
     priority: Optional[Literal["high", "medium", "low"]] = None
     is_complete: Optional[bool] = None
+    tag_names: Optional[List[str]] = Field(default=None, description="Tag names to assign (replaces existing, max 20)")
 
     @field_validator("title", mode="before")
     @classmethod
