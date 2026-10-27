@@ -201,10 +201,7 @@ class ResourceLink(Base):
 
     __tablename__ = "resource_links"
     __table_args__ = (
-        UniqueConstraint("resource_id", "linked_item_id", name="uq_resource_link"),
-    )
-    __table_args__ = (
-        UniqueConstraint("resource_id", "linked_item_id", name="uq_resource_link"),
+        UniqueConstraint("resource_id", "linked_item_id", name="uq_resource_links"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

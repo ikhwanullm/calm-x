@@ -91,10 +91,10 @@ def convert_item(
             item.area_maintenance_notes = payload.area_maintenance_notes
         # R2.1: project_status and project_completed_at are PRESERVED (hidden, not cleared)
         # so they can be restored if the item is later converted back to Project.
+        pass
 
     elif target_type == "resource":
         # R2.1: project_status and project_completed_at are PRESERVED (hidden, not cleared)
-        pass  # tasks already moved to inbox above; no other field changes
         pass  # tasks already moved to inbox above; no other field changes
 
     item.updated_at = now

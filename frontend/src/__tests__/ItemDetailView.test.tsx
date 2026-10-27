@@ -81,6 +81,30 @@ vi.mock('../hooks/useLinks', () => ({
   useConvertItem: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
 }))
 
+vi.mock('../components/items/ReferenceLinksSection', () => ({
+  ReferenceLinksSection: () => <div data-testid="ref-links">Reference links</div>,
+}))
+
+vi.mock('../components/items/ResourceLinksSection', () => ({
+  ResourceLinksSection: () => <div data-testid="resource-links">Resource links</div>,
+}))
+
+vi.mock('../components/items/TypeConversionDialog', () => ({
+  TypeConversionDialog: () => null,
+}))
+
+vi.mock('../components/items/ReferenceLinksSection', () => ({
+  ReferenceLinksSection: () => <div data-testid="ref-links">Reference links</div>,
+}))
+
+vi.mock('../components/items/ResourceLinksSection', () => ({
+  ResourceLinksSection: () => <div data-testid="resource-links">Resource links</div>,
+}))
+
+vi.mock('../components/items/TypeConversionDialog', () => ({
+  TypeConversionDialog: () => null,
+}))
+
 vi.mock('../components/tasks/TaskDrawer', () => ({
   TaskDrawer: () => null,
 }))

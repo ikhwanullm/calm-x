@@ -1,8 +1,9 @@
-"""Normalize resource_links unique constraint — remove any duplicate.
+"""Normalize resource_links to exactly one unique constraint.
 
 Migration 002 added uq_resource_link via batch_alter_table.
-On some databases this may have resulted in two constraints.
-This migration recreates the table to ensure exactly one constraint.
+This migration uses recreate="always" to rebuild the table from
+current model metadata (uq_resource_links with s), removing any
+duplicate or differently-named constraints.
 
 Revision ID: 003
 Revises: 002
@@ -19,11 +20,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # batch_alter_table without additional ops recreates the table from the current
-    # model definition, normalizing to exactly one unique constraint.
-    with op.batch_alter_table("resource_links") as _batch_op:
-        pass  # no structural changes; table is recreated from model metadata
+    # recreate="always" rebuilds the table from model metadata,
+    # ensuring exactly the one constraint defined in __table_args__.
+    with op.batch_alter_table("resource_links", recreate="always") as batch_op:
+        pass
 
 
 def downgrade() -> None:
-    pass  # constraint state after downgrade same as after 002
+    with op.batch_alter_table("resource_links", recreate="always") as batch_op:
+        pass
