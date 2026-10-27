@@ -130,10 +130,19 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
 
     # --- SPA fallback ---
     @app.get("/{full_path:path}", include_in_schema=False)
-    async def spa_fallback(full_path: str):
+    async def spa_fallback(request: Request, full_path: str):
         # Paths beginning with "api" or "api/" are API routes that were not found.
         # Return 404 JSON — never serve index.html for API paths.
         if full_path == "api" or full_path.startswith("api/"):
+            # Redirect trailing-slash API paths (/api/items/ -> /api/items).
+            # FastAPI redirect_slashes cannot fire because this catch-all matches first.
+            if full_path.endswith("/"):
+                from fastapi.responses import RedirectResponse
+                target = "/" + full_path.rstrip("/")
+                qs = request.url.query
+                if qs:
+                    target = target + "?" + qs
+                return RedirectResponse(url=target, status_code=307)
             return JSONResponse(
                 status_code=404,
                 content={"error": f"API route not found: /{full_path}", "type": "not_found"},
