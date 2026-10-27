@@ -63,16 +63,6 @@ def _get_task_counts(session: Session, item_id: int) -> tuple[int, int]:
 
 
 
-def _get_task_counts(session: Session, item_id: int) -> tuple[int, int]:
-    """Return (total_tasks, completed_tasks) for an item via a single aggregate query."""
-    total = session.execute(
-        select(func.count()).where(Task.item_id == item_id)
-    ).scalar_one()
-    completed = session.execute(
-        select(func.count()).where(Task.item_id == item_id, Task.is_complete == 1)
-    ).scalar_one()
-    return total, completed
-
 def get_item(session: Session, item_id: int) -> Item:
     """Return a single item by id or raise NotFoundError."""
     return _get_or_404(session, item_id)

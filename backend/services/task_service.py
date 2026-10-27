@@ -25,9 +25,15 @@ def _task_to_response(session: Session, task: Task) -> TaskResponse:
     done_subs = session.execute(
         select(func.count()).where(Subtask.task_id == task.id, Subtask.is_complete == 1)
     ).scalar_one()
-    tag_names = [
-        tt.tag.name for tt in task.task_tags
-    ] if task.task_tags is not None else []
+    # Query tag names directly via SQL to avoid stale ORM identity-map after flush
+    tag_names = list(
+        session.execute(
+            select(Tag.name)
+            .join(TaskTag, TaskTag.tag_id == Tag.id)
+            .where(TaskTag.task_id == task.id)
+            .order_by(Tag.name)
+        ).scalars().all()
+    )
     return TaskResponse(
         id=task.id,
         item_id=task.item_id,
@@ -78,6 +84,32 @@ def get_inbox_tasks(session: Session) -> list[TaskResponse]:
     return list_tasks(session, item_id=None)
 
 
+
+
+def _set_task_tags(session: Session, task: Task, tag_names: list[str]) -> None:
+    """Replace all tags on task with tag_names (creates missing tags on the fly)."""
+    for tt in list(task.task_tags):
+        session.delete(tt)
+    session.flush()
+    for raw_name in tag_names:
+        name = raw_name.strip().lower()
+        if not name:
+            continue
+        tag = session.execute(
+            select(Tag).where(func.lower(Tag.name) == name)
+        ).scalar_one_or_none()
+        if tag is None:
+            tag = Tag(name=name, created_at=now_utc())
+            session.add(tag)
+            session.flush()
+        existing = session.execute(
+            select(TaskTag).where(TaskTag.task_id == task.id, TaskTag.tag_id == tag.id)
+        ).scalar_one_or_none()
+        if existing is None:
+            session.add(TaskTag(task_id=task.id, tag_id=tag.id))
+    session.flush()
+
+
 def create_task(session: Session, data: TaskCreate) -> TaskResponse:
     """Create a task. Enforces 100-task limit and archived guard."""
     # Guard: parent item not archived
@@ -108,6 +140,9 @@ def create_task(session: Session, data: TaskCreate) -> TaskResponse:
     )
     session.add(task)
     session.flush()
+    # Assign tags if provided
+    if getattr(data, "tag_names", None):
+        _set_task_tags(session, task, data.tag_names)
     # Propagate timestamp to parent item
     if data.item_id is not None:
         item = session.get(Item, data.item_id)
@@ -128,9 +163,12 @@ def update_task(session: Session, task_id: int, data: TaskUpdate) -> TaskRespons
     # Prevent changing is_complete via update_task (use mark_complete/mark_incomplete)
     update_fields.pop("is_complete", None)
     update_fields.pop("item_id", None)
+    tag_names = update_fields.pop("tag_names", None)
     for field, value in update_fields.items():
         setattr(task, field, value)
     task.updated_at = now_utc()
+    if tag_names is not None:
+        _set_task_tags(session, task, tag_names)
     if task.item_id is not None:
         item = session.get(Item, task.item_id)
         if item is not None:

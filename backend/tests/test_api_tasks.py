@@ -186,3 +186,30 @@ def test_reorder_invalid_task_ids_rejected(client):
     # Try to reorder item_id with a task belonging to other_item_id
     resp = client.put(f"/api/items/{item_id}/tasks/reorder", json={"task_ids": [ta, tb]}, headers=HEADERS)
     assert resp.status_code == 400
+
+
+def test_create_task_with_tags(client):
+    """Fix 2: creating a task with tag_names assigns tags and returns them."""
+    resp = client.post("/api/tasks", json={"title": "Tagged", "tag_names": ["work", "urgent"]}, headers=HEADERS)
+    assert resp.status_code == 201
+    body = resp.json()
+    assert set(body["tags"]) == {"work", "urgent"}
+
+
+def test_update_task_tags_replaces(client):
+    """Fix 2: updating tag_names replaces all existing tags."""
+    r = client.post("/api/tasks", json={"title": "T", "tag_names": ["old"]}, headers=HEADERS)
+    task_id = r.json()["id"]
+    resp = client.put(f"/api/tasks/{task_id}", json={"tag_names": ["new1", "new2"]}, headers=HEADERS)
+    assert resp.status_code == 200
+    tags = resp.json()["tags"]
+    assert "old" not in tags
+    assert set(tags) == {"new1", "new2"}
+
+
+def test_clear_task_tags(client):
+    """Fix 2: setting tag_names=[] clears all tags."""
+    r = client.post("/api/tasks", json={"title": "T", "tag_names": ["x"]}, headers=HEADERS)
+    task_id = r.json()["id"]
+    resp = client.put(f"/api/tasks/{task_id}", json={"tag_names": []}, headers=HEADERS)
+    assert resp.json()["tags"] == []

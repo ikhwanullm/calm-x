@@ -92,7 +92,7 @@ def test_list_items_excludes_archived_by_default(db_session):
     _project(db_session, title="Active")
     _project(db_session, title="Archived", archived_at=now_utc())
     results = item_service.list_items(db_session)
-    titles = [r.title for r in results]
+    titles = [r[0].title for r in results]
     assert "Active" in titles
     assert "Archived" not in titles
 
@@ -108,7 +108,7 @@ def test_list_items_type_filter(db_session):
     item_service.create_item(db_session, ProjectCreate(type="project", title="P"))
     item_service.create_item(db_session, AreaCreate(type="area", title="A"))
     results = item_service.list_items(db_session, type_filter="project")
-    assert all(r.type == "project" for r in results)
+    assert all(r[0].type == "project" for r in results)
 
 
 # ---------------------------------------------------------------------------
