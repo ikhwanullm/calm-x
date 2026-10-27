@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db_session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from backend.schemas.task import (
     TaskCreate,
     TaskMovePayload,
@@ -18,7 +18,17 @@ from backend.schemas.task import (
 from backend.services import task_service
 
 class QuickCapturePayload(BaseModel):
-    title: str
+    title: str = Field(..., max_length=200)
+
+    @field_validator('title', mode='before')
+    @classmethod
+    def strip_title(cls, v: object) -> object:
+        if isinstance(v, str):
+            stripped = v.strip()
+            if not stripped:
+                raise ValueError('title must not be empty or whitespace')
+            return stripped
+        return v
 
 
 router = APIRouter(tags=["tasks"])

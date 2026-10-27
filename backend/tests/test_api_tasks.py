@@ -213,3 +213,34 @@ def test_clear_task_tags(client):
     task_id = r.json()["id"]
     resp = client.put(f"/api/tasks/{task_id}", json={"tag_names": []}, headers=HEADERS)
     assert resp.json()["tags"] == []
+
+
+def test_quick_capture_empty_title_returns_400(client):
+    """Fix 5: quick-capture with empty title returns 400, not 500."""
+    resp = client.post("/api/tasks/quick-capture", json={"title": ""}, headers=HEADERS)
+    assert resp.status_code == 422 or resp.status_code == 400, resp.json()
+
+
+def test_quick_capture_whitespace_title_returns_400(client):
+    """Fix 5: quick-capture with whitespace-only title returns 400."""
+    resp = client.post("/api/tasks/quick-capture", json={"title": "   "}, headers=HEADERS)
+    assert resp.status_code == 422 or resp.status_code == 400, resp.json()
+
+
+def test_update_task_21_tags_rejected(client):
+    """Fix 6: TaskUpdate with 21 tags returns 400/422."""
+    r = client.post("/api/tasks", json={"title": "T"}, headers=HEADERS)
+    task_id = r.json()["id"]
+    tags = [f"tag{i}" for i in range(21)]
+    resp = client.put(f"/api/tasks/{task_id}", json={"tag_names": tags}, headers=HEADERS)
+    assert resp.status_code in (400, 422), resp.json()
+
+
+def test_update_task_20_tags_accepted(client):
+    """Fix 6: TaskUpdate with exactly 20 tags is allowed."""
+    r = client.post("/api/tasks", json={"title": "T"}, headers=HEADERS)
+    task_id = r.json()["id"]
+    tags = [f"tag{i}" for i in range(20)]
+    resp = client.put(f"/api/tasks/{task_id}", json={"tag_names": tags}, headers=HEADERS)
+    assert resp.status_code == 200
+    assert len(resp.json()["tags"]) == 20
