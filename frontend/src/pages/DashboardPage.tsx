@@ -33,13 +33,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Summary cards ? 3 columns at xl, 2 at md */}
+      {/* Summary cards: 3 columns at xl, 2 at md */}
       <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
         <SummaryCard
           title="Inbox"
           loading={isLoading}
           stat={data?.inbox_count ?? 0}
-          statLabel="open tasks"
+          statLabel={`open ${(data?.inbox_count ?? 0) === 1 ? "task" : "tasks"}`}
           action={<Link to="/inbox" className="text-xs text-accent-text hover:underline">Process inbox →</Link>}
         />
         <SummaryCard
@@ -160,12 +160,7 @@ function OverallProgressCard({ loading, value }: { loading: boolean; value: numb
       ) : value == null ? (
         <p className="text-sm text-muted">No eligible projects</p>
       ) : (
-        <>
-          <p className="text-3xl font-semibold text-text tabular-nums" style={{ letterSpacing: "-0.02em" }}>
-            {value}%
-          </p>
-          <ProgressBar completed={value} total={100} label="Overall project progress" />
-        </>
+        <ProgressBar completed={value} total={100} label="Overall project progress" />
       )}
     </div>
   )
