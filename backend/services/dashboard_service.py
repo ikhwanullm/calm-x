@@ -7,7 +7,7 @@ from typing import Optional
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.models.item import Item, Task
+from backend.models.item import Item, ReferenceLink, Task
 from backend.schemas.dashboard import (
     DashboardSchema,
     DeadlineItemSchema,
@@ -65,8 +65,13 @@ def get_dashboard_data(session: Session, client_today: date) -> DashboardSchema:
     resources_count: int = session.execute(
         select(func.count()).where(Item.type == "resource", Item.archived_at.is_(None))
     ).scalar_one()
-    # reference_link_count will be populated in Phase 5 when ReferenceLink model is added
-    reference_link_count: int = 0
+    # Count reference links on non-archived Resources
+    reference_link_count: int = session.execute(
+        select(func.count())
+        .select_from(ReferenceLink)
+        .join(Item, ReferenceLink.item_id == Item.id)
+        .where(Item.type == "resource", Item.archived_at.is_(None))
+    ).scalar_one()
 
     # --- Archives ---
     archives_count: int = session.execute(
