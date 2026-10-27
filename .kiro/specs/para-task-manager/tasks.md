@@ -820,8 +820,8 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Inbox shows tasks with move functionality
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Phase 5: Type Conversion & Links
-  - [ ] 5.1 Implement TypeConversionService
+- [x] 5. Phase 5: Type Conversion & Links
+  - [x] 5.1 Implement TypeConversionService
     - Create `backend/services/type_conversion_service.py`
     - Implement `convert(item_id, payload: TypeConversionPayload)` handling all 6 paths:
       - Project → Area: hide deadline/goal/status, keep tasks
@@ -834,11 +834,11 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Delete resource_links when converting TO Resource (R2.8)
     - _Requirements: R1.5, R2.1, R2.2, R2.3, R2.4, R2.5, R2.6, R2.7, R2.8_
 
-  - [ ] 5.2 Add convert endpoint to Items API
+  - [x] 5.2 Add convert endpoint to Items API
     - POST `/api/items/{id}/convert` with TypeConversionPayload
     - _Requirements: R1.5_
 
-  - [ ] 5.3 Create TypeConversionDialog component
+  - [x] 5.3 Create TypeConversionDialog component
     - Show current type and target type dropdown
     - Display consequences before confirming:
       - "X open tasks will move to the Inbox"
@@ -847,28 +847,28 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Optional field for maintenance_notes when converting to Area
     - _Requirements: R2.2, R2.4, R2.7, R2.8; ui-guidelines.md §5_
 
-  - [ ] 5.4 Create SQLAlchemy models for ReferenceLink and ResourceLink
+  - [x] 5.4 Create SQLAlchemy models for ReferenceLink and ResourceLink
     - ReferenceLink: id, item_id, url, sort_order, created_at
     - ResourceLink: id, resource_id, linked_item_id, created_at (unique constraint)
     - _Requirements: R6.3, R6.4_
 
-  - [ ] 5.5 Create Pydantic schemas for links
+  - [x] 5.5 Create Pydantic schemas for links
     - ReferenceLinkCreate with URL validation (http/https, max 2000 chars)
     - ReferenceLinkResponse, ResourceLinkResponse
     - _Requirements: Field Constraints table_
 
-  - [ ] 5.6 Implement ReferenceLinkService
+  - [x] 5.6 Implement ReferenceLinkService
     - Implement `add_reference_link()` with URL validation and 50 link limit
     - Implement `remove_reference_link()`, `reorder_links()`
     - _Requirements: R6.3_
 
-  - [ ] 5.7 Implement ResourceLinkService
+  - [x] 5.7 Implement ResourceLinkService
     - Implement `link_resource()` with 20 link limit
     - Block linking to archived items or Resources
     - Implement `unlink_resource()`
     - _Requirements: R6.4, R6.5, R6.6_
 
-  - [ ] 5.8 Create Links API routers
+  - [x] 5.8 Create Links API routers
     - GET/POST `/api/items/{id}/links` - Reference links
     - DELETE `/api/links/{id}` - Remove reference link
     - GET `/api/resources/{id}/linked-items`
@@ -876,52 +876,52 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - DELETE `/api/resources/{id}/link/{item_id}`
     - _Requirements: R6.3, R6.4_
 
-  - [ ] 5.9 Create Reference Links UI
+  - [x] 5.9 Create Reference Links UI
     - Display reference links in Item detail view
     - Add link form with URL validation
     - Remove link button
     - Drag-and-drop reordering
     - _Requirements: R6.3_
 
-  - [ ] 5.10 Create Resource Links UI
+  - [x] 5.10 Create Resource Links UI
     - Display linked Projects/Areas in Resource detail view
     - "Link to…" combobox listing non-archived Projects and Areas
     - Unlink button for each linked item
     - _Requirements: R6.4_
 
-  - [ ] 5.11 Property test: Type Conversion Preserves Common Data (P7)
+  - [x] 5.11 Property test: Type Conversion Preserves Common Data (P7)
     - **Property 7: Type Conversion Preserves Common Data**
     - Test that title, description, notes, reference links remain unchanged after type conversion
     - **Validates: Requirements R2.1, R2.2, R2.3, R2.4, R2.5, R2.6**
 
-  - [ ] 5.12 Property test: Type Conversion Hides but Preserves Fields (P8)
+  - [x] 5.12 Property test: Type Conversion Hides but Preserves Fields (P8)
     - **Property 8: Type Conversion Hides but Preserves Type-Specific Fields**
     - Test that converting Project to Area hides project_deadline, project_goal but preserves in DB
     - Test that converting Area to Resource hides maintenance_notes but preserves in DB
     - **Validates: Requirements R2.1, R2.2, R2.4**
 
-  - [ ] 5.13 Property test: Tasks Move to Inbox on Resource Conversion (P9)
+  - [x] 5.13 Property test: Tasks Move to Inbox on Resource Conversion (P9)
     - **Property 9: Tasks Move to Inbox on Resource Conversion**
     - Test that converting Project/Area to Resource moves all tasks to Inbox (item_id = NULL)
     - **Validates: Requirements R2.2, R2.4**
 
-  - [ ] 5.14 Property test: Reference Link Maximum Enforced (P19)
+  - [x] 5.14 Property test: Reference Link Maximum Enforced (P19)
     - **Property 19: Reference Link Maximum Enforced**
     - Test that adding link 51 to an Item raises LimitExceededError
     - **Validates: Requirements R6.3**
 
-  - [ ] 5.15 Property test: Resource Link Maximum Enforced (P20)
+  - [x] 5.15 Property test: Resource Link Maximum Enforced (P20)
     - **Property 20: Resource Link Maximum Enforced**
     - Test that linking resource to item 21 raises LimitExceededError
     - **Validates: Requirements R6.4**
 
-  - [ ] 5.16 Property test: Resource Link Cleanup on Type Conversion (P22)
+  - [x] 5.16 Property test: Resource Link Cleanup on Type Conversion (P22)
     - **Property 22: Resource Link Cleanup on Type Conversion**
     - Test FROM Resource: resource_links where resource_id matches are deleted
     - Test TO Resource: resource_links where linked_item_id matches are deleted
     - **Validates: Requirements R2.7, R2.8**
 
-- [ ] 5.17 Checkpoint: Type Conversion complete
+- [x] 5.17 Checkpoint: Type Conversion complete
   - Convert items between all type combinations in browser
   - Verify tasks move to Inbox when converting to Resource
   - Verify resource links are cleaned up appropriately
