@@ -31,6 +31,13 @@ export function useAddReferenceLink(itemId: number) {
   })
 }
 
+export function useReorderReferenceLinks(itemId: number) {
+  return useMutation({
+    mutationFn: (linkIds: number[]) => linksApi.reorderLinks(itemId, linkIds),
+    onError: (err: Error) => notify.error("Could not reorder links.", err.message),
+  })
+}
+
 export function useDeleteReferenceLink(itemId: number) {
   const qc = useQueryClient()
   return useMutation({
@@ -77,6 +84,8 @@ export function useConvertItem() {
     mutationFn: ({ itemId, payload }: { itemId: number; payload: TypeConversionPayload }) =>
       linksApi.convert(itemId, payload),
     onSuccess: (updatedItem) => {
+      const labels: Record<string, string> = { project: "Project", area: "Area", resource: "Resource" }
+      notify.success(`Converted to ${labels[updatedItem.type] ?? updatedItem.type}`)
       qc.invalidateQueries({ queryKey: itemKeys.all })
       qc.invalidateQueries({ queryKey: taskKeys.all })
       qc.invalidateQueries({ queryKey: dashboardKeys.all })

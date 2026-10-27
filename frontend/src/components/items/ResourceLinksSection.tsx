@@ -1,4 +1,5 @@
 import { Unlink } from "lucide-react"
+import { Link } from "react-router-dom"
 import { useLinkedItems, useLinkResource, useUnlinkResource } from "@/hooks/useLinks"
 import { useItems } from "@/hooks/useItems"
 import { notify } from "@/lib/toast"
@@ -44,7 +45,12 @@ export function ResourceLinksSection({ resourceId, isArchived }: ResourceLinksSe
         <ul className="space-y-1" aria-label="Linked items">
           {linked.map((item) => (
             <li key={item.id} className="flex items-center gap-2 group">
-              <span className="flex-1 text-sm text-text truncate">{item.title}</span>
+              <Link
+                to={`/${item.type === "project" ? "projects" : "areas"}/${item.id}`}
+                className="flex-1 text-sm text-accent-text hover:underline truncate"
+              >
+                {item.title}
+              </Link>
               <span className="text-xs text-muted">{item.type}</span>
               {!isArchived && (
                 <button

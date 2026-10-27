@@ -8,6 +8,7 @@ import { ReferenceLinksSection } from "../components/items/ReferenceLinksSection
 
 vi.mock("../api/links", () => ({
   linksApi: {
+    reorderLinks: vi.fn().mockResolvedValue([]),
     listLinks: vi.fn().mockResolvedValue([
       { id: 1, item_id: 1, url: "https://example.com", sort_order: 0, created_at: "" },
     ]),
@@ -63,5 +64,21 @@ describe("ReferenceLinksSection", () => {
     await waitFor(() =>
       expect(vi.mocked(linksApi.addLink)).toHaveBeenCalledWith(1, "https://new.com")
     )
+  })
+
+  it("renders with DnD context without errors (reorder feature)", async () => {
+    // Verify the component mounts successfully with dnd-kit wrapping
+    render(<ReferenceLinksSection itemId={1} isArchived={false} />, { wrapper })
+    await waitFor(() => expect(screen.getByText("https://example.com")).toBeTruthy())
+    // Add link form still accessible
+    expect(screen.getByLabelText("Add reference link URL")).toBeTruthy()
+  })
+
+  it("renders with DnD context without errors (reorder feature)", async () => {
+    // Verify the component mounts successfully with dnd-kit wrapping
+    render(<ReferenceLinksSection itemId={1} isArchived={false} />, { wrapper })
+    await waitFor(() => expect(screen.getByText("https://example.com")).toBeTruthy())
+    // Add link form still accessible
+    expect(screen.getByLabelText("Add reference link URL")).toBeTruthy()
   })
 })
