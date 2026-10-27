@@ -40,13 +40,23 @@ def test_subtask_model_structure(db_engine):
     assert required.issubset(cols)
 
 
-def test_tag_nocase_index_exists(db_engine):
-    inspector = inspect(db_engine)
+def test_tag_model_exists():
+    """3.2: Tag and TaskTag models are registered in ORM."""
+    from backend.models.item import Tag, TaskTag
+    assert Tag.__tablename__ == "tags"
+    assert TaskTag.__tablename__ == "task_tags"
+
+
+def test_tag_nocase_via_migration(tmp_path):
+    """3.2: Tags table has COLLATE NOCASE via migration (not just create_all)."""
+    from backend.database import _run_migrations, get_engine, Base
+    db = tmp_path / "nocase_test.db"
+    engine = get_engine(f"sqlite:///{db}")
+    _run_migrations(f"sqlite:///{db}")
+    inspector = inspect(engine)
     indexes = inspector.get_indexes("tags")
     names = [idx["name"] for idx in indexes if idx.get("name")]
-    print("Tag indexes:", names)
-    # The COLLATE NOCASE index was created by migration as uq_tags_name_nocase
-    assert any("nocase" in n.lower() for n in names), f"No nocase index found: {names}"
+    assert any("nocase" in n.lower() for n in names), f"COLLATE NOCASE index missing: {names}"
 
 
 def test_user_preference_model_structure(db_engine):
