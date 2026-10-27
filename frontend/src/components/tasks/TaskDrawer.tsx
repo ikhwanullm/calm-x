@@ -10,6 +10,7 @@ import {
   useDeleteTask,
   useCompleteTask,
   useIncompleteTask,
+  useMoveTask,
 } from '@/hooks/useTasks'
 import {
   useSubtasks,
@@ -18,6 +19,8 @@ import {
   useIncompleteSubtask,
   useDeleteSubtask,
 } from '@/hooks/useSubtasks'
+import { useItems } from '@/hooks/useItems'
+import { useTags, useCreateTag } from '@/hooks/useTags'
 import type { TaskPriority } from '@/types/models'
 import { cn } from '@/lib/utils'
 
@@ -73,7 +76,7 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.title])
 
-  // ── Handlers ─────────────────────────────────────────────────────────
+  // ── Handlers ────────────────────────────────────────────────────
 
   function handleToggleComplete() {
     if (!task) return
@@ -123,7 +126,7 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
     onClose()
   }
 
-  // ── Render ────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────
 
   return (
     <>
@@ -134,7 +137,7 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
           aria-label="Task details"
           hideCloseButton
         >
-          {/* ── Header ─────────────────────────────────────────────────── */}
+          {/* ── Header ────────────────────────────────────────────── */}
           <div className="flex items-start gap-3 px-5 py-4 border-b border-border shrink-0">
             {/* Completion checkbox */}
             <input
@@ -197,7 +200,7 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             </SheetClose>
           </div>
 
-          {/* ── Scrollable body ─────────────────────────────────────────── */}
+          {/* ── Scrollable body ─────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
             {/* Priority & Due date */}
@@ -248,6 +251,11 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                 </div>
               </div>
             </div>
+
+            {/* Tags */}
+            {task && (
+              <TagsSection taskId={safeId} currentTags={task.tags} />
+            )}
 
             {/* Subtasks */}
             <div className="space-y-3">
@@ -374,8 +382,9 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             </div>
           </div>
 
-          {/* ── Footer ─────────────────────────────────────────────────── */}
-          <div className="shrink-0 px-5 py-3 border-t border-border">
+          {/* ── Footer ────────────────────────────────────────────────── */}
+          <div className="shrink-0 px-5 py-3 border-t border-border space-y-2">
+            <MoveToSelect taskId={safeId} currentItemId={task?.item_id ?? null} />
             <Button
               variant="danger"
               size="sm"
@@ -390,7 +399,7 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         </SheetContent>
       </Sheet>
 
-      {/* ── Confirm: delete task ─────────────────────────────────────── */}
+      {/* ── Confirm: delete task ─────────────────────────────────── */}
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
@@ -401,7 +410,7 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         destructive
       />
 
-      {/* ── Confirm: reset subtasks (R8.9) ───────────────────────────── */}
+      {/* ── Confirm: reset subtasks (R8.9) ───────────────────────────────── */}
       <ConfirmDialog
         open={showResetSubtasksDialog}
         onOpenChange={setShowResetSubtasksDialog}
@@ -412,5 +421,117 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         destructive={false}
       />
     </>
+  )
+}
+
+// ── MoveToSelect ───────────────────────────────────────────────────────────────────
+
+function MoveToSelect({ taskId, currentItemId }: { taskId: number; currentItemId: number | null }) {
+  const { data: items = [] } = useItems({ include_archived: false })
+  const moveTask = useMoveTask()
+
+  // Filter to projects and areas only
+  const destinations = items.filter(i => i.type === 'project' || i.type === 'area')
+
+  function handleMove(e: React.ChangeEvent<HTMLSelectElement>) {
+    const value = e.target.value
+    const itemId = value === 'inbox' ? null : Number(value)
+    if (itemId === currentItemId) return
+    moveTask.mutate({ id: taskId, payload: { item_id: itemId } })
+    e.target.value = value  // reset display after mutation
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <label htmlFor="move-to-select" className="text-sm text-muted whitespace-nowrap">
+        Move to…
+      </label>
+      <select
+        id="move-to-select"
+        defaultValue={currentItemId === null ? 'inbox' : String(currentItemId)}
+        onChange={handleMove}
+        aria-label="Move task to"
+        className="flex-1 h-8 px-2 rounded-control border border-border bg-surface text-sm text-text focus:outline-2 focus:outline-offset-2 focus:outline-accent"
+      >
+        <option value="inbox">Inbox</option>
+        {destinations.map(item => (
+          <option key={item.id} value={String(item.id)}>
+            {item.type === 'project' ? '📁' : '📂'} {item.title}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+// ── TagsSection ──────────────────────────────────────────────────────────────────────
+
+function TagsSection({ taskId: _taskId, currentTags }: { taskId: number; currentTags: string[] }) {
+  const { data: allTags = [] } = useTags()
+  const createTag = useCreateTag()
+  const [inputValue, setInputValue] = useState('')
+  const MAX_TAGS = 20
+
+  function addTag(name: string) {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    if (currentTags.length >= MAX_TAGS) return
+    if (currentTags.includes(trimmed)) return
+    // Create tag in the tag service (task-tag wiring is a future iteration)
+    createTag.mutate({ name: trimmed })
+    setInputValue('')
+  }
+
+  function removeTag(_name: string) {
+    // Visual placeholder — actual task-tag removal API wiring comes in a later iteration
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-text">Tags</h3>
+        <span className="text-xs text-muted">{currentTags.length}/{MAX_TAGS}</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {currentTags.map(tag => (
+          <span
+            key={tag}
+            className="inline-flex items-center gap-1 px-2 h-5 rounded bg-surface-2 text-xs text-text"
+          >
+            #{tag}
+            <button
+              type="button"
+              onClick={() => removeTag(tag)}
+              aria-label={`Remove tag ${tag}`}
+              className="text-muted hover:text-danger-fg"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
+      {currentTags.length < MAX_TAGS && (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { e.preventDefault(); addTag(inputValue) }
+            }}
+            placeholder="Add tag…"
+            list="available-tags"
+            maxLength={50}
+            aria-label="Add tag"
+            className="flex-1 h-8 px-2 rounded-control border border-border bg-surface text-sm text-text placeholder:text-muted focus:outline-2 focus:outline-offset-2 focus:outline-accent"
+          />
+          <datalist id="available-tags">
+            {allTags
+              .filter(t => !currentTags.includes(t.name))
+              .map(t => <option key={t.id} value={t.name} />)}
+          </datalist>
+        </div>
+      )}
+    </div>
   )
 }

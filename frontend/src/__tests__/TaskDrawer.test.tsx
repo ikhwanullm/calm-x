@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { TaskDrawer } from '../components/tasks/TaskDrawer'
 import type { Task, Subtask } from '../types/models'
 
-// ── Fixtures ────────────────────────────────────────────────────────────────
+// ── Fixtures ──────────────────────────────────────────────────────────────────────────
 
 const baseTask: Task = {
   id: 1,
@@ -28,7 +28,7 @@ const subtasks: Subtask[] = [
   { id: 11, task_id: 1, title: 'Sub B', is_complete: false, sort_order: 1, created_at: '', updated_at: '' },
 ]
 
-// ── Mocks ───────────────────────────────────────────────────────────────────
+// ── Mocks ───────────────────────────────────────────────────────────────────────────
 
 const mockMutate = vi.fn()
 
@@ -38,6 +38,7 @@ vi.mock('../hooks/useTasks', () => ({
   useDeleteTask: vi.fn(() => ({ mutate: mockMutate })),
   useCompleteTask: vi.fn(() => ({ mutate: mockMutate })),
   useIncompleteTask: vi.fn(() => ({ mutate: mockMutate })),
+  useMoveTask: vi.fn(() => ({ mutate: mockMutate })),
 }))
 
 vi.mock('../hooks/useSubtasks', () => ({
@@ -48,13 +49,22 @@ vi.mock('../hooks/useSubtasks', () => ({
   useDeleteSubtask: vi.fn(() => ({ mutate: mockMutate })),
 }))
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+vi.mock('../hooks/useItems', () => ({
+  useItems: vi.fn(() => ({ data: [] })),
+}))
+
+vi.mock('../hooks/useTags', () => ({
+  useTags: vi.fn(() => ({ data: [] })),
+  useCreateTag: vi.fn(() => ({ mutate: mockMutate })),
+}))
+
+// ── Helpers ───────────────────────────────────────────────────────────────────────────
 
 function renderDrawer(taskId: number | null, onClose = vi.fn()) {
   return render(<TaskDrawer taskId={taskId} onClose={onClose} />)
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// ── Tests ─────────────────────────────────────────────────────────────────────────────
 
 describe('TaskDrawer', () => {
   beforeEach(() => {
@@ -130,5 +140,16 @@ describe('TaskDrawer', () => {
   it('shows progress bar when there are subtasks', () => {
     renderDrawer(1)
     expect(screen.getByRole('progressbar')).toBeTruthy()
+  })
+
+  it('test_move_to_select_renders: "Move to…" select is present in the footer', () => {
+    renderDrawer(1)
+    expect(screen.getByLabelText('Move task to')).toBeTruthy()
+    expect(screen.getByText('Move to…')).toBeTruthy()
+  })
+
+  it('test_tags_section_renders: "Tags" heading is present in the body', () => {
+    renderDrawer(1)
+    expect(screen.getByRole('heading', { name: 'Tags' })).toBeTruthy()
   })
 })
