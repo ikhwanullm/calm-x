@@ -710,7 +710,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Test backend progress_service.calculate_progress()
     - _Requirements: R4.3, R14.1_
 
-- [-] 3.42 Checkpoint: Tasks & Subtasks complete
+- [x] 3.42 Checkpoint: Tasks & Subtasks complete
   - Create, edit, delete tasks and subtasks in browser
   - Verify task-subtask completion synchronization works correctly
   - Verify drag-and-drop reordering works with keyboard
