@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models for Items (Projects, Areas, Resources)."""
 from __future__ import annotations
 
-from sqlalchemy import Date, ForeignKey, Integer, String, Text, UniqueConstraint, UniqueConstraint
+from sqlalchemy import Date, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database import Base

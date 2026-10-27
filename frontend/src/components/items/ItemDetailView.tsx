@@ -213,9 +213,6 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
   <DropdownMenuItem onSelect={() => setShowConvertDialog(true)}>
                   Convert type
                 </DropdownMenuItem>
-  <DropdownMenuItem onSelect={() => setShowConvertDialog(true)}>
-                  Convert type
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={() => {
                     archiveItem.mutate(item.id, { onSuccess: () => navigate(listPath) })
@@ -310,13 +307,6 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         <ResourceLinksSection resourceId={item.id} isArchived={archived} />
       )}
 
-      {/* Reference links */}
-      <ReferenceLinksSection itemId={item.id} isArchived={archived} />
-
-      {/* Resource linked items (only for Resources) */}
-      {item.type === 'resource' && (
-        <ResourceLinksSection resourceId={item.id} isArchived={archived} />
-      )}
 
       {/* Tasks section */}
       <TasksSection item={item} archived={archived} />
@@ -341,12 +331,6 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         currentType={item.type}
       />
 
-      <TypeConversionDialog
-        open={showConvertDialog}
-        onOpenChange={setShowConvertDialog}
-        itemId={item.id}
-        currentType={item.type}
-      />
 
       {/* 2.16: Delete confirm dialog */}
       <ConfirmDialog

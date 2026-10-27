@@ -70,6 +70,17 @@ vi.mock('../components/tasks/TaskList', () => ({
   TaskList: () => null,
 }))
 
+vi.mock('../hooks/useLinks', () => ({
+  useReferenceLinks: vi.fn(() => ({ data: [] })),
+  useAddReferenceLink: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
+  useDeleteReferenceLink: vi.fn(() => ({ mutate: vi.fn() })),
+  useReorderReferenceLinks: vi.fn(() => ({ mutate: vi.fn() })),
+  useLinkedItems: vi.fn(() => ({ data: [] })),
+  useLinkResource: vi.fn(() => ({ mutate: vi.fn() })),
+  useUnlinkResource: vi.fn(() => ({ mutate: vi.fn() })),
+  useConvertItem: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
+}))
+
 vi.mock('../components/tasks/TaskDrawer', () => ({
   TaskDrawer: () => null,
 }))
@@ -194,4 +205,36 @@ describe('ItemDetailView', () => {
   })
 
 
+
+  it("renders exactly one Convert type menu item", async () => {
+    const user = userEvent.setup()
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    // Open the actions menu
+    const menuBtn = screen.getByRole("button", { name: "Item actions" })
+    await user.click(menuBtn)
+    const convertItems = screen.getAllByText("Convert type")
+    expect(convertItems.length).toBe(1)
+  })
+
+  it("renders exactly one Reference links section", () => {
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    const headings = screen.getAllByText(/Reference links/i)
+    expect(headings.length).toBe(1)
+  })
+
+  it("renders exactly one Convert type menu item", async () => {
+    const user = userEvent.setup()
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    // Open the actions menu
+    const menuBtn = screen.getByRole("button", { name: "Item actions" })
+    await user.click(menuBtn)
+    const convertItems = screen.getAllByText("Convert type")
+    expect(convertItems.length).toBe(1)
+  })
+
+  it("renders exactly one Reference links section", () => {
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    const headings = screen.getAllByText(/Reference links/i)
+    expect(headings.length).toBe(1)
+  })
 })
