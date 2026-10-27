@@ -18,7 +18,7 @@ class ProjectSummarySchema(BaseModel):
     title: str
     task_count: int
     completed_task_count: int
-    progress_percentage: float
+    progress_percentage: int    # integer, (200m+n)//(2n) formula
     project_deadline: Optional[str] = None
 
 
@@ -29,8 +29,10 @@ class DashboardSchema(BaseModel):
     areas_count: int
     area_task_count: int
     resources_count: int
+    reference_link_count: int       # Phase 5: always 0 until ReferenceLink model exists
     archives_count: int
-    overall_progress: Optional[float]       # None when no eligible projects
+    overall_progress: Optional[int]     # None when no eligible projects
+    nearest_deadline_project: Optional[str]  # YYYY-MM-DD or None
     upcoming_deadlines: List[DeadlineItemSchema]
     active_projects: List[ProjectSummarySchema]
-    last_review_date: Optional[str]         # Phase 10
+    last_review_date: Optional[str]     # Phase 10

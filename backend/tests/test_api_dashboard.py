@@ -173,3 +173,27 @@ def test_dashboard_bad_date_returns_error_contract(client):
     assert "error" in body, f"Missing 'error' key in {body}"
     assert "type" in body, f"Missing 'type' key in {body}"
     assert "detail" not in body, f"Should not use FastAPI detail format"
+
+
+def test_dashboard_progress_1_of_8_is_13(engine):
+    """Fix 4: calculate_progress(1,8)=13 not 12 (round-half-up formula)."""
+    from backend.services.progress_service import calculate_progress
+    assert calculate_progress(1, 8) == 13
+
+    TODAY_LOCAL = date.today()
+    with Session(engine) as s:
+        now = now_utc()
+        proj = Item(type="project", title="P", description="", notes="",
+                    project_status="active", archived_at=None, created_at=now, updated_at=now)
+        s.add(proj); s.flush()
+        for i in range(8):
+            t = Task(item_id=proj.id, title=f"T{i}", description="", notes="",
+                     priority="medium", is_complete=1 if i == 0 else 0,
+                     sort_order=i, created_at=now, updated_at=now)
+            s.add(t)
+        s.commit()
+
+    with Session(engine) as s:
+        data = get_dashboard_data(s, TODAY_LOCAL)
+    assert data.active_projects[0].progress_percentage == 13
+    assert data.overall_progress == 13
