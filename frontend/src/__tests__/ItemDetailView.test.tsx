@@ -14,6 +14,12 @@ import {
   useRestoreItem,
   useDeleteItem,
 } from '../hooks/useItems'
+import {
+  useItemTasks,
+  useCreateTask,
+  useCompleteTask,
+  useIncompleteTask,
+} from '../hooks/useTasks'
 
 const mockProject = {
   id: 1,
@@ -45,6 +51,21 @@ vi.mock('../hooks/useItems', () => ({
   useDeleteItem: vi.fn(),
 }))
 
+vi.mock('../hooks/useTasks', () => ({
+  useItemTasks: vi.fn().mockReturnValue({ data: [], isLoading: false }),
+  useCreateTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
+  useCompleteTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
+  useIncompleteTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
+}))
+
+vi.mock('../components/tasks/TaskList', () => ({
+  TaskList: () => null,
+}))
+
+vi.mock('../components/tasks/TaskDrawer', () => ({
+  TaskDrawer: () => null,
+}))
+
 function wrapper({ children }: { children: React.ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return (
@@ -67,6 +88,10 @@ describe('ItemDetailView', () => {
     vi.mocked(useArchiveItem).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
     vi.mocked(useRestoreItem).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
     vi.mocked(useDeleteItem).mockReturnValue({ mutate: mockMutate, isPending: false } as any)
+    vi.mocked(useItemTasks).mockReturnValue({ data: [], isLoading: false } as any)
+    vi.mocked(useCreateTask).mockReturnValue({ mutate: mockMutate } as any)
+    vi.mocked(useCompleteTask).mockReturnValue({ mutate: mockMutate } as any)
+    vi.mocked(useIncompleteTask).mockReturnValue({ mutate: mockMutate } as any)
   })
 
   it('renders item title', () => {
@@ -142,5 +167,21 @@ describe('ItemDetailView', () => {
     render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
     expect(screen.getByRole('button', { name: 'Restore' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Delete permanently' })).toBeTruthy()
+  })
+
+  // 3.30: Tasks section
+  it('shows add task button when not archived', () => {
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    expect(screen.getByRole('button', { name: 'Add task' })).toBeTruthy()
+  })
+
+  it('does not show add task button when archived', () => {
+    vi.mocked(useItem).mockReturnValueOnce({
+      data: { ...mockProject, archived_at: '2024-06-01T00:00:00Z' },
+      isLoading: false,
+      isError: false,
+    } as any)
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    expect(screen.queryByRole('button', { name: 'Add task' })).toBeNull()
   })
 })

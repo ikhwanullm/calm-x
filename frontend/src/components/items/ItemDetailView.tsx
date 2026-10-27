@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { isProject, isArea, isArchived } from '@/types/models'
-import type { Item } from '@/types/models'
+import type { Item, Task } from '@/types/models'
 import {
   useItem,
   useUpdateItem,
@@ -11,6 +11,7 @@ import {
   useRestoreItem,
   useDeleteItem,
 } from '@/hooks/useItems'
+import { useItemTasks, useCreateTask, useCompleteTask, useIncompleteTask } from '@/hooks/useTasks'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { ProgressBar, StatusBadge, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
 import { getDeadlineStatus, DEFAULT_THRESHOLD } from '@/utils/deadline'
@@ -22,6 +23,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { TaskList } from '@/components/tasks/TaskList'
+import { TaskDrawer } from '@/components/tasks/TaskDrawer'
 
 interface ItemDetailViewProps {
   id: number
@@ -64,7 +67,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
 
   const archived = isArchived(item)
 
-  // R1.6: Complete project → prompt to archive
+  // R1.6: Complete project -> prompt to archive
   const handleCompleteProject = () => {
     completeProject.mutate(item.id, {
       onSuccess: () => setShowArchivePrompt(true),
@@ -109,7 +112,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
           role="status"
         >
           <span className="text-warn-fg font-medium">
-            Read-only · Archived on {formatAbsoluteDate(item.archived_at!)}
+            Read-only \u00b7 Archived on {formatAbsoluteDate(item.archived_at!)}
           </span>
           <div className="flex gap-2">
             <button
@@ -147,7 +150,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
       {/* Header row: title + 2.16 actions menu */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          {/* Title — inline edit */}
+          {/* Title - inline edit */}
           <InlineTitle
             item={item}
             disabled={archived}
@@ -175,7 +178,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
           )}
         </div>
 
-        {/* 2.16: Item actions menu (⋯) */}
+        {/* 2.16: Item actions menu (...) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -183,7 +186,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
               aria-label="Item actions"
               className="flex-shrink-0 mt-1 p-1.5 rounded-control text-muted hover:text-text hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
             >
-              <span aria-hidden="true" className="text-base leading-none tracking-widest">···</span>
+              <span aria-hidden="true" className="text-base leading-none tracking-widest">\u00b7\u00b7\u00b7</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -287,6 +290,9 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         onSave={(v) => updateItem.mutate({ notes: v })}
       />
 
+      {/* Tasks section */}
+      <TasksSection item={item} archived={archived} />
+
       {/* 2.15: Archive prompt after completing project (R1.6) */}
       <ConfirmDialog
         open={showArchivePrompt}
@@ -310,6 +316,92 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         onConfirm={handleDeleteConfirm}
         onCancel={() => setShowDeleteConfirm(false)}
       />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Tasks section (R4.5 / R4.6 task limit)
+// ---------------------------------------------------------------------------
+
+function TasksSection({ item, archived }: { item: Item; archived: boolean }) {
+  const { data: tasks = [], isLoading: tasksLoading } = useItemTasks(item.id)
+  const createTask = useCreateTask()
+  const completeTask = useCompleteTask()
+  const incompleteTask = useIncompleteTask()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const selectedTaskId = Number(searchParams.get('task')) || null
+
+  const MAX_TASKS = 100
+  const atLimit = tasks.length >= MAX_TASKS
+
+  function openDrawer(taskId: number) {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      next.set('task', String(taskId))
+      return next
+    })
+  }
+
+  function closeDrawer() {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      next.delete('task')
+      return next
+    })
+  }
+
+  function handleToggleComplete(task: Task) {
+    if (task.is_complete) {
+      incompleteTask.mutate(task.id)
+    } else {
+      completeTask.mutate(task.id)
+    }
+  }
+
+  function handleAddTask() {
+    createTask.mutate(
+      { title: 'New task', item_id: item.id, priority: 'medium' },
+      { onSuccess: (newTask) => openDrawer(newTask.id) }
+    )
+  }
+
+  return (
+    <div className="mt-6">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-text">
+          Tasks
+          {tasks.length > 0 && (
+            <span className="ml-2 text-muted font-normal">{tasks.length}</span>
+          )}
+        </h3>
+        {!archived && (
+          <button
+            type="button"
+            onClick={handleAddTask}
+            disabled={atLimit}
+            title={atLimit ? 'This item has reached the maximum of 100 tasks.' : undefined}
+            aria-label="Add task"
+            className="text-sm text-accent-text hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
+          >
+            + Add task
+          </button>
+        )}
+      </div>
+
+      {tasksLoading ? (
+        <p className="text-sm text-muted">Loading tasks\u2026</p>
+      ) : (
+        <TaskList
+          tasks={tasks}
+          selectedTaskId={selectedTaskId ?? undefined}
+          onOpenDrawer={openDrawer}
+          onToggleComplete={handleToggleComplete}
+        />
+      )}
+
+      <TaskDrawer taskId={selectedTaskId} onClose={closeDrawer} />
     </div>
   )
 }
