@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-query'
 import { itemsApi } from '../api/items'
 import { notify } from '../lib/toast'
+import { dashboardKeys } from './useDashboard'
 import type {
   Item,
   ItemCreatePayload,
@@ -51,6 +52,7 @@ export function useCreateItem() {
     mutationFn: (payload: ItemCreatePayload) => itemsApi.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.all })
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => {
       notify.error("Couldn't create item. Check that the server is running and try again.", err.message)
@@ -81,6 +83,7 @@ export function useUpdateItem(id: number) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.all })
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
     },
   })
 }
@@ -92,6 +95,7 @@ export function useDeleteItem() {
     onSuccess: (_data, id) => {
       queryClient.removeQueries({ queryKey: itemKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: itemKeys.all })
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => {
       notify.error("Couldn't delete item. Try again.", err.message)
@@ -105,6 +109,7 @@ export function useArchiveItem() {
     mutationFn: (id: number) => itemsApi.archive(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.all })
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => {
       notify.error("Couldn't archive item. Try again.", err.message)
@@ -118,6 +123,7 @@ export function useRestoreItem() {
     mutationFn: (id: number) => itemsApi.restore(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.all })
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => {
       notify.error("Couldn't restore item. Try again.", err.message)
@@ -131,6 +137,7 @@ export function useCompleteProject() {
     mutationFn: (id: number) => itemsApi.completeProject(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.all })
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => {
       notify.error("Couldn't complete project. Try again.", err.message)
@@ -144,6 +151,7 @@ export function useReopenProject() {
     mutationFn: (id: number) => itemsApi.reopenProject(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.all })
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => {
       notify.error("Couldn't reopen project. Try again.", err.message)

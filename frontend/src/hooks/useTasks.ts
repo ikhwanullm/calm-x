@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { tasksApi } from '../api/tasks'
 import { itemKeys } from './useItems'
+import { dashboardKeys } from './useDashboard'
 import { notify } from '../lib/toast'
 import type {
   Task,
@@ -75,6 +76,7 @@ export function useUpdateTask(id: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: taskKeys.all })
       qc.invalidateQueries({ queryKey: itemKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
   })
 }
@@ -87,6 +89,7 @@ export function useDeleteTask() {
       qc.removeQueries({ queryKey: taskKeys.detail(id) })
       qc.invalidateQueries({ queryKey: taskKeys.all })
       qc.invalidateQueries({ queryKey: itemKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => notify.error("Couldn't delete task. Try again.", err.message),
   })
@@ -100,6 +103,7 @@ export function useMoveTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: taskKeys.all })
       qc.invalidateQueries({ queryKey: itemKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => notify.error("Couldn't move task. Try again.", err.message),
   })
@@ -131,6 +135,7 @@ export function useCompleteTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: taskKeys.all })
       qc.invalidateQueries({ queryKey: itemKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
   })
 }
@@ -159,6 +164,7 @@ export function useIncompleteTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: taskKeys.all })
       qc.invalidateQueries({ queryKey: itemKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
   })
 }

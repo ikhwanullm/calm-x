@@ -3,6 +3,7 @@ import { subtasksApi } from '../api/subtasks'
 import { notify } from '../lib/toast'
 import { taskKeys } from './useTasks'
 import type { SubtaskCreatePayload, SubtaskUpdatePayload } from '../types/models'
+import { dashboardKeys } from './useDashboard'
 
 export const subtaskKeys = {
   forTask: (taskId: number) => ['subtasks', 'task', taskId] as const,
@@ -24,6 +25,7 @@ export function useCreateSubtask(taskId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: subtaskKeys.forTask(taskId) })
       qc.invalidateQueries({ queryKey: taskKeys.detail(taskId) })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => notify.error("Couldn't add subtask. Try again.", err.message),
   })
@@ -34,7 +36,10 @@ export function useUpdateSubtask() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: SubtaskUpdatePayload }) =>
       subtasksApi.update(id, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['subtasks'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['subtasks'] })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+    },
     onError: (err: Error) => notify.error("Couldn't update subtask. Try again.", err.message),
   })
 }
@@ -46,6 +51,7 @@ export function useDeleteSubtask(taskId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: subtaskKeys.forTask(taskId) })
       qc.invalidateQueries({ queryKey: taskKeys.detail(taskId) })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => notify.error("Couldn't delete subtask. Try again.", err.message),
   })
@@ -58,6 +64,7 @@ export function useCompleteSubtask(taskId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: subtaskKeys.forTask(taskId) })
       qc.invalidateQueries({ queryKey: taskKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => notify.error("Couldn't complete subtask. Try again.", err.message),
   })
@@ -70,6 +77,7 @@ export function useIncompleteSubtask(taskId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: subtaskKeys.forTask(taskId) })
       qc.invalidateQueries({ queryKey: taskKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     onError: (err: Error) => notify.error("Couldn't reopen subtask. Try again.", err.message),
   })
