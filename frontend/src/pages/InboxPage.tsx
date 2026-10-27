@@ -55,7 +55,7 @@ export default function InboxPage() {
       />
 
       {isLoading ? (
-        <p className="text-sm text-muted mt-4">Loading\u2026</p>
+        <p className="text-sm text-muted mt-4">Loading…</p>
       ) : tasks.length === 0 ? (
         <EmptyState
           title="Inbox zero."
@@ -130,7 +130,7 @@ function InlineCapture({ onCapture }: { onCapture: (title: string) => void }) {
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Capture a task\u2026"
+        placeholder="Capture a task…"
         maxLength={200}
         aria-label="Capture task title"
         className={cn(
@@ -188,7 +188,7 @@ function MoveToSelect({ task }: { task: Task }) {
         "hover:text-text hover:border-accent transition-colors"
       )}
     >
-      <option value="" disabled>Move to\u2026</option>
+      <option value="" disabled>Move to…</option>
       {destinations.map((item) => (
         <option key={item.id} value={String(item.id)}>
           {item.title}

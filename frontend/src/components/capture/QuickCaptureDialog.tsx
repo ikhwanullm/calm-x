@@ -58,7 +58,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Task title?"
+            placeholder="Task title…"
             maxLength={200}
             aria-label="Task title"
             className={cn(
@@ -79,7 +79,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
                 "hover:opacity-90 disabled:opacity-50 transition-opacity"
               )}
             >
-              {createTask.isPending ? "Capturing?" : "Capture"}
+              {createTask.isPending ? "Capturing…" : "Capture"}
             </button>
           </div>
         </form>

@@ -40,7 +40,7 @@ export default function DashboardPage() {
           loading={isLoading}
           stat={data?.inbox_count ?? 0}
           statLabel="open tasks"
-          action={<Link to="/inbox" className="text-xs text-accent-text hover:underline">Process inbox \u2192</Link>}
+          action={<Link to="/inbox" className="text-xs text-accent-text hover:underline">Process inbox →</Link>}
         />
         <SummaryCard
           title="Projects"
@@ -67,7 +67,7 @@ export default function DashboardPage() {
           loading={isLoading}
           stat={data?.archives_count ?? 0}
           statLabel="archived items"
-          action={<Link to="/archive" className="text-xs text-accent-text hover:underline">View archive \u2192</Link>}
+          action={<Link to="/archive" className="text-xs text-accent-text hover:underline">View archive →</Link>}
         />
         <OverallProgressCard loading={isLoading} value={data?.overall_progress ?? null} />
       </div>
@@ -84,7 +84,7 @@ export default function DashboardPage() {
         ) : (data?.upcoming_deadlines.length ?? 0) === 0 ? (
           <EmptyState
             title="Nothing overdue or due soon."
-            description="You\u2019re all caught up!"
+            description="You’re all caught up!"
             dashedBorder
           />
         ) : (
@@ -141,7 +141,7 @@ function SummaryCard({
           {stat}
         </p>
       )}
-      <p className="text-xs text-muted">{loading ? "\u2026" : statLabel}</p>
+      <p className="text-xs text-muted">{loading ? "…" : statLabel}</p>
       {sub && <p className="text-xs text-muted">{sub}</p>}
       {action && <div className="mt-auto pt-1">{action}</div>}
     </div>

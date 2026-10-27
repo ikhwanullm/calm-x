@@ -122,7 +122,7 @@ export function AppShell() {
               role="search"
               aria-label="Search (placeholder)"
             >
-              <span className="text-muted text-sm">Search?</span>
+              <span className="text-muted text-sm">Search…</span>
             </div>
           </div>
           <button
