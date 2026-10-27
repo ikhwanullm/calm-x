@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models for Items (Projects, Areas, Resources)."""
 from __future__ import annotations
 
-from sqlalchemy import Date, ForeignKey, Integer, String, Text
+from sqlalchemy import Date, ForeignKey, Integer, String, Text, UniqueConstraint, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database import Base
@@ -200,6 +200,12 @@ class ResourceLink(Base):
     """A link from a Resource item to a Project or Area."""
 
     __tablename__ = "resource_links"
+    __table_args__ = (
+        UniqueConstraint("resource_id", "linked_item_id", name="uq_resource_link"),
+    )
+    __table_args__ = (
+        UniqueConstraint("resource_id", "linked_item_id", name="uq_resource_link"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     resource_id: Mapped[int] = mapped_column(
