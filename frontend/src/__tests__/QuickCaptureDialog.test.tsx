@@ -1,22 +1,52 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router-dom"
+import { Toaster } from "sonner"
 import React from "react"
 import { QuickCaptureDialog } from "../components/capture/QuickCaptureDialog"
+import { notify } from "../lib/toast"
 
-const mockMutate = vi.fn()
-
-vi.mock("../hooks/useTasks", () => ({
-  useCreateTask: vi.fn(() => ({ mutate: mockMutate, isPending: false })),
+// Mock the API so the real useCreateTask hook can resolve
+vi.mock("../api/tasks", () => ({
+  tasksApi: {
+    create: vi.fn().mockResolvedValue({
+      id: 1, item_id: null, title: "Test task", is_complete: false,
+      sort_order: 0, description: "", notes: "", due_date: null,
+      priority: "medium", created_at: "", updated_at: "",
+      subtask_count: 0, completed_subtask_count: 0, tags: [],
+    }),
+    inbox: vi.fn().mockResolvedValue([]),
+  },
 }))
 
+vi.mock("../api/items", () => ({ itemsApi: { list: vi.fn().mockResolvedValue([]) } }))
+vi.mock("../api/settings", () => ({
+  settingsApi: { get: vi.fn().mockResolvedValue({ approaching_deadline_threshold: "3" }) },
+}))
+
+// Spy on notify.success so we can assert it was called with the action option
+vi.mock("../lib/toast", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../lib/toast")>()
+  return {
+    ...actual,
+    notify: {
+      success: vi.fn(),
+      error: vi.fn(),
+      info: vi.fn(),
+    },
+  }
+})
+
 function wrapper({ children }: { children: React.ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return (
     <MemoryRouter>
-      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+      <QueryClientProvider client={qc}>
+        <Toaster />
+        {children}
+      </QueryClientProvider>
     </MemoryRouter>
   )
 }
@@ -34,15 +64,17 @@ describe("QuickCaptureDialog", () => {
     expect(screen.queryByRole("textbox", { name: /task title/i })).toBeNull()
   })
 
-  it("calls createTask.mutate with trimmed title on submit", async () => {
+  it("calls tasksApi.create with trimmed title on submit", async () => {
     const user = userEvent.setup()
+    const { tasksApi } = await import("../api/tasks")
     render(<QuickCaptureDialog open onOpenChange={vi.fn()} />, { wrapper })
     const input = screen.getByRole("textbox", { name: /task title/i })
     await user.type(input, "My new task")
     await user.keyboard("{Enter}")
-    expect(mockMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "My new task", priority: "medium" }),
-      expect.any(Object)
+    await waitFor(() =>
+      expect(vi.mocked(tasksApi.create)).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "My new task", priority: "medium" })
+      )
     )
   })
 
@@ -52,26 +84,20 @@ describe("QuickCaptureDialog", () => {
     expect((btn as HTMLButtonElement).disabled).toBe(true)
   })
 
-  it("capture calls notify.success with action option (typed, no as any)", async () => {
+  it("shows Added to Inbox toast with View Inbox action after successful capture", async () => {
     const user = userEvent.setup()
-    // Mock the notify module to capture what it receives
-    const notifyMock = { success: vi.fn(), error: vi.fn(), info: vi.fn() }
-    vi.doMock("../lib/toast", () => ({ notify: notifyMock }))
-
-    const { useCreateTask } = await import("../hooks/useTasks")
-    vi.mocked(useCreateTask).mockReturnValueOnce({
-      mutate: (_p: unknown, cbs: { onSuccess?: () => void }) => cbs.onSuccess?.(),
-      isPending: false,
-    } as any)
-
     render(<QuickCaptureDialog open onOpenChange={vi.fn()} />, { wrapper })
     const input = screen.getByRole("textbox", { name: /task title/i })
     await user.type(input, "Test task")
     await user.keyboard("{Enter}")
-
-    // The real toast module was used (not the doMock which takes effect next cycle).
-    // Verify no crash happened: all other assertions passed, component still mounted.
-    expect(screen.queryByLabelText("Task title")).toBeDefined()
-    vi.doUnmock("../lib/toast")
+    // Verify notify.success was called with the action option containing "View Inbox"
+    await waitFor(() =>
+      expect(vi.mocked(notify.success)).toHaveBeenCalledWith(
+        "Added to Inbox",
+        expect.objectContaining({
+          action: expect.objectContaining({ label: "View Inbox" }),
+        })
+      )
+    )
   })
 })
