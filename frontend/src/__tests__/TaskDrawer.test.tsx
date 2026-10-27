@@ -34,7 +34,7 @@ const mockMutate = vi.fn()
 
 vi.mock('../hooks/useTasks', () => ({
   useTask: vi.fn(() => ({ data: baseTask, isLoading: false })),
-  useUpdateTask: vi.fn(() => ({ mutate: mockMutate })),
+  useUpdateTask: vi.fn(() => ({ mutate: mockMutate, isPending: false })),
   useDeleteTask: vi.fn(() => ({ mutate: mockMutate })),
   useCompleteTask: vi.fn(() => ({ mutate: mockMutate })),
   useIncompleteTask: vi.fn(() => ({ mutate: mockMutate })),
@@ -151,5 +151,22 @@ describe('TaskDrawer', () => {
   it('test_tags_section_renders: "Tags" heading is present in the body', () => {
     renderDrawer(1)
     expect(screen.getByRole('heading', { name: 'Tags' })).toBeTruthy()
+  })
+
+  it('add tag input is present in TagsSection', () => {
+    renderDrawer(1)
+    // input[list] has implicit ARIA role combobox
+    expect(screen.getByLabelText(/add tag/i)).toBeTruthy()
+  })
+
+  it('typing a tag name and pressing Enter calls updateTask.mutate with tag_names', async () => {
+    const user = userEvent.setup()
+    renderDrawer(1)
+    const input = screen.getByLabelText(/add tag/i)
+    await user.type(input, 'design')
+    await user.keyboard('{Enter}')
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ tag_names: expect.arrayContaining(['design']) })
+    )
   })
 })

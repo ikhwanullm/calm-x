@@ -20,7 +20,7 @@ import {
   useDeleteSubtask,
 } from '@/hooks/useSubtasks'
 import { useItems } from '@/hooks/useItems'
-import { useTags, useCreateTag } from '@/hooks/useTags'
+import { useTags } from '@/hooks/useTags'
 import type { TaskPriority } from '@/types/models'
 import { cn } from '@/lib/utils'
 
@@ -466,24 +466,24 @@ function MoveToSelect({ taskId, currentItemId }: { taskId: number; currentItemId
 
 // ── TagsSection ──────────────────────────────────────────────────────────────────────
 
-function TagsSection({ taskId: _taskId, currentTags }: { taskId: number; currentTags: string[] }) {
+function TagsSection({ taskId, currentTags }: { taskId: number; currentTags: string[] }) {
   const { data: allTags = [] } = useTags()
-  const createTag = useCreateTag()
+  const updateTask = useUpdateTask(taskId)
   const [inputValue, setInputValue] = useState('')
   const MAX_TAGS = 20
 
   function addTag(name: string) {
-    const trimmed = name.trim()
+    const trimmed = name.trim().toLowerCase()
     if (!trimmed) return
     if (currentTags.length >= MAX_TAGS) return
     if (currentTags.includes(trimmed)) return
-    // Create tag in the tag service (task-tag wiring is a future iteration)
-    createTag.mutate({ name: trimmed })
+    // Assign updated tag list; backend creates the tag if it does not exist yet
+    updateTask.mutate({ tag_names: [...currentTags, trimmed] })
     setInputValue('')
   }
 
-  function removeTag(_name: string) {
-    // Visual placeholder — actual task-tag removal API wiring comes in a later iteration
+  function removeTag(name: string) {
+    updateTask.mutate({ tag_names: currentTags.filter((t) => t !== name) })
   }
 
   return (

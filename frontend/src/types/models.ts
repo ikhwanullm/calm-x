@@ -143,6 +143,7 @@ export interface TaskCreatePayload {
   notes?: string
   due_date?: string | null
   priority?: TaskPriority
+  tag_names?: string[]
 }
 
 export interface TaskUpdatePayload {
@@ -151,6 +152,7 @@ export interface TaskUpdatePayload {
   notes?: string
   due_date?: string | null
   priority?: TaskPriority
+  tag_names?: string[]
 }
 
 export interface TaskMovePayload {
