@@ -51,7 +51,7 @@ def create_item(
     data: ItemCreateUnion,
     session: SessionDep,
 ):
-    """Create a new Project, Area, or Resource. 	ype field is required."""
+    """Create a new Project, Area, or Resource.  ype field is required."""
     item = item_service.create_item(session, data)
     session.commit()
     return item_to_response(item)
