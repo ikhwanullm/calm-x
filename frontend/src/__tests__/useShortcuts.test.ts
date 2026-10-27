@@ -7,10 +7,17 @@ function fireKey(key: string, opts: KeyboardEventInit = {}) {
 }
 
 describe("useShortcuts", () => {
-  it("calls handler for registered key", () => {
+  it("calls handler for uppercase registered key", () => {
     const handler = vi.fn()
     renderHook(() => useShortcuts({ Q: handler }))
     fireKey("Q")
+    expect(handler).toHaveBeenCalledOnce()
+  })
+
+  it("calls handler when lowercase key is pressed for uppercase registration", () => {
+    const handler = vi.fn()
+    renderHook(() => useShortcuts({ Q: handler }))
+    fireKey("q")
     expect(handler).toHaveBeenCalledOnce()
   })
 

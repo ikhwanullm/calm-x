@@ -17,7 +17,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 /**
  * Register keyboard shortcuts.
  * Shortcuts are ignored when focus is inside an input, textarea,
- * select, or contenteditable element (ui-guidelines ?8).
+ * select, or contenteditable element (ui-guidelines §8).
  */
 export function useShortcuts(shortcuts: ShortcutMap): void {
   useEffect(() => {
@@ -37,7 +37,8 @@ export function useShortcuts(shortcuts: ShortcutMap): void {
       // Block other combinations with modifier keys
       if (e.metaKey || e.ctrlKey || e.altKey) return
 
-      const handler = shortcuts[e.key]
+      // Match case-insensitively for letter keys (e.g. "Q" and "q" fire the same handler)
+      const handler = shortcuts[e.key] ?? shortcuts[e.key.toUpperCase()]
       if (handler) {
         e.preventDefault()
         handler()
