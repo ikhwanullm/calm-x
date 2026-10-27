@@ -1,7 +1,7 @@
 import { differenceInCalendarDays, parseISO } from 'date-fns'
 import type { BadgeStatus } from '@/components/common/StatusBadge'
 
-export const DEFAULT_THRESHOLD = 3  // TODO: Phase 3 — fetch from GET /api/settings
+export const DEFAULT_THRESHOLD = 3  // fallback used while settings are loading or unavailable
 
 /**
  * Compute the deadline status badge for a project.
