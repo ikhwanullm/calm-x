@@ -110,24 +110,22 @@ export function useCompleteTask() {
   return useMutation({
     mutationFn: (id: number) => tasksApi.complete(id),
     onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: taskKeys.detail(id) })
+      await qc.cancelQueries({ queryKey: taskKeys.all })
+      // Snapshot and update detail cache (if present)
       const prevDetail = qc.getQueryData<Task>(taskKeys.detail(id))
       if (prevDetail) qc.setQueryData<Task>(taskKeys.detail(id), { ...prevDetail, is_complete: true })
-      // Also update list cache optimistically (forItem or inbox)
-      const itemId = prevDetail?.item_id ?? null
-      const listKey = itemId == null ? taskKeys.inbox() : taskKeys.forItem(itemId)
-      const prevList = qc.getQueryData<Task[]>(listKey)
-      if (prevList) {
-        qc.setQueryData<Task[]>(listKey, prevList.map((t) => t.id === id ? { ...t, is_complete: true } : t))
+      // Update ALL list caches containing this task (works even without detail cache)
+      const prevLists: Array<[readonly unknown[], Task[]]> = []
+      for (const [key, data] of qc.getQueriesData<Task[]>({ queryKey: taskKeys.all })) {
+        if (!Array.isArray(data) || !data.some((t) => t.id === id)) continue
+        prevLists.push([key, data])
+        qc.setQueryData<Task[]>(key as any, data.map((t) => t.id === id ? { ...t, is_complete: true } : t))
       }
-      return { prevDetail, prevList, itemId }
+      return { prevDetail, prevLists }
     },
     onError: (err: Error, id, ctx) => {
       if (ctx?.prevDetail) qc.setQueryData(taskKeys.detail(id), ctx.prevDetail)
-      if (ctx?.prevList != null) {
-        const lk = ctx.itemId == null ? taskKeys.inbox() : taskKeys.forItem(ctx.itemId)
-        qc.setQueryData(lk, ctx.prevList)
-      }
+      for (const [key, data] of ctx?.prevLists ?? []) qc.setQueryData(key, data)
       notify.error("Couldn't complete task. Try again.", err.message)
     },
     onSuccess: () => {
@@ -142,24 +140,20 @@ export function useIncompleteTask() {
   return useMutation({
     mutationFn: (id: number) => tasksApi.incomplete(id),
     onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: taskKeys.detail(id) })
+      await qc.cancelQueries({ queryKey: taskKeys.all })
       const prevDetail = qc.getQueryData<Task>(taskKeys.detail(id))
       if (prevDetail) qc.setQueryData<Task>(taskKeys.detail(id), { ...prevDetail, is_complete: false })
-      // Also update list cache optimistically (forItem or inbox)
-      const itemId = prevDetail?.item_id ?? null
-      const listKey = itemId == null ? taskKeys.inbox() : taskKeys.forItem(itemId)
-      const prevList = qc.getQueryData<Task[]>(listKey)
-      if (prevList) {
-        qc.setQueryData<Task[]>(listKey, prevList.map((t) => t.id === id ? { ...t, is_complete: false } : t))
+      const prevLists: Array<[readonly unknown[], Task[]]> = []
+      for (const [key, data] of qc.getQueriesData<Task[]>({ queryKey: taskKeys.all })) {
+        if (!Array.isArray(data) || !data.some((t) => t.id === id)) continue
+        prevLists.push([key, data])
+        qc.setQueryData<Task[]>(key as any, data.map((t) => t.id === id ? { ...t, is_complete: false } : t))
       }
-      return { prevDetail, prevList, itemId }
+      return { prevDetail, prevLists }
     },
     onError: (err: Error, id, ctx) => {
       if (ctx?.prevDetail) qc.setQueryData(taskKeys.detail(id), ctx.prevDetail)
-      if (ctx?.prevList != null) {
-        const lk = ctx.itemId == null ? taskKeys.inbox() : taskKeys.forItem(ctx.itemId)
-        qc.setQueryData(lk, ctx.prevList)
-      }
+      for (const [key, data] of ctx?.prevLists ?? []) qc.setQueryData(key, data)
       notify.error("Couldn't reopen task. Try again.", err.message)
     },
     onSuccess: () => {
