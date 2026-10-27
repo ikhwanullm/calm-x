@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   useInboxTasks,
   useCreateTask,
@@ -29,6 +29,26 @@ export default function InboxPage() {
   const completedTasks = tasks.filter((t) => t.is_complete)
   const destinations = allItems.filter((i) => i.type === "project" || i.type === "area")
 
+  // Remove IDs that are no longer in openTasks (e.g. after individual or bulk move)
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === 0) return prev
+      const validIds = new Set(openTasks.map((t) => t.id))
+      const filtered = new Set([...prev].filter((id) => validIds.has(id)))
+      return filtered.size === prev.size ? prev : filtered
+    })
+  }, [openTasks])
+
+  // Remove IDs that are no longer in openTasks (e.g. after individual or bulk move)
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === 0) return prev
+      const validIds = new Set(openTasks.map((t) => t.id))
+      const filtered = new Set([...prev].filter((id) => validIds.has(id)))
+      return filtered.size === prev.size ? prev : filtered
+    })
+  }, [openTasks])
+
   const allOpenSelected = openTasks.length > 0 && openTasks.every((t) => selectedIds.has(t.id))
 
   function toggleSelect(id: number) {
@@ -48,28 +68,26 @@ export default function InboxPage() {
     }
   }
 
-  function handleBulkMove(itemId: number) {
+  async function handleBulkMove(itemId: number) {
     const ids = Array.from(selectedIds)
     const target = allItems.find((i) => i.id === itemId)
-    let moved = 0
-    ids.forEach((id) =>
-      moveTask.mutate(
-        { id, payload: { item_id: itemId } },
-        {
-          onSuccess: () => {
-            moved += 1
-            if (moved === ids.length) {
-              notify.success(
-                `Moved ${ids.length} ${ids.length === 1 ? "task" : "tasks"} to ${target?.title ?? "item"}`,
-              )
-              setSelectedIds(new Set())
-            }
-          },
-          onError: (err: Error) =>
-            notify.error("Could not move task.", err.message),
-        }
-      )
+    // Clear selection immediately so bar disappears regardless of outcome
+    setSelectedIds(new Set())
+    const results = await Promise.allSettled(
+      ids.map((id) => moveTask.mutateAsync({ id, payload: { item_id: itemId } }))
     )
+    const succeeded = results.filter((r) => r.status === "fulfilled").length
+    const failed = results.filter((r) => r.status === "rejected").length
+    if (succeeded > 0) {
+      notify.success(
+        `Moved ${succeeded} ${succeeded === 1 ? "task" : "tasks"} to ${target?.title ?? "item"}`
+      )
+    }
+    if (failed > 0) {
+      notify.error(
+        `${failed} ${failed === 1 ? "task" : "tasks"} could not be moved.`
+      )
+    }
   }
 
   function handleToggleComplete(task: Task) {
