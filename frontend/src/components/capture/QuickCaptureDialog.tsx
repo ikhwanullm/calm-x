@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Kbd } from "@/components/common"
 import { useCreateTask } from "@/hooks/useTasks"
@@ -13,6 +14,7 @@ interface QuickCaptureDialogProps {
 export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogProps) {
   const [title, setTitle] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+  const navigate = useNavigate()
   const createTask = useCreateTask()
 
   function handleSubmit(e: React.FormEvent) {
@@ -23,7 +25,10 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
       { title: trimmed, priority: "medium" },
       {
         onSuccess: () => {
-          notify.success("Added to Inbox", "Task captured with Medium priority.")
+          notify.success("Added to Inbox", {
+            description: "Task captured with Medium priority.",
+            action: { label: "View Inbox", onClick: () => navigate("/inbox") },
+          } as any)
           setTitle("")
           onOpenChange(false)
         },

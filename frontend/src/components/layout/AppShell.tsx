@@ -47,7 +47,7 @@ function SidebarNavItem({ item, inboxCount }: { item: NavItem; inboxCount?: numb
       aria-label={item.label}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 rounded-control px-3 h-11",
+          "relative flex items-center gap-3 rounded-control px-3 h-11",
           "text-sm font-medium transition-colors",
           "xl:w-full w-11 xl:justify-start justify-center overflow-hidden",
           isActive
@@ -66,12 +66,18 @@ function SidebarNavItem({ item, inboxCount }: { item: NavItem; inboxCount?: numb
           />
           <span className="xl:block hidden truncate">{item.label}</span>
           {item.label === "Inbox" && inboxCount != null && inboxCount > 0 && (
-            <span
-              className="xl:flex hidden ml-auto items-center justify-center min-w-5 h-5 px-1 rounded-pill bg-surface-2 text-xs font-semibold tabular-nums"
-              aria-label={`${inboxCount} inbox items`}
-            >
-              {inboxCount > 99 ? "99+" : inboxCount}
-            </span>
+            <>
+              <span
+                className="xl:flex hidden ml-auto items-center justify-center min-w-5 h-5 px-1 rounded-pill bg-surface-2 text-xs font-semibold tabular-nums"
+                aria-label={`${inboxCount} inbox items`}
+              >
+                {inboxCount > 99 ? "99+" : inboxCount}
+              </span>
+              <span
+                className="xl:hidden absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-accent"
+                aria-hidden="true"
+              />
+            </>
           )}
         </>
       )}

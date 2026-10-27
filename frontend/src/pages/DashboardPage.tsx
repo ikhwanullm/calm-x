@@ -181,7 +181,13 @@ function NeedsAttentionRow({
   threshold: number
 }) {
   const status = getDeadlineStatus(item.deadline, false, threshold, today)
-  const href = item.type === "project" ? `/projects/${item.id}` : null
+  // For tasks: link to parent item page, or inbox if no parent
+  // For projects: link to projects page
+  const href = item.type === "project"
+    ? `/projects/${item.id}`
+    : item.item_id != null
+      ? `/${item.item_id}`    // will navigate to project/area detail
+      : "/inbox"
 
   return (
     <li className="flex items-center justify-between gap-3 py-2 px-3 rounded-control bg-surface border border-border">
@@ -190,11 +196,7 @@ function NeedsAttentionRow({
           {item.type === "task" && (
             <span className="text-xs text-muted mr-1.5">Task</span>
           )}
-          {href ? (
-            <Link to={href} className="hover:text-accent-text">{item.title}</Link>
-          ) : (
-            item.title
-          )}
+          <Link to={href} className="hover:text-accent-text">{item.title}</Link>
         </p>
       </div>
       {status && (
