@@ -124,7 +124,7 @@ export function useCompleteTask() {
       for (const [key, data] of qc.getQueriesData<Task[]>({ queryKey: taskKeys.all })) {
         if (!Array.isArray(data) || !data.some((t) => t.id === id)) continue
         prevLists.push([key, data])
-        qc.setQueryData<Task[]>(key as any, data.map((t) => t.id === id ? { ...t, is_complete: true } : t))
+        qc.setQueryData<Task[]>(key, data.map((t) => t.id === id ? { ...t, is_complete: true } : t))
       }
       return { prevDetail, prevLists }
     },
@@ -153,7 +153,7 @@ export function useIncompleteTask() {
       for (const [key, data] of qc.getQueriesData<Task[]>({ queryKey: taskKeys.all })) {
         if (!Array.isArray(data) || !data.some((t) => t.id === id)) continue
         prevLists.push([key, data])
-        qc.setQueryData<Task[]>(key as any, data.map((t) => t.id === id ? { ...t, is_complete: false } : t))
+        qc.setQueryData<Task[]>(key, data.map((t) => t.id === id ? { ...t, is_complete: false } : t))
       }
       return { prevDetail, prevLists }
     },
