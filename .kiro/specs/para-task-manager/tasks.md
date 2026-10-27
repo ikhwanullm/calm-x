@@ -718,37 +718,37 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Verify "Show N completed" grouping
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Phase 4: Inbox & Quick Capture + Dashboard
-  - [ ] 4.1 Create InboxView page
+- [x] 4. Phase 4: Inbox & Quick Capture + Dashboard
+  - [x] 4.1 Create InboxView page
     - Display all tasks with item_id = null
     - Include Quick Capture form pinned at top
     - Display task count in header
     - Empty state: "Inbox zero. Everything has a home."
     - _Requirements: R3.1, R3.6; ui-guidelines.md §10_
 
-  - [ ] 4.2 Implement Quick Capture form
+  - [x] 4.2 Implement Quick Capture form
     - Single title input field
     - Enter saves to Inbox with Medium priority
     - Show toast "Added to Inbox" with link
     - _Requirements: R3.2, R3.3_
 
-  - [ ] 4.3 Add "Move to…" button on each Inbox task row
+  - [x] 4.3 Add "Move to…" button on each Inbox task row
     - Combobox listing non-archived Projects and Areas
     - Support bulk-select checkbox for moving multiple tasks
     - _Requirements: R3.4, R3.5_
 
-  - [ ] 4.4 Create Quick Capture global dialog
+  - [x] 4.4 Create Quick Capture global dialog
     - Opens with Q shortcut from any page
     - Same behavior as inline form
     - Modal dialog that focuses input
     - _Requirements: R3.2; ui-guidelines.md §8_
 
-  - [ ] 4.5 Implement useShortcuts hook
+  - [x] 4.5 Implement useShortcuts hook
     - Ignore events from input, textarea, select elements
     - Support Q, /, Ctrl+K, ?, Escape shortcuts
     - _Requirements: R15.10; ui-guidelines.md §8_
 
-  - [ ] 4.6 Create DashboardService
+  - [x] 4.6 Create DashboardService
     - Create `backend/services/dashboard_service.py`
     - Implement `get_dashboard_data(client_today: date)` accepting client's local date
     - Calculate: inbox_count, active_projects_count, active_task_count, areas_count, area_task_count, resources_count, reference_link_count, archives_count
@@ -757,19 +757,19 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Get last_review_date
     - _Requirements: R9.1, R9.2, R9.3, R9.4, R14.5_
 
-  - [ ] 4.7 Create Dashboard API router
+  - [x] 4.7 Create Dashboard API router
     - Create `backend/api/dashboard.py`
     - GET `/api/dashboard?today=YYYY-MM-DD` - Get dashboard data
     - Use client's local date for deadline calculations
     - _Requirements: R9.1, R9.2, R9.3, R9.4_
 
-  - [ ] 4.8 Create Dashboard page
+  - [x] 4.8 Create Dashboard page
     - Display six summary cards in 3-column grid (2 columns below 1280px)
     - Cards: Inbox, Projects, Areas, Resources, Archives, Overall progress
     - All five PARA/Inbox cards visible without scrolling at 1280×800
     - _Requirements: R1.1, R3.6, R9.1, R9.2; ui-guidelines.md §4_
 
-  - [ ] 4.9 Implement Dashboard summary cards
+  - [x] 4.9 Implement Dashboard summary cards
     - Inbox: task count, "Process inbox →" link
     - Projects: active count, open task count, nearest deadline
     - Areas: count, open task count
@@ -778,42 +778,42 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Overall progress: average percentage with progress bar
     - _Requirements: R9.2, R14.5_
 
-  - [ ] 4.10 Implement "Needs attention" section
+  - [x] 4.10 Implement "Needs attention" section
     - Display overdue items first (red badges), sorted oldest first
     - Then approaching items (yellow badges), sorted soonest first
     - Include both tasks and projects with deadlines
     - Empty state: "Nothing overdue or due soon."
     - _Requirements: R9.3, R9.4_
 
-  - [ ] 4.11 Implement "Active projects" section
+  - [x] 4.11 Implement "Active projects" section
     - Show each active project with progress bar and deadline badge
     - Projects without deadline show "No deadline"
     - _Requirements: R9.2_
 
-  - [ ] 4.12 Add "Start weekly review" button
+  - [x] 4.12 Add "Start weekly review" button
     - Display in Dashboard header
     - Show "Last weekly review X days ago" or "No reviews yet"
     - _Requirements: R10.1, R10.13_
 
-  - [ ] 4.13 Update Sidebar with Inbox count pill
+  - [x] 4.13 Update Sidebar with Inbox count pill
     - Show task count next to Inbox nav item
     - At 768-1279px (collapsed rail), show count as dot/pill
     - _Requirements: R3.6; ui-guidelines.md §4_
 
-  - [ ] 4.14 Property test: Dashboard Progress Excludes Ineligible Projects (P13)
+  - [x] 4.14 Property test: Dashboard Progress Excludes Ineligible Projects (P13)
     - **Property 13: Dashboard Progress Excludes Ineligible Projects**
     - Test that archived projects are excluded from overall progress
     - Test that completed projects are excluded from overall progress
     - Test that zero-task projects are excluded from overall progress
     - **Validates: Requirements R14.5**
 
-  - [ ] 4.15 REGRESSION TEST: Overdue items appear in Dashboard "Needs attention"
+  - [x] 4.15 REGRESSION TEST: Overdue items appear in Dashboard "Needs attention"
     - Create task with due_date in the past
     - Call GET /api/dashboard?today={today}
     - Verify task appears in upcoming_deadlines with is_overdue=true
     - _Requirements: R9.3, R9.4_
 
-- [ ] 4.16 Checkpoint: Inbox & Dashboard complete
+- [x] 4.16 Checkpoint: Inbox & Dashboard complete
   - Quick Capture works from any page (Q shortcut)
   - Dashboard displays correct counts and calculations
   - "Needs attention" shows overdue and approaching items correctly
