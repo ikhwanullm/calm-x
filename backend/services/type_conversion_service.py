@@ -79,6 +79,7 @@ def convert_item(
     item.type = target_type
 
     if target_type == "project":
+        # Restore project_status if it was preserved; default to 'active' if never set
         item.project_status = item.project_status or "active"
         if payload.project_goal is not None:
             item.project_goal = payload.project_goal
@@ -88,14 +89,13 @@ def convert_item(
     elif target_type == "area":
         if payload.area_maintenance_notes is not None:
             item.area_maintenance_notes = payload.area_maintenance_notes
-        # Clear project-specific status when becoming non-project
-        item.project_status = None
-        item.project_completed_at = None
+        # R2.1: project_status and project_completed_at are PRESERVED (hidden, not cleared)
+        # so they can be restored if the item is later converted back to Project.
 
     elif target_type == "resource":
-        # Clear project and area specific status
-        item.project_status = None
-        item.project_completed_at = None
+        # R2.1: project_status and project_completed_at are PRESERVED (hidden, not cleared)
+        pass  # tasks already moved to inbox above; no other field changes
+        pass  # tasks already moved to inbox above; no other field changes
 
     item.updated_at = now
     session.flush()
