@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import func, select
-from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.exceptions import ArchivedItemError, ConflictError, NotFoundError
@@ -41,12 +40,28 @@ def list_items(
     if not include_archived:
         q = q.where(Item.archived_at.is_(None))
     items = list(session.execute(q).scalars().all())
-    # Attach task counts to each item
-    result = []
-    for item in items:
-        total, completed = _get_task_counts(session, item.id)
-        result.append((item, total, completed))
-    return result
+    if not items:
+        return []
+    # Batch task counts: two GROUP BY queries instead of N+1 per-item queries
+    item_ids = [item.id for item in items]
+    total_map: dict[int, int] = dict(
+        session.execute(
+            select(Task.item_id, func.count().label('n'))
+            .where(Task.item_id.in_(item_ids))
+            .group_by(Task.item_id)
+        ).all()
+    )
+    completed_map: dict[int, int] = dict(
+        session.execute(
+            select(Task.item_id, func.count().label('n'))
+            .where(Task.item_id.in_(item_ids), Task.is_complete == 1)
+            .group_by(Task.item_id)
+        ).all()
+    )
+    return [
+        (item, total_map.get(item.id, 0), completed_map.get(item.id, 0))
+        for item in items
+    ]
 
 
 
