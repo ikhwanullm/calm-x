@@ -47,20 +47,21 @@ export default function DashboardPage() {
           loading={isLoading}
           stat={data?.active_projects_count ?? 0}
           statLabel="active"
-          sub={data ? `${data.active_task_count} open tasks` : undefined}
+          sub={data ? `${data.active_task_count} open ${data.active_task_count === 1 ? "task" : "tasks"}${data.nearest_deadline_project ? " · nearest " + data.nearest_deadline_project : ""}` : undefined}
         />
         <SummaryCard
           title="Areas"
           loading={isLoading}
           stat={data?.areas_count ?? 0}
           statLabel="total"
-          sub={data ? `${data.area_task_count} open tasks` : undefined}
+          sub={data ? `${data.area_task_count} open ${data.area_task_count === 1 ? "task" : "tasks"}` : undefined}
         />
         <SummaryCard
           title="Resources"
           loading={isLoading}
           stat={data?.resources_count ?? 0}
           statLabel="total"
+          sub={data != null ? `${data.reference_link_count} reference links` : undefined}
         />
         <SummaryCard
           title="Archives"
@@ -161,7 +162,7 @@ function OverallProgressCard({ loading, value }: { loading: boolean; value: numb
       ) : (
         <>
           <p className="text-3xl font-semibold text-text tabular-nums" style={{ letterSpacing: "-0.02em" }}>
-            {Math.round(value)}%
+            {value}%
           </p>
           <ProgressBar completed={value} total={100} label="Overall project progress" />
         </>

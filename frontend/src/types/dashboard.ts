@@ -23,8 +23,10 @@ export interface DashboardData {
   areas_count: number
   area_task_count: number
   resources_count: number
+  reference_link_count: number
   archives_count: number
   overall_progress: number | null
+  nearest_deadline_project: string | null
   upcoming_deadlines: DeadlineItem[]
   active_projects: ProjectSummary[]
   last_review_date: string | null
