@@ -11,7 +11,7 @@ import { TaskDrawer } from "@/components/tasks/TaskDrawer"
 import { TaskRow } from "@/components/tasks/TaskRow"
 import { EmptyState } from "@/components/common"
 import { notify } from "@/lib/toast"
-import type { Task } from "@/types/models"
+import type { Task, Item } from "@/types/models"
 import { cn } from "@/lib/utils"
 
 export default function InboxPage() {
@@ -19,11 +19,58 @@ export default function InboxPage() {
   const createTask = useCreateTask()
   const completeTask = useCompleteTask()
   const incompleteTask = useIncompleteTask()
+  const moveTask = useMoveTask()
+  const { data: allItems = [] } = useItems({ include_archived: false })
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
 
   const openTasks = tasks.filter((t) => !t.is_complete)
   const completedTasks = tasks.filter((t) => t.is_complete)
+  const destinations = allItems.filter((i) => i.type === "project" || i.type === "area")
+
+  const allOpenSelected = openTasks.length > 0 && openTasks.every((t) => selectedIds.has(t.id))
+
+  function toggleSelect(id: number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    if (allOpenSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(openTasks.map((t) => t.id)))
+    }
+  }
+
+  function handleBulkMove(itemId: number) {
+    const ids = Array.from(selectedIds)
+    const target = allItems.find((i) => i.id === itemId)
+    let moved = 0
+    ids.forEach((id) =>
+      moveTask.mutate(
+        { id, payload: { item_id: itemId } },
+        {
+          onSuccess: () => {
+            moved += 1
+            if (moved === ids.length) {
+              notify.success(
+                `Moved ${ids.length} ${ids.length === 1 ? "task" : "tasks"} to ${target?.title ?? "item"}`,
+              )
+              setSelectedIds(new Set())
+            }
+          },
+          onError: (err: Error) =>
+            notify.error("Could not move task.", err.message),
+        }
+      )
+    )
+  }
 
   function handleToggleComplete(task: Task) {
     if (task.is_complete) incompleteTask.mutate(task.id)
@@ -54,6 +101,23 @@ export default function InboxPage() {
         }
       />
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && destinations.length > 0 && (
+        <div className="mt-3 flex items-center gap-3 px-3 py-2 rounded-control bg-accent-soft border border-accent">
+          <span className="text-sm font-medium text-accent-text">
+            {selectedIds.size} {selectedIds.size === 1 ? "task" : "tasks"} selected
+          </span>
+          <BulkMoveSelect destinations={destinations} onMove={handleBulkMove} />
+          <button
+            type="button"
+            onClick={() => setSelectedIds(new Set())}
+            className="ml-auto text-xs text-muted hover:text-text"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
+
       {isLoading ? (
         <p className="text-sm text-muted mt-4">Loading…</p>
       ) : tasks.length === 0 ? (
@@ -63,35 +127,33 @@ export default function InboxPage() {
           dashedBorder
         />
       ) : (
-        <div className="mt-4 space-y-1" role="list" aria-label="Inbox tasks">
-          {openTasks.map((task) => (
-            <div key={task.id} className="flex items-center gap-2" role="listitem">
-              <div className="flex-1 min-w-0">
-                <TaskRow
-                  task={task}
-                  isSelected={selectedTaskId === task.id}
-                  onOpenDrawer={setSelectedTaskId}
-                  onToggleComplete={handleToggleComplete}
-                  isDraggable={false}
-                />
-              </div>
-              <MoveToSelect task={task} />
+        <div className="mt-4" role="list" aria-label="Inbox tasks">
+          {/* Select-all header row */}
+          {openTasks.length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1 mb-1">
+              <input
+                type="checkbox"
+                checked={allOpenSelected}
+                onChange={toggleSelectAll}
+                aria-label="Select all open tasks"
+                className="h-4 w-4 rounded accent-[var(--accent)] cursor-pointer"
+              />
+              <span className="text-xs text-muted">Select all</span>
             </div>
-          ))}
+          )}
 
-          {completedTasks.length > 0 && (
-            <>
-              <button
-                type="button"
-                onClick={() => setShowCompleted((v) => !v)}
-                className="mt-3 text-sm text-muted hover:text-text transition-colors"
-              >
-                {showCompleted
-                  ? `Hide ${completedTasks.length} completed`
-                  : `Show ${completedTasks.length} completed`}
-              </button>
-              {showCompleted && completedTasks.map((task) => (
-                <div key={task.id} role="listitem">
+          <div className="space-y-1">
+            {openTasks.map((task) => (
+              <div key={task.id} className="flex items-center gap-2" role="listitem">
+                {/* Selection checkbox */}
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(task.id)}
+                  onChange={() => toggleSelect(task.id)}
+                  aria-label={`Select task: ${task.title}`}
+                  className="shrink-0 h-4 w-4 rounded accent-[var(--accent)] cursor-pointer"
+                />
+                <div className="flex-1 min-w-0">
                   <TaskRow
                     task={task}
                     isSelected={selectedTaskId === task.id}
@@ -100,9 +162,35 @@ export default function InboxPage() {
                     isDraggable={false}
                   />
                 </div>
-              ))}
-            </>
-          )}
+                <RowMoveSelect task={task} destinations={destinations} />
+              </div>
+            ))}
+
+            {completedTasks.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowCompleted((v) => !v)}
+                  className="mt-3 text-sm text-muted hover:text-text transition-colors"
+                >
+                  {showCompleted
+                    ? `Hide ${completedTasks.length} completed`
+                    : `Show ${completedTasks.length} completed`}
+                </button>
+                {showCompleted && completedTasks.map((task) => (
+                  <div key={task.id} role="listitem">
+                    <TaskRow
+                      task={task}
+                      isSelected={selectedTaskId === task.id}
+                      onOpenDrawer={setSelectedTaskId}
+                      onToggleComplete={handleToggleComplete}
+                      isDraggable={false}
+                    />
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
         </div>
       )}
 
@@ -154,12 +242,45 @@ function InlineCapture({ onCapture }: { onCapture: (title: string) => void }) {
   )
 }
 
-// ---- Move to... select per inbox row (task 4.3) ----
+// ---- Bulk move select (shown in the bulk action bar) ----
 
-function MoveToSelect({ task }: { task: Task }) {
-  const { data: items = [] } = useItems({ include_archived: false })
+function BulkMoveSelect({
+  destinations,
+  onMove,
+}: {
+  destinations: Item[]
+  onMove: (itemId: number) => void
+}) {
+  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value
+    if (!val) return
+    onMove(Number(val))
+    e.target.value = ""
+  }
+  return (
+    <select
+      defaultValue=""
+      onChange={handleChange}
+      aria-label="Move selected tasks to"
+      className={cn(
+        "h-8 px-2 text-sm rounded-control border border-accent bg-surface text-text",
+        "focus:outline-2 focus:outline-offset-2 focus:outline-accent"
+      )}
+    >
+      <option value="" disabled>Move to…</option>
+      {destinations.map((item) => (
+        <option key={item.id} value={String(item.id)}>
+          {item.title}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+// ---- Per-row move select ----
+
+function RowMoveSelect({ task, destinations }: { task: Task; destinations: Item[] }) {
   const moveTask = useMoveTask()
-  const destinations = items.filter((i) => i.type === "project" || i.type === "area")
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value

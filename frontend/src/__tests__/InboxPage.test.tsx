@@ -21,7 +21,11 @@ vi.mock("../hooks/useTasks", () => ({
 }))
 
 vi.mock("../hooks/useItems", () => ({
-  useItems: vi.fn(() => ({ data: [] })),
+  useItems: vi.fn(() => ({
+    data: [
+      { id: 10, type: "project", title: "Work", task_count: 0, completed_task_count: 0, progress_percentage: 0, archived_at: null, created_at: "", updated_at: "", description: "", notes: "", project_goal: null, project_deadline: null, project_status: "active", project_completed_at: null },
+    ],
+  })),
 }))
 
 vi.mock("../hooks/useSettings", () => ({
@@ -32,8 +36,8 @@ vi.mock("../components/tasks/TaskDrawer", () => ({
   TaskDrawer: () => null,
 }))
 
-const makeTask = (id: number, is_complete = false): Task => ({
-  id, item_id: null, title: `Task ${id}`, description: "", notes: "",
+const makeTask = (id: number, is_complete = false, title = `Task ${id}`): Task => ({
+  id, item_id: null, title, description: "", notes: "",
   due_date: null, priority: "medium", is_complete, sort_order: 0,
   created_at: "", updated_at: "", subtask_count: 0, completed_subtask_count: 0, tags: [],
 })
@@ -97,5 +101,49 @@ describe("InboxPage", () => {
     render(<InboxPage />, { wrapper })
     expect(screen.getByText(/Show 1 completed/i)).toBeTruthy()
     expect(screen.queryByText("Task 2")).toBeNull()
+  })
+
+  it("shows select-all checkbox when open tasks exist", async () => {
+    const { useInboxTasks } = await import("../hooks/useTasks")
+    vi.mocked(useInboxTasks).mockReturnValue({
+      data: [makeTask(1), makeTask(2)], isLoading: false
+    } as any)
+    render(<InboxPage />, { wrapper })
+    expect(screen.getByLabelText("Select all open tasks")).toBeTruthy()
+  })
+
+  it("selecting a task shows bulk action bar with Move to... select", async () => {
+    const user = userEvent.setup()
+    const { useInboxTasks } = await import("../hooks/useTasks")
+    vi.mocked(useInboxTasks).mockReturnValue({
+      data: [makeTask(1, false, "Buy milk")], isLoading: false
+    } as any)
+    render(<InboxPage />, { wrapper })
+    const selectBox = screen.getByLabelText("Select task: Buy milk")
+    await user.click(selectBox)
+    expect(screen.getByLabelText("Move selected tasks to")).toBeTruthy()
+    expect(screen.getByText("1 task selected")).toBeTruthy()
+  })
+
+  it("shows select-all checkbox when open tasks exist", async () => {
+    const { useInboxTasks } = await import("../hooks/useTasks")
+    vi.mocked(useInboxTasks).mockReturnValue({
+      data: [makeTask(1), makeTask(2)], isLoading: false
+    } as any)
+    render(<InboxPage />, { wrapper })
+    expect(screen.getByLabelText("Select all open tasks")).toBeTruthy()
+  })
+
+  it("selecting a task shows bulk action bar with Move to... select", async () => {
+    const user = userEvent.setup()
+    const { useInboxTasks } = await import("../hooks/useTasks")
+    vi.mocked(useInboxTasks).mockReturnValue({
+      data: [makeTask(1, false, "Buy milk")], isLoading: false
+    } as any)
+    render(<InboxPage />, { wrapper })
+    const selectBox = screen.getByLabelText("Select task: Buy milk")
+    await user.click(selectBox)
+    expect(screen.getByLabelText("Move selected tasks to")).toBeTruthy()
+    expect(screen.getByText("1 task selected")).toBeTruthy()
   })
 })
