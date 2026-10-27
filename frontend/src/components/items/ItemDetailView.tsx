@@ -25,6 +25,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { TaskList } from '@/components/tasks/TaskList'
+import { TypeConversionDialog } from '@/components/items/TypeConversionDialog'
+import { ReferenceLinksSection } from '@/components/items/ReferenceLinksSection'
+import { ResourceLinksSection } from '@/components/items/ResourceLinksSection'
 import { TaskDrawer } from '@/components/tasks/TaskDrawer'
 
 interface ItemDetailViewProps {
@@ -48,6 +51,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
 
   const [showArchivePrompt, setShowArchivePrompt] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showConvertDialog, setShowConvertDialog] = useState(false)
 
   if (isLoading) {
     return (
@@ -206,6 +210,12 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
               </>
             ) : (
               <>
+  <DropdownMenuItem onSelect={() => setShowConvertDialog(true)}>
+                  Convert type
+                </DropdownMenuItem>
+  <DropdownMenuItem onSelect={() => setShowConvertDialog(true)}>
+                  Convert type
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={() => {
                     archiveItem.mutate(item.id, { onSuccess: () => navigate(listPath) })
@@ -292,6 +302,22 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         onSave={(v) => updateItem.mutate({ notes: v })}
       />
 
+      {/* Reference links */}
+      <ReferenceLinksSection itemId={item.id} isArchived={archived} />
+
+      {/* Resource linked items (only for Resources) */}
+      {item.type === 'resource' && (
+        <ResourceLinksSection resourceId={item.id} isArchived={archived} />
+      )}
+
+      {/* Reference links */}
+      <ReferenceLinksSection itemId={item.id} isArchived={archived} />
+
+      {/* Resource linked items (only for Resources) */}
+      {item.type === 'resource' && (
+        <ResourceLinksSection resourceId={item.id} isArchived={archived} />
+      )}
+
       {/* Tasks section */}
       <TasksSection item={item} archived={archived} />
 
@@ -306,6 +332,20 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         destructive={false}
         onConfirm={handleArchiveConfirm}
         onCancel={() => setShowArchivePrompt(false)}
+      />
+
+      <TypeConversionDialog
+        open={showConvertDialog}
+        onOpenChange={setShowConvertDialog}
+        itemId={item.id}
+        currentType={item.type}
+      />
+
+      <TypeConversionDialog
+        open={showConvertDialog}
+        onOpenChange={setShowConvertDialog}
+        itemId={item.id}
+        currentType={item.type}
       />
 
       {/* 2.16: Delete confirm dialog */}
