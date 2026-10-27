@@ -3,6 +3,7 @@ import { isProject, isArchived } from '@/types/models'
 import { useItems } from '@/hooks/useItems'
 import { CardLink, EmptyState, ProgressBar, StatusBadge, Skeleton, SkeletonGroup } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
+import { useDeadlineThreshold } from '@/hooks/useSettings'
 import { getLocalToday } from '@/utils/date'
 
 interface ItemListViewProps {
@@ -86,8 +87,9 @@ export function ItemListView({
 }
 
 function ItemCard({ item, basePath, today }: { item: Item; basePath: string; today: string }) {
+  const threshold = useDeadlineThreshold()
   const deadlineStatus = isProject(item) && item.project_deadline
-    ? getDeadlineStatus(item.project_deadline, item.project_status === 'completed', 3, today)
+    ? getDeadlineStatus(item.project_deadline, item.project_status === 'completed', threshold, today)
     : null
 
   return (

@@ -1,7 +1,8 @@
 import { GripVertical } from 'lucide-react'
 import type { Task } from '@/types/models'
 import { PriorityChip, TagChip, StatusBadge } from '@/components/common'
-import { getDeadlineStatus, DEFAULT_THRESHOLD } from '@/utils/deadline'
+import { getDeadlineStatus } from '@/utils/deadline'
+import { useDeadlineThreshold } from '@/hooks/useSettings'
 import { getLocalToday } from '@/utils/date'
 import { cn } from '@/lib/utils'
 
@@ -26,8 +27,9 @@ export function TaskRow({
   onToggleComplete,
 }: TaskRowProps) {
   const today = getLocalToday()
+  const threshold = useDeadlineThreshold()
   const deadlineStatus = task.due_date && !task.is_complete
-    ? getDeadlineStatus(task.due_date, task.is_complete, DEFAULT_THRESHOLD, today)
+    ? getDeadlineStatus(task.due_date, task.is_complete, threshold, today)
     : null
 
   return (

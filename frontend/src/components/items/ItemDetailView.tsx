@@ -14,7 +14,8 @@ import {
 import { useItemTasks, useCreateTask, useCompleteTask, useIncompleteTask } from '@/hooks/useTasks'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { ProgressBar, StatusBadge, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
-import { getDeadlineStatus, DEFAULT_THRESHOLD } from '@/utils/deadline'
+import { getDeadlineStatus } from '@/utils/deadline'
+import { useDeadlineThreshold } from '@/hooks/useSettings'
 import { getLocalToday, formatAbsoluteDate } from '@/utils/date'
 import { cn } from '@/lib/utils'
 import {
@@ -35,6 +36,7 @@ interface ItemDetailViewProps {
 
 export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps) {
   const { data: item, isLoading, isError } = useItem(id)
+  const threshold = useDeadlineThreshold()
   const updateItem = useUpdateItem(id)
   const completeProject = useCompleteProject()
   const reopenProject = useReopenProject()
@@ -112,7 +114,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
           role="status"
         >
           <span className="text-warn-fg font-medium">
-            Read-only \u00b7 Archived on {formatAbsoluteDate(item.archived_at!)}
+            Read-only · Archived on {formatAbsoluteDate(item.archived_at!)}
           </span>
           <div className="flex gap-2">
             <button
@@ -186,7 +188,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
               aria-label="Item actions"
               className="flex-shrink-0 mt-1 p-1.5 rounded-control text-muted hover:text-text hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
             >
-              <span aria-hidden="true" className="text-base leading-none tracking-widest">\u00b7\u00b7\u00b7</span>
+              <span aria-hidden="true" className="text-base leading-none tracking-widest">···</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -226,9 +228,9 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
       {/* Project deadline status */}
       {isProject(item) && item.project_deadline && (
         <div className="mt-2">
-          {getDeadlineStatus(item.project_deadline, item.project_status === 'completed', DEFAULT_THRESHOLD, today) && (
+          {getDeadlineStatus(item.project_deadline, item.project_status === 'completed', threshold, today) && (
             <StatusBadge
-              status={getDeadlineStatus(item.project_deadline, item.project_status === 'completed', DEFAULT_THRESHOLD, today)!}
+              status={getDeadlineStatus(item.project_deadline, item.project_status === 'completed', threshold, today)!}
               date={item.project_deadline}
               today={today}
             />
@@ -263,7 +265,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         <InlineField
           label="Maintenance notes"
           value={item.area_maintenance_notes ?? ''}
-          placeholder="Notes on how to maintain this area\u2026"
+          placeholder="Notes on how to maintain this area…"
           multiline
           disabled={archived}
           onSave={(v) => updateItem.mutate({ area_maintenance_notes: v || null })}
@@ -274,7 +276,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
       <InlineField
         label="Description"
         value={item.description}
-        placeholder="Add a description\u2026"
+        placeholder="Add a description…"
         multiline
         disabled={archived}
         onSave={(v) => updateItem.mutate({ description: v })}
@@ -284,7 +286,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
       <InlineField
         label="Notes"
         value={item.notes}
-        placeholder="Add notes\u2026"
+        placeholder="Add notes…"
         multiline
         disabled={archived}
         onSave={(v) => updateItem.mutate({ notes: v })}
@@ -391,7 +393,7 @@ function TasksSection({ item, archived }: { item: Item; archived: boolean }) {
       </div>
 
       {tasksLoading ? (
-        <p className="text-sm text-muted">Loading tasks\u2026</p>
+        <p className="text-sm text-muted">Loading tasks…</p>
       ) : (
         <TaskList
           tasks={tasks}

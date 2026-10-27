@@ -51,6 +51,14 @@ vi.mock('../hooks/useItems', () => ({
   useDeleteItem: vi.fn(),
 }))
 
+vi.mock('../hooks/useSettings', () => ({
+  useDeadlineThreshold: vi.fn().mockReturnValue(3),
+}))
+
+vi.mock('../hooks/useSettings', () => ({
+  useDeadlineThreshold: vi.fn().mockReturnValue(3),
+}))
+
 vi.mock('../hooks/useTasks', () => ({
   useItemTasks: vi.fn().mockReturnValue({ data: [], isLoading: false }),
   useCreateTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
@@ -184,4 +192,6 @@ describe('ItemDetailView', () => {
     render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
     expect(screen.queryByRole('button', { name: 'Add task' })).toBeNull()
   })
+
+
 })
