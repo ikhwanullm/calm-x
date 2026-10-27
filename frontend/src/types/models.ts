@@ -111,3 +111,100 @@ export function isResource(item: Item): item is Resource {
 export function isArchived(item: Item): boolean {
   return item.archived_at !== null
 }
+
+// ---------------------------------------------------------------------------
+// Task
+// ---------------------------------------------------------------------------
+
+export type TaskPriority = 'high' | 'medium' | 'low'
+
+export interface Task {
+  id: number
+  item_id: number | null
+  title: string
+  description: string
+  notes: string
+  due_date: string | null        // YYYY-MM-DD
+  priority: TaskPriority
+  is_complete: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+  subtask_count: number
+  completed_subtask_count: number
+  tags: string[]
+}
+
+// Create/Update payloads
+export interface TaskCreatePayload {
+  title: string
+  item_id?: number | null
+  description?: string
+  notes?: string
+  due_date?: string | null
+  priority?: TaskPriority
+}
+
+export interface TaskUpdatePayload {
+  title?: string
+  description?: string
+  notes?: string
+  due_date?: string | null
+  priority?: TaskPriority
+}
+
+export interface TaskMovePayload {
+  item_id: number | null
+}
+
+export interface TaskReorderPayload {
+  task_ids: number[]
+}
+
+// ---------------------------------------------------------------------------
+// Subtask
+// ---------------------------------------------------------------------------
+
+export interface Subtask {
+  id: number
+  task_id: number
+  title: string
+  is_complete: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface SubtaskCreatePayload {
+  title: string
+}
+
+export interface SubtaskUpdatePayload {
+  title?: string
+}
+
+// ---------------------------------------------------------------------------
+// Tag
+// ---------------------------------------------------------------------------
+
+export interface Tag {
+  id: number
+  name: string
+  created_at: string
+}
+
+export interface TagCreatePayload {
+  name: string
+}
+
+export interface TagRenamePayload {
+  name: string
+}
+
+// ---------------------------------------------------------------------------
+// Type guards
+// ---------------------------------------------------------------------------
+
+export function isComplete(task: Task): boolean {
+  return task.is_complete
+}
