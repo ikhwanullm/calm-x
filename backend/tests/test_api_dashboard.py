@@ -163,3 +163,13 @@ def test_overall_progress_empty_when_no_eligible_projects(engine):
     with Session(engine) as s:
         data = get_dashboard_data(s, TODAY)
     assert data.overall_progress is None
+
+
+def test_dashboard_bad_date_returns_error_contract(client):
+    """Fix 6: invalid today returns {error, type} not {detail: ...}."""
+    r = client.get("/api/dashboard?today=not-a-date", headers=HEADERS)
+    assert r.status_code == 400
+    body = r.json()
+    assert "error" in body, f"Missing 'error' key in {body}"
+    assert "type" in body, f"Missing 'type' key in {body}"
+    assert "detail" not in body, f"Should not use FastAPI detail format"

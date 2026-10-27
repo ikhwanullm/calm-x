@@ -4,10 +4,11 @@ from __future__ import annotations
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db_session
+from backend.exceptions import ValidationError
 from backend.schemas.dashboard import DashboardSchema
 from backend.services.dashboard_service import get_dashboard_data
 
@@ -27,8 +28,5 @@ def get_dashboard(
     try:
         client_today = date.fromisoformat(today)
     except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail={"error": f"Invalid date: {today!r}. Expected YYYY-MM-DD.", "type": "validation_error"},
-        )
+        raise ValidationError(f"Invalid date: {today!r}. Expected YYYY-MM-DD.")
     return get_dashboard_data(session, client_today)
