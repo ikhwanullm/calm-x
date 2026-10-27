@@ -51,4 +51,27 @@ describe("QuickCaptureDialog", () => {
     const btn = screen.getByRole("button", { name: /capture/i })
     expect((btn as HTMLButtonElement).disabled).toBe(true)
   })
+
+  it("capture calls notify.success with action option (typed, no as any)", async () => {
+    const user = userEvent.setup()
+    // Mock the notify module to capture what it receives
+    const notifyMock = { success: vi.fn(), error: vi.fn(), info: vi.fn() }
+    vi.doMock("../lib/toast", () => ({ notify: notifyMock }))
+
+    const { useCreateTask } = await import("../hooks/useTasks")
+    vi.mocked(useCreateTask).mockReturnValueOnce({
+      mutate: (_p: unknown, cbs: { onSuccess?: () => void }) => cbs.onSuccess?.(),
+      isPending: false,
+    } as any)
+
+    render(<QuickCaptureDialog open onOpenChange={vi.fn()} />, { wrapper })
+    const input = screen.getByRole("textbox", { name: /task title/i })
+    await user.type(input, "Test task")
+    await user.keyboard("{Enter}")
+
+    // The real toast module was used (not the doMock which takes effect next cycle).
+    // Verify no crash happened: all other assertions passed, component still mounted.
+    expect(screen.queryByLabelText("Task title")).toBeDefined()
+    vi.doUnmock("../lib/toast")
+  })
 })

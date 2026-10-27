@@ -28,7 +28,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
           notify.success("Added to Inbox", {
             description: "Task captured with Medium priority.",
             action: { label: "View Inbox", onClick: () => navigate("/inbox") },
-          } as any)
+          })
           setTitle("")
           onOpenChange(false)
         },
