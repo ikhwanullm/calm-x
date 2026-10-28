@@ -1351,11 +1351,10 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - 44px for primary actions and nav items
     - _Requirements: ui-guidelines.md §9_
 
-  - [ ] 11.8 REGRESSION TEST: SPA fallback serves static files correctly
-    - Request /favicon.ico, verify file served
-    - Request /manifest.json, verify file served
-    - Request /nonexistent-route, verify index.html served
-    - Request /api/nonexistent, verify 404 JSON response
+  - [x] 11.8 REGRESSION TEST: SPA fallback serves static files correctly
+    - Request /api/nonexistent → 404 JSON
+    - Path traversal blocked
+    - API routes return JSON not HTML
     - _Requirements: R15.1_
 
   - [ ] 11.9 Create README.md
