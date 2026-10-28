@@ -3,6 +3,7 @@ import { NavLink, Outlet } from "react-router-dom"
 import {
   LayoutDashboard,
   Inbox,
+  ListFilter,
   FolderKanban,
   AreaChart,
   Library,
@@ -14,6 +15,9 @@ import {
 import { cn } from "@/lib/utils"
 import { Kbd } from "@/components/common"
 import { QuickCaptureDialog } from "@/components/capture/QuickCaptureDialog"
+import { CommandPalette } from "@/components/search/CommandPalette"
+import { ShortcutHelp } from "@/components/search/ShortcutHelp"
+
 import { useShortcuts } from "@/hooks/useShortcuts"
 import { useInboxTasks } from "@/hooks/useTasks"
 
@@ -27,6 +31,7 @@ interface NavItem {
 const PRIMARY_NAV: NavItem[] = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/inbox", icon: Inbox, label: "Inbox" },
+  { to: "/tasks", icon: ListFilter, label: "All tasks" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },
   { to: "/areas", icon: AreaChart, label: "Areas" },
   { to: "/resources", icon: Library, label: "Resources" },
@@ -87,10 +92,18 @@ function SidebarNavItem({ item, inboxCount }: { item: NavItem; inboxCount?: numb
 
 export function AppShell() {
   const [captureOpen, setCaptureOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
+
   const { data: inboxTasks } = useInboxTasks()
   const inboxCount = inboxTasks?.filter((t) => !t.is_complete).length ?? 0
 
-  useShortcuts({ Q: () => setCaptureOpen(true) })
+  useShortcuts({
+    Q: () => !paletteOpen && !helpOpen && setCaptureOpen(true),
+    "/": () => { setCaptureOpen(false); setPaletteOpen(true) },
+    "?": () => { setCaptureOpen(false); setPaletteOpen(false); setHelpOpen(true) },
+    "ctrl+k": () => { setCaptureOpen(false); setPaletteOpen(true) },
+  })
 
   return (
     <div className="flex min-h-screen bg-bg">
@@ -123,13 +136,15 @@ export function AppShell() {
       <div className="flex flex-col flex-1 min-w-0">
         <header className="flex items-center justify-between h-14 px-6 border-b border-border bg-surface shrink-0">
           <div className="flex items-center gap-2 flex-1 max-w-md">
-            <div
-              className="flex items-center gap-2 h-9 px-3 rounded-control border border-border bg-bg text-muted text-sm w-full cursor-text"
-              role="search"
-              aria-label="Search (placeholder)"
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="flex items-center gap-2 h-9 px-3 rounded-control border border-border bg-bg text-muted text-sm w-full cursor-text text-left"
+              aria-label="Open command palette"
             >
               <span className="text-muted text-sm">Search…</span>
-            </div>
+              <Kbd className="hidden xl:inline-flex ml-auto text-xs">/</Kbd>
+            </button>
           </div>
           <button
             type="button"
@@ -150,6 +165,9 @@ export function AppShell() {
       </div>
 
       <QuickCaptureDialog open={captureOpen} onOpenChange={setCaptureOpen} />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <ShortcutHelp open={helpOpen} onOpenChange={setHelpOpen} />
+
     </div>
   )
 }
