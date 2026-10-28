@@ -16,6 +16,7 @@ from backend.schemas.task import (
     TaskUpdate,
 )
 from backend.services import task_service
+from backend.services.filter_service import filter_tasks
 
 class QuickCapturePayload(BaseModel):
     title: str = Field(..., max_length=200)
@@ -40,8 +41,30 @@ def list_all_tasks(
     session: SessionDep,
     item_id: Optional[int] = Query(default=None),
     include_complete: bool = Query(default=True),
+    tags: Optional[str] = Query(default=None, description="Comma-separated tag IDs"),
+    priorities: Optional[str] = Query(default=None, description="Comma-separated priorities"),
+    due_start: Optional[str] = Query(default=None, description="YYYY-MM-DD"),
+    due_end: Optional[str] = Query(default=None, description="YYYY-MM-DD"),
+    category: Optional[str] = Query(default=None, description="project|area|inbox"),
 ):
-    """List tasks. Pass item_id to filter by item, or omit for Inbox."""
+    """List tasks with optional filters. Supports tag/priority/date/category filtering."""
+    # If any filter param provided, use filter service; otherwise use simple list
+    has_filters = any([
+        tags, priorities, due_start, due_end, category, item_id is not None,
+    ])
+    if has_filters:
+        tag_ids = [int(t.strip()) for t in tags.split(",") if t.strip()] if tags else None
+        priority_list = [p.strip() for p in priorities.split(",") if p.strip()] if priorities else None
+        return filter_tasks(
+            session,
+            tags=tag_ids,
+            priorities=priority_list,
+            due_start=due_start,
+            due_end=due_end,
+            category=category,
+            item_id=item_id,
+            include_complete=include_complete,
+        )
     return task_service.list_tasks(session, item_id=item_id, include_complete=include_complete)
 
 
