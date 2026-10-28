@@ -3,7 +3,7 @@ import { useDashboard } from "@/hooks/useDashboard"
 import { useDeadlineThreshold } from "@/hooks/useSettings"
 import { ProgressBar, StatusBadge, Skeleton, EmptyState } from "@/components/common"
 import { getDeadlineStatus } from "@/utils/deadline"
-import { getLocalToday, formatAbsoluteDate } from "@/utils/date"
+import { getLocalToday, formatRelativeDate } from '@/utils/date'
 import type { DeadlineItem, ProjectSummary } from "@/types/dashboard"
 
 export default function DashboardPage() {
@@ -25,7 +25,7 @@ export default function DashboardPage() {
           </Link>
           {data?.last_review_date ? (
             <p className="text-xs text-muted">
-              Last review: {formatAbsoluteDate(data.last_review_date)}
+              Last weekly review {formatRelativeDate(data.last_review_date, today).toLowerCase()}
             </p>
           ) : (
             <p className="text-xs text-muted">No reviews yet</p>

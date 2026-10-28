@@ -1175,19 +1175,19 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Actions: Keep, Update, Archive
     - _Requirements: R10.7, R10.8_
 
-  - [ ] 9.10 Implement Summary step
+  - [x] 9.10 Implement Summary step
     - Show counts of actions performed during review
     - Notes textarea (max 500 chars with live counter)
     - "Complete review" button
     - _Requirements: R10.10, R10.11_
 
-  - [ ] 9.11 Implement immediate save for all review actions
+  - [x] 9.11 Implement immediate save for all review actions
     - Every action (complete, update, delete) saves to database within 100ms
     - "Exit review" returns to Dashboard without recording review (R10.12)
     - Header states "Changes save as you go."
     - _Requirements: R10.9, R10.12_
 
-  - [ ] 9.12 Implement review completion
+  - [x] 9.12 Implement review completion
     - Record completed_at timestamp and notes
     - Show confirmation with date
     - Link back to Dashboard

@@ -70,6 +70,8 @@ export default function WeeklyReviewPage() {
     '?': () => { setCaptureOpen(false); setPaletteOpen(false); setHelpOpen(true) },
     'ctrl+k': () => { setCaptureOpen(false); setPaletteOpen(true) },
     Escape: () => { setCaptureOpen(false); setPaletteOpen(false); setHelpOpen(false) },
+    // Review navigation shortcut
+    ArrowRight: () => { if (!isCompleted && !isSummary) goNext() },
   })
 
   // Action count helpers
