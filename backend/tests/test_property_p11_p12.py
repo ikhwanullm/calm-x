@@ -1,4 +1,3 @@
-\"\"\"Property tests P11 (Tag Filter OR) and P12 (Combined Filters AND).\"\"\"
 from __future__ import annotations
 import pytest
 from datetime import date, timedelta
@@ -53,7 +52,7 @@ def _assign(s, task, tag):
 )
 @settings(max_examples=30, deadline=None)
 def test_p11_tag_filter_or_logic(n_tag1, n_tag2, n_both, n_neither):
-    \"\"\"P11: filtering by [T1, T2] returns tasks with T1 OR T2.\"\"\"
+    """P11: filtering by [T1, T2] returns tasks with T1 OR T2."""
     e = _engine()
     with Session(e) as s:
         tag1 = _tag(s, "t1"); tag2 = _tag(s, "t2")
@@ -76,6 +75,7 @@ def test_p11_tag_filter_or_logic(n_tag1, n_tag2, n_both, n_neither):
 
 
 def test_p11_empty_tag_list_returns_all_unarchived():
+    """P11: no tag filter means no tag restriction."""
     e = _engine()
     with Session(e) as s:
         t1 = _task(s, "A"); t2 = _task(s, "B"); s.commit()
@@ -87,7 +87,7 @@ def test_p11_empty_tag_list_returns_all_unarchived():
 # ---- P12: Combined filters use AND logic ----
 
 def test_p12_tag_and_priority_and_logic():
-    \"\"\"P12: tag AND priority filter uses AND across types.\"\"\"
+    """P12: tag AND priority filter uses AND across types."""
     e = _engine()
     with Session(e) as s:
         tag = _tag(s, "work")
@@ -103,6 +103,7 @@ def test_p12_tag_and_priority_and_logic():
 
 
 def test_p12_priority_and_due_date_and_logic():
+    """P12: priority AND due_date uses AND logic."""
     today = str(date.today())
     e = _engine()
     with Session(e) as s:
