@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { ExternalLink, Trash2, Plus, GripVertical } from "lucide-react"
 import {
   DndContext,
@@ -46,6 +46,7 @@ export function ReferenceLinksSection({ itemId, isArchived }: ReferenceLinksProp
   const reorderLinks = useReorderReferenceLinks(itemId)
   const [inputUrl, setInputUrl] = useState("")
   const [urlError, setUrlError] = useState("")
+  const urlInputRef = useRef<HTMLInputElement>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -127,7 +128,11 @@ export function ReferenceLinksSection({ itemId, isArchived }: ReferenceLinksProp
                   isArchived={isArchived}
                   onDelete={(id) =>
                     deleteLink.mutate(id, {
-                      onSuccess: () => notify.success("Link removed"),
+                      onSuccess: () => {
+                        notify.success("Link removed")
+                        // Focus the URL input after deletion so keyboard users can continue
+                        requestAnimationFrame(() => urlInputRef.current?.focus())
+                      },
                     })
                   }
                 />
@@ -141,6 +146,7 @@ export function ReferenceLinksSection({ itemId, isArchived }: ReferenceLinksProp
         <form onSubmit={handleAdd} className="flex gap-2">
           <div className="flex-1 min-w-0">
             <input
+              ref={urlInputRef}
               type="url"
               value={inputUrl}
               onChange={(e) => { setInputUrl(e.target.value); setUrlError("") }}

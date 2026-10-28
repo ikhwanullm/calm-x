@@ -27,9 +27,11 @@ import { cn } from '@/lib/utils'
 export interface TaskDrawerProps {
   taskId: number | null
   onClose: () => void
+  /** Optional: called after the task is deleted so the parent can move focus */
+  onDeleted?: (taskId: number) => void
 }
 
-export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
+export function TaskDrawer({ taskId, onClose, onDeleted }: TaskDrawerProps) {
   const open = taskId !== null && taskId > 0
   const safeId = taskId ?? 0
 
@@ -55,6 +57,7 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const [addingSubtask, setAddingSubtask] = useState(false)
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
   const newSubtaskRef = useRef<HTMLInputElement>(null)
+  const addSubtaskBtnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (addingSubtask) newSubtaskRef.current?.focus()
@@ -121,9 +124,26 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   }
 
   function handleDeleteTask() {
-    deleteTask.mutate(safeId)
+    const deletedId = safeId
+    deleteTask.mutate(deletedId)
     setShowDeleteDialog(false)
     onClose()
+    // Move focus to the next/previous task row or the list container
+    requestAnimationFrame(() => {
+      if (onDeleted) {
+        onDeleted(deletedId)
+      } else {
+        // Fallback: focus the first task row title button or the main element
+        const firstTaskBtn = document.querySelector<HTMLButtonElement>(
+          '[role="list"] button[class*="text-left"]'
+        )
+        if (firstTaskBtn) {
+          firstTaskBtn.focus()
+        } else {
+          (document.querySelector('main') as HTMLElement | null)?.focus()
+        }
+      }
+    })
   }
 
   // ── Render ────────────────────────────────────────────────────
@@ -302,7 +322,11 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                     <button
                       type="button"
                       aria-label={`Delete subtask: ${subtask.title}`}
-                      onClick={() => deleteSubtask.mutate(subtask.id)}
+                      onClick={() => deleteSubtask.mutate(subtask.id, {
+                        onSuccess: () => {
+                          requestAnimationFrame(() => addSubtaskBtnRef.current?.focus())
+                        },
+                      })}
                       className="shrink-0 text-muted hover:text-danger-fg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                     >
                       <Trash2 size={13} aria-hidden="true" />
@@ -350,6 +374,7 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                 </form>
               ) : (
                 <button
+                  ref={addSubtaskBtnRef}
                   type="button"
                   onClick={() => setAddingSubtask(true)}
                   className="flex items-center gap-1.5 text-sm text-muted hover:text-text transition-colors"

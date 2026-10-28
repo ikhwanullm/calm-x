@@ -466,6 +466,7 @@ function TagsSettings() {
   const [editValue, setEditValue] = useState("")
   const [renameError, setRenameError] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<Tag | null>(null)
+  const newTagInputRef = useRef<HTMLInputElement>(null)
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -499,7 +500,12 @@ function TagsSettings() {
     if (!deleteTarget) return
     const { name } = deleteTarget
     deleteTag.mutate(deleteTarget.id, {
-      onSuccess: () => { setDeleteTarget(null); notify.success(`Tag "${name}" deleted`) },
+      onSuccess: () => {
+        setDeleteTarget(null)
+        notify.success(`Tag "${name}" deleted`)
+        // Return focus to "New tag name" input after deletion
+        requestAnimationFrame(() => newTagInputRef.current?.focus())
+      },
       onError: (err: Error) => notify.error("Could not delete tag.", err.message),
     })
   }
@@ -510,6 +516,7 @@ function TagsSettings() {
       <div className="space-y-4">
         <form onSubmit={handleCreate} className="flex gap-2" aria-label="Create tag">
           <input
+            ref={newTagInputRef}
             type="text"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
