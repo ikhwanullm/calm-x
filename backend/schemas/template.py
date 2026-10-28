@@ -146,6 +146,7 @@ class CreateProjectFromTemplatePayload(BaseModel):
     start_date: Optional[date] = None
     project_goal: Optional[str] = Field(default=None, max_length=500)
     project_deadline: Optional[date] = None
+    area_id: Optional[int] = None
 
     @field_validator("title", mode="before")
     @classmethod

@@ -39,6 +39,9 @@ export interface Project extends ItemBase {
   project_deadline: string | null  // YYYY-MM-DD date string or null
   project_status: ProjectStatus | null
   project_completed_at: string | null
+  area_id: number | null
+  area_title: string | null
+  area_archived: boolean
 }
 
 export interface Area extends ItemBase {
@@ -64,6 +67,7 @@ export interface ProjectCreatePayload {
   notes?: string
   project_goal?: string | null
   project_deadline?: string | null
+  area_id?: number | null
 }
 
 export interface AreaCreatePayload {
@@ -90,6 +94,7 @@ export interface ItemUpdatePayload {
   project_goal?: string | null
   project_deadline?: string | null
   area_maintenance_notes?: string | null
+  area_id?: number | null
 }
 
 // ---------------------------------------------------------------------------
@@ -269,6 +274,7 @@ export interface CreateProjectFromTemplatePayload {
   start_date?: string  // YYYY-MM-DD
   project_goal?: string | null
   project_deadline?: string | null  // YYYY-MM-DD
+  area_id?: number | null
 }
 
 export interface TemplateTaskReorderPayload {

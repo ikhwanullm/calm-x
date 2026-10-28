@@ -22,6 +22,9 @@ const mockArchivedProject: Item = {
   project_deadline: null,
   project_status: 'completed',
   project_completed_at: null,
+  area_id: null,
+  area_title: null,
+  area_archived: false,
 }
 
 const mockArchivedArea: Item = {

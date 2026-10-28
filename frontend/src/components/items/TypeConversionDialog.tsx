@@ -141,7 +141,17 @@ export function TypeConversionDialog({
                       resource{preview.resource_link_count !== 1 ? "s" : ""} will be removed.
                     </p>
                   )}
-                  {preview.resource_link_count === 0 && preview.task_count === 0 && (
+                  {preview.area_project_count > 0 && (
+                    <p className="text-warn-fg">
+                      <span className="font-medium">{preview.area_project_count}</span>{" "}
+                      project{preview.area_project_count !== 1 ? "s" : ""} will no longer belong to this area.
+                    </p>
+                  )}
+                  {preview.leaves_area && (
+                    <p className="text-warn-fg">This project will be removed from its area.</p>
+                  )}
+                  {preview.resource_link_count === 0 && preview.task_count === 0 &&
+                    preview.area_project_count === 0 && !preview.leaves_area && (
                     <p>No data will be lost during this conversion.</p>
                   )}
                 </div>

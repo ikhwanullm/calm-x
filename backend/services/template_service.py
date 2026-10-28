@@ -218,6 +218,10 @@ def create_project_from_template(
     # Default start_date to today if not provided
     start_date = data.start_date or date.today()
 
+    if data.area_id is not None:
+        from backend.services.item_service import _validate_parent_area
+        _validate_parent_area(session, data.area_id)
+
     # Create the project
     project = Item(
         type="project",
@@ -232,6 +236,7 @@ def create_project_from_template(
         project_status="active",
         project_completed_at=None,
         area_maintenance_notes=None,
+        area_id=data.area_id,
     )
     session.add(project)
     session.flush()  # Get project.id

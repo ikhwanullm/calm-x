@@ -40,6 +40,7 @@ vi.mock('../hooks/useItems', () => ({
   useRestoreItem: vi.fn(),
   useDeleteItem: vi.fn(),
   useCreateItem: vi.fn(),
+  useItems: vi.fn(() => ({ data: [] })),
   itemKeys: { all: ['items'], list: () => [], detail: (id: number) => ['items', 'detail', id] },
 }))
 
@@ -85,6 +86,8 @@ vi.mock('../components/tasks/TaskDrawer', () => ({ TaskDrawer: () => null }))
 vi.mock('../components/items/TypeConversionDialog', () => ({ TypeConversionDialog: () => null }))
 vi.mock('../components/items/ReferenceLinksSection', () => ({ ReferenceLinksSection: () => null }))
 vi.mock('../components/items/ResourceLinksSection', () => ({ ResourceLinksSection: () => null }))
+vi.mock('../components/items/ProjectAreaField', () => ({ ProjectAreaField: () => null }))
+vi.mock('../components/items/AreaProjectsSection', () => ({ AreaProjectsSection: () => null }))
 vi.mock('../components/items/LinkedResourcesSection', () => ({ LinkedResourcesSection: () => null }))
 vi.mock('../lib/toast', () => ({ notify: { success: vi.fn(), error: vi.fn() } }))
 
@@ -99,6 +102,7 @@ const baseProject: Project = {
   task_count: 0, completed_task_count: 0, progress_percentage: 0,
   project_goal: null, project_deadline: null,
   project_status: 'active', project_completed_at: null,
+  area_id: null, area_title: null, area_archived: false,
 }
 
 const noop = vi.fn()

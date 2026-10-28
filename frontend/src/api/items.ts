@@ -13,6 +13,7 @@ export interface ListItemsParams {
   q?: string
   archived_from?: string  // YYYY-MM-DD
   archived_to?: string    // YYYY-MM-DD
+  area_id?: number        // only Projects that belong to this Area
 }
 
 export const itemsApi = {

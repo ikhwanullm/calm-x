@@ -93,3 +93,5 @@ class TypeConversionPreview(BaseModel):
     task_count: int            # total tasks to move (to Resource) or keep
     open_task_count: int
     resource_link_count: int   # links to be removed
+    area_project_count: int = 0  # projects detached when an Area changes type
+    leaves_area: bool = False    # a Project loses its parent Area when it changes type

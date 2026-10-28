@@ -33,4 +33,6 @@ export interface TypeConversionPreview {
   task_count: number
   open_task_count: number
   resource_link_count: number
+  area_project_count: number
+  leaves_area: boolean
 }

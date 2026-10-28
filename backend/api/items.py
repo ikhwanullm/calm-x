@@ -44,6 +44,7 @@ def list_items(
     q: Optional[str] = Query(default=None, max_length=200, description="Search query for title/description"),
     archived_from: Optional[datetime] = Query(default=None, description="Filter archived items from this datetime (ISO 8601 with tz offset, e.g. 2026-10-28T00:00:00+07:00)"),
     archived_to: Optional[datetime] = Query(default=None, description="Filter archived items to this datetime (ISO 8601 with tz offset, e.g. 2026-10-28T23:59:59+07:00)"),
+    area_id: Optional[int] = Query(default=None, description="Only Projects that belong to this Area"),
 ):
     """List items. Filter by type and/or include archived.
 
@@ -67,6 +68,7 @@ def list_items(
         include_archived=include_archived,
         archived_only=archived_only,
         sort_by_archived=archived_only,  # Sort by archived_at desc when viewing archive
+        area_id=area_id,
     )
 
     # Apply search filter if provided

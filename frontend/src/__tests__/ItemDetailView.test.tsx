@@ -88,6 +88,14 @@ vi.mock('../components/items/ResourceLinksSection', () => ({
   ResourceLinksSection: () => <div data-testid="resource-links">Resource links</div>,
 }))
 
+vi.mock('../components/items/ProjectAreaField', () => ({
+  ProjectAreaField: () => <div data-testid="project-area">Area</div>,
+}))
+
+vi.mock('../components/items/AreaProjectsSection', () => ({
+  AreaProjectsSection: () => <div data-testid="area-projects">Projects</div>,
+}))
+
 vi.mock('../components/items/LinkedResourcesSection', () => ({
   LinkedResourcesSection: () => <div data-testid="linked-resources">Linked resources</div>,
 }))

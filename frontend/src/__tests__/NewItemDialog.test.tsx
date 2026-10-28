@@ -13,6 +13,12 @@ vi.mock('../hooks/useItems', () => ({
     mutateAsync: mockCreateItem,
     isPending: false,
   }),
+  useItems: () => ({
+    data: [
+      { id: 3, type: 'area', title: 'Platform' },
+      { id: 4, type: 'area', title: 'Health' },
+    ],
+  }),
 }))
 
 const mockTemplateList = [
@@ -153,6 +159,50 @@ describe('NewItemDialog', () => {
         })
       ))
       expect(onCreated).toHaveBeenCalledWith(77)
+    })
+  })
+
+  describe('Area', () => {
+    it('lets a new project join an area', async () => {
+      const user = userEvent.setup()
+      mockCreateItem.mockClear()
+      renderDialog()
+      await user.type(screen.getByLabelText(/^title/i), 'Migrate CML')
+      await user.selectOptions(screen.getByLabelText('Project area'), '3')
+      await user.click(screen.getByRole('button', { name: /create project/i }))
+      await waitFor(() => expect(mockCreateItem).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'project', title: 'Migrate CML', area_id: 3 })
+      ))
+    })
+
+    it('sends no area when none is chosen', async () => {
+      const user = userEvent.setup()
+      mockCreateItem.mockClear()
+      renderDialog()
+      await user.type(screen.getByLabelText(/^title/i), 'Solo')
+      await user.click(screen.getByRole('button', { name: /create project/i }))
+      await waitFor(() => expect(mockCreateItem).toHaveBeenCalled())
+      expect(mockCreateItem.mock.calls[0][0].area_id).toBeUndefined()
+    })
+
+    it('passes the area when creating from a template', async () => {
+      const user = userEvent.setup()
+      mockCreateFromTemplate.mockClear()
+      renderDialog()
+      await user.click(screen.getByRole('button', { name: /from template/i }))
+      await user.selectOptions(await screen.findByLabelText(/template/i), '1')
+      await user.selectOptions(screen.getByLabelText('Project area'), '4')
+      await user.click(screen.getByRole('button', { name: /create project/i }))
+      await waitFor(() => expect(mockCreateFromTemplate).toHaveBeenCalledWith(
+        expect.objectContaining({ payload: expect.objectContaining({ area_id: 4 }) })
+      ))
+    })
+
+    it('has no area field for an Area item', async () => {
+      const user = userEvent.setup()
+      renderDialog()
+      await user.click(screen.getByRole('radio', { name: /area/i }))
+      expect(screen.queryByLabelText('Project area')).toBeNull()
     })
   })
 })

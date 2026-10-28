@@ -22,6 +22,9 @@ const project: Project = {
   project_deadline: null,
   project_status: 'active',
   project_completed_at: null,
+  area_id: null,
+  area_title: null,
+  area_archived: false,
 }
 
 const area: Area = {

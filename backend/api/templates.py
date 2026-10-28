@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db_session
-from backend.schemas.item import ProjectResponse
+from backend.schemas.item import ProjectResponse, item_to_response
 from backend.schemas.template import (
     CreateProjectFromTemplatePayload,
     TemplateCreate,
@@ -84,7 +84,8 @@ def create_project_from_template(
     project = template_service.create_project_from_template(session, template_id, data)
     session.commit()
     session.refresh(project)
-    return project
+    total = len(project.tasks)
+    return item_to_response(project, task_count=total, completed_task_count=0)
 
 
 # ---------------------------------------------------------------------------

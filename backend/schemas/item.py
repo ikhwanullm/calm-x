@@ -29,6 +29,7 @@ class ProjectCreate(BaseModel):
     notes: str = Field(default="", max_length=10000)
     project_goal: Optional[str] = Field(default=None, max_length=500)
     project_deadline: Optional[date] = None
+    area_id: Optional[int] = None
 
     @field_validator("title", mode="before")
     @classmethod
@@ -81,6 +82,7 @@ class ItemUpdate(BaseModel):
     project_goal: Optional[str] = Field(default=None, max_length=500)
     project_deadline: Optional[date] = None
     area_maintenance_notes: Optional[str] = Field(default=None, max_length=1000)
+    area_id: Optional[int] = None
 
     @field_validator("title", mode="before")
     @classmethod
@@ -111,6 +113,9 @@ class ProjectResponse(BaseModel):
     project_deadline: Optional[date] = None
     project_status: Optional[str] = None
     project_completed_at: Optional[datetime] = None
+    area_id: Optional[int] = None
+    area_title: Optional[str] = None
+    area_archived: bool = False
     task_count: int = 0
     completed_task_count: int = 0
     progress_percentage: int = 0
@@ -228,6 +233,7 @@ def item_to_response(
     item_type = getattr(item, "type")
 
     if item_type == "project":
+        area = getattr(item, "area", None)
         return ProjectResponse(
             id=item.id,  # type: ignore[attr-defined]
             type="project",
@@ -241,6 +247,9 @@ def item_to_response(
             project_deadline=item.project_deadline,  # type: ignore[attr-defined]
             project_status=item.project_status,  # type: ignore[attr-defined]
             project_completed_at=item.project_completed_at,  # type: ignore[attr-defined]
+            area_id=area.id if area is not None else None,
+            area_title=area.title if area is not None else None,
+            area_archived=area is not None and area.archived_at is not None,
             task_count=task_count,
             completed_task_count=completed_task_count,
             progress_percentage=progress,

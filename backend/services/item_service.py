@@ -7,7 +7,7 @@ from typing import Optional
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.exceptions import ArchivedItemError, ConflictError, NotFoundError
+from backend.exceptions import ArchivedItemError, ConflictError, NotFoundError, ValidationError
 from backend.models.item import Item, Task
 from backend.schemas.item import AreaCreate, ItemUpdate, ProjectCreate, ResourceCreate
 
@@ -28,12 +28,22 @@ def _guard_not_archived(item: Item) -> None:
         raise ArchivedItemError(f"Item {item.id} is archived and cannot be modified")
 
 
+def _validate_parent_area(session: Session, area_id: int) -> None:
+    """A Project's parent must be an existing, non-archived Area."""
+    area = session.get(Item, area_id)
+    if area is None or area.type != "area":
+        raise ValidationError(f"Item {area_id} is not an Area", detail="area_id must refer to an Area")
+    if area.archived_at is not None:
+        raise ArchivedItemError(f"Area {area_id} is archived and cannot receive projects")
+
+
 def list_items(
     session: Session,
     type_filter: Optional[str] = None,
     include_archived: bool = False,
     archived_only: bool = False,
     sort_by_archived: bool = False,
+    area_id: Optional[int] = None,
 ) -> list[tuple[Item, int, int]]:
     """Return items with task counts as (item, total_tasks, completed_tasks).
 
@@ -46,6 +56,8 @@ def list_items(
     q = select(Item)
     if type_filter is not None:
         q = q.where(Item.type == type_filter)
+    if area_id is not None:
+        q = q.where(Item.area_id == area_id)
 
     # archived_only takes precedence
     if archived_only:
@@ -119,6 +131,9 @@ def create_item(
         item.project_status = "active"
         item.project_goal = data.project_goal  # type: ignore[attr-defined]
         item.project_deadline = data.project_deadline  # type: ignore[attr-defined]
+        if data.area_id is not None:  # type: ignore[attr-defined]
+            _validate_parent_area(session, data.area_id)  # type: ignore[attr-defined]
+            item.area_id = data.area_id  # type: ignore[attr-defined]
     elif data.type == "area":
         item.area_maintenance_notes = data.area_maintenance_notes  # type: ignore[attr-defined]
 
@@ -139,6 +154,11 @@ def update_item(session: Session, item_id: int, data: ItemUpdate) -> Item:
 
     # Only update fields that were explicitly provided in the request body
     update_data = data.model_dump(exclude_unset=True)
+    new_area_id = update_data.get("area_id")
+    if new_area_id is not None:
+        if item.type != "project":
+            raise ValidationError("Only Projects can belong to an Area", detail="area_id")
+        _validate_parent_area(session, new_area_id)
     for field, value in update_data.items():
         setattr(item, field, value)
 

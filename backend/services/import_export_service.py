@@ -66,6 +66,7 @@ def export_data(session: Session) -> dict[str, Any]:
             "project_status": item.project_status,
             "project_completed_at": _dt_to_iso(item.project_completed_at),
             "area_maintenance_notes": item.area_maintenance_notes,
+            "area_id": item.area_id,
         }
 
     def task_dict(t: Task) -> dict:
@@ -319,6 +320,17 @@ def _validate_import_refs(data: dict) -> None:
     tag_ids = {r["id"] for r in data["tags"] if isinstance(r.get("id"), int)}
     template_ids = {r["id"] for r in data["templates"] if isinstance(r.get("id"), int)}
 
+    # items.area_id → an Area in the same file (absent in exports made before it existed)
+    item_types = {r["id"]: r.get("type") for r in data["items"] if isinstance(r.get("id"), int)}
+    for r in data["items"]:
+        area_id = r.get("area_id")
+        if area_id is None:
+            continue
+        if r.get("type") != "project":
+            raise ImportValidationError(f"Item id={r.get('id')} is not a project but has area_id={area_id}")
+        if item_types.get(area_id) != "area":
+            raise ImportValidationError(f"Project id={r.get('id')} references area_id={area_id}, which is not an Area in the file")
+
     # tasks.item_id → items.id (NULL is allowed = inbox)
     for t in data["tasks"]:
         item_id = t.get("item_id")
@@ -445,6 +457,12 @@ def _import_merge(session: Session, data: dict) -> dict[str, int]:
         session.flush()
         item_id_map[r["id"]] = item.id
     counts["items"] = len(item_id_map)
+
+    # Parent Areas are set once every item has its new id
+    for r in data["items"]:
+        if r.get("area_id") is not None:
+            session.get(Item, item_id_map[r["id"]]).area_id = item_id_map[r["area_id"]]
+    session.flush()
 
     # ── Tasks ──────────────────────────────────────────────────────────────
     for r in data["tasks"]:

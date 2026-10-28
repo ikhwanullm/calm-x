@@ -37,12 +37,17 @@ def get_conversion_preview(
             select(ResourceLink).where(ResourceLink.linked_item_id == item_id)
         ).scalars().all()
         rl_count += len(rl_as_linked)
+    area_project_count = len(session.execute(
+        select(Item.id).where(Item.area_id == item_id)
+    ).all()) if item.type == "area" else 0
     return TypeConversionPreview(
         current_type=item.type,
         target_type=target_type,
         task_count=len(tasks),
         open_task_count=open_count,
         resource_link_count=rl_count,
+        area_project_count=area_project_count,
+        leaves_area=item.type == "project" and item.area_id is not None,
     )
 
 
@@ -74,6 +79,16 @@ def convert_item(
         ).scalars().all():
             task.item_id = None
             task.updated_at = now
+
+    # Area membership only exists between a Project and an Area
+    if item.type == "project":
+        item.area_id = None
+    if item.type == "area":
+        for project in session.execute(
+            select(Item).where(Item.area_id == item_id)
+        ).scalars().all():
+            project.area_id = None
+            project.updated_at = now
 
     # Apply type-specific field changes
     item.type = target_type

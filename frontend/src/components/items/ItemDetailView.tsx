@@ -29,6 +29,8 @@ import { TypeConversionDialog } from '@/components/items/TypeConversionDialog'
 import { ReferenceLinksSection } from '@/components/items/ReferenceLinksSection'
 import { ResourceLinksSection } from '@/components/items/ResourceLinksSection'
 import { LinkedResourcesSection } from '@/components/items/LinkedResourcesSection'
+import { ProjectAreaField } from '@/components/items/ProjectAreaField'
+import { AreaProjectsSection } from '@/components/items/AreaProjectsSection'
 import { TaskDrawer } from '@/components/tasks/TaskDrawer'
 
 interface ItemDetailViewProps {
@@ -245,6 +247,15 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         />
       )}
 
+      {/* Optional parent Area of a project */}
+      {isProject(item) && (
+        <ProjectAreaField
+          project={item}
+          disabled={archived}
+          onChange={(areaId) => updateItem.mutate({ area_id: areaId })}
+        />
+      )}
+
       {/* Project goal */}
       {isProject(item) && (
         <InlineField
@@ -309,6 +320,9 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         <LinkedResourcesSection itemId={item.id} isArchived={archived} />
       )}
 
+
+      {/* Projects that belong to this Area */}
+      {isArea(item) && <AreaProjectsSection areaId={item.id} isArchived={archived} />}
 
       {/* Tasks section — not shown for Resources (R3.7) */}
       {item.type !== 'resource' && (

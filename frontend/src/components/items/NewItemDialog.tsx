@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { useCreateItem } from '@/hooks/useItems'
+import { useCreateItem, useItems } from '@/hooks/useItems'
 import { useTemplates, useTemplate, useCreateProjectFromTemplate } from '@/hooks/useTemplates'
 import { extractApiError } from '@/api/client'
 import type { ItemType } from '@/types/models'
@@ -44,6 +44,7 @@ export function NewItemDialog({
   // Project-specific state for blank projects
   const [projectGoal, setProjectGoal] = useState('')
   const [projectDeadline, setProjectDeadline] = useState('')
+  const [projectAreaId, setProjectAreaId] = useState('')
 
   // Project-specific state for templates
   const [projectMode, setProjectMode] = useState<ProjectMode>('blank')
@@ -54,6 +55,8 @@ export function NewItemDialog({
   const createFromTemplate = useCreateProjectFromTemplate()
   const { data: templates } = useTemplates()
   const { data: selectedTemplate } = useTemplate(selectedTemplateId ?? 0)
+  const { data: areas = [] } = useItems({ type: 'area' })
+  const areaId = projectAreaId ? Number(projectAreaId) : undefined
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -63,6 +66,7 @@ export function NewItemDialog({
       setErrors({})
       setProjectGoal('')
       setProjectDeadline('')
+      setProjectAreaId('')
       setProjectMode('blank')
       setSelectedTemplateId(null)
       setStartDate(getLocalToday())
@@ -82,6 +86,7 @@ export function NewItemDialog({
     setType(defaultType)
     setProjectGoal('')
     setProjectDeadline('')
+    setProjectAreaId('')
     setProjectMode('blank')
     setSelectedTemplateId(null)
     setStartDate(getLocalToday())
@@ -122,6 +127,7 @@ export function NewItemDialog({
             start_date: startDate,
             project_goal: projectGoal.trim() || undefined,
             project_deadline: projectDeadline || undefined,
+            area_id: areaId,
           },
         })
         onCreated?.(project.id)
@@ -133,6 +139,7 @@ export function NewItemDialog({
           ...(type === 'project' && {
             project_goal: projectGoal.trim() || undefined,
             project_deadline: projectDeadline || undefined,
+            area_id: areaId,
           }),
         })
         onCreated?.(item.id)
@@ -404,6 +411,29 @@ export function NewItemDialog({
                   </p>
                 )}
               </div>
+
+              {areas.length > 0 && (
+                <div className="mb-5">
+                  <label htmlFor="project-area" className="block text-sm font-medium text-text mb-1.5">
+                    Area <span className="font-normal text-muted">(optional)</span>
+                  </label>
+                  <select
+                    id="project-area"
+                    value={projectAreaId}
+                    onChange={(e) => setProjectAreaId(e.target.value)}
+                    aria-label="Project area"
+                    className={cn(
+                      'w-full h-10 px-3 rounded-control border border-border bg-surface text-text text-sm',
+                      'focus:outline-2 focus:outline-accent focus:outline-offset-0'
+                    )}
+                  >
+                    <option value="">No area</option>
+                    {areas.map((area) => (
+                      <option key={area.id} value={String(area.id)}>{area.title}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </>
           )}
 

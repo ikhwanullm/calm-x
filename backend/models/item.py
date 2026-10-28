@@ -31,6 +31,14 @@ class Item(Base):
     # Area-specific fields (None for non-areas)
     area_maintenance_notes: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
+    # Optional parent Area of a Project (None for non-projects and unassigned projects)
+    area_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("items.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    area: Mapped[Item | None] = relationship(
+        "Item", remote_side="Item.id", foreign_keys="Item.area_id"
+    )
+
     # Relationships — all with cascade delete-orphan + passive_deletes for DB cascade
     tasks: Mapped[list[Task]] = relationship(
         "Task",
