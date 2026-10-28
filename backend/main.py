@@ -66,6 +66,10 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
 
     app = FastAPI(title="Calm-X", version="0.1.0", docs_url="/api/docs")
 
+    # Store config on app.state so routes can access it via Depends(get_app_config)
+    # instead of calling load_config() which would ignore the injected test config.
+    app.state.config = config
+
     # --- Middleware ---
     # Strip trailing slashes from /api/... paths for all HTTP methods.
     # FastAPI's redirect_slashes only works for routes it knows about;

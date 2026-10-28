@@ -1,18 +1,19 @@
 """FastAPI router for Backup management."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
-from backend.api.deps import get_db_session
-from backend.config import load_config
+from backend.api.deps import get_app_config, get_db_session
+from backend.exceptions import ValidationError
 
 router = APIRouter(prefix="/backup", tags=["backup"])
 SessionDep = Annotated[Session, Depends(get_db_session)]
+ConfigDep = Annotated[object, Depends(get_app_config)]
 
 
 class BackupEntry(BaseModel):
@@ -37,11 +38,10 @@ class BackupCreateResponse(BaseModel):
 
 
 @router.get("/list", response_model=BackupListResponse)
-def list_backups(session: SessionDep) -> BackupListResponse:
+def list_backups(session: SessionDep, config: ConfigDep) -> BackupListResponse:
     """List all backup files (newest first)."""
     from backend.services.backup_service import list_backups as _list_backups
 
-    config = load_config()
     entries = _list_backups(config.absolute_backup_dir)
     backups = [
         BackupEntry(
@@ -55,12 +55,10 @@ def list_backups(session: SessionDep) -> BackupListResponse:
 
 
 @router.post("/create", response_model=BackupCreateResponse, status_code=201)
-def create_backup(session: SessionDep) -> BackupCreateResponse:
+def create_backup(session: SessionDep, config: ConfigDep) -> BackupCreateResponse:
     """Create a manual backup now."""
     from backend.services.backup_service import create_backup as _create_backup
-    from backend.exceptions import ValidationError
 
-    config = load_config()
     try:
         path = _create_backup(
             db_path=config.absolute_db_path,
@@ -73,5 +71,5 @@ def create_backup(session: SessionDep) -> BackupCreateResponse:
     return BackupCreateResponse(
         filename=path.name,
         size=path.stat().st_size,
-        created_at=datetime.fromtimestamp(path.stat().st_mtime),
+        created_at=datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc),
     )

@@ -7,16 +7,16 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
-from backend.api.deps import get_db_session
-from backend.config import load_config
+from backend.api.deps import get_app_config, get_db_session
 from backend.exceptions import ImportFailedError, ImportValidationError
 from backend.services.import_export_service import export_data, import_data
 
 router = APIRouter(tags=["import-export"])
 SessionDep = Annotated[Session, Depends(get_db_session)]
+ConfigDep = Annotated[object, Depends(get_app_config)]
 logger = logging.getLogger(__name__)
 
 _MAX_IMPORT_BYTES = 10 * 1024 * 1024  # 10 MB
@@ -39,7 +39,7 @@ def export_json(session: SessionDep) -> Response:
 
 
 @router.post("/import")
-async def import_json(request: Request, session: SessionDep) -> dict:
+async def import_json(request: Request, session: SessionDep, config: ConfigDep) -> dict:
     """Import data from a JSON payload.
 
     Query params:
@@ -61,8 +61,6 @@ async def import_json(request: Request, session: SessionDep) -> dict:
         data = json.loads(body)
     except json.JSONDecodeError as exc:
         raise ImportValidationError(f"Invalid JSON: {exc}") from exc
-
-    config = load_config()
 
     # import_data validates first, then writes — all in the session's transaction
     counts = import_data(
