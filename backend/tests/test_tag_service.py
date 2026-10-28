@@ -65,7 +65,7 @@ def test_rename_same_name_ok(db_session):
     """Renaming to the same name (or same case) should not raise."""
     t = create_tag(db_session, TagCreate(name="Foo"))
     result = rename_tag(db_session, t.id, TagRename(name="Foo"))
-    assert result.name == "Foo"
+    assert result.name == "foo"  # names normalized to lowercase
 
 
 def test_delete_tag(db_session):

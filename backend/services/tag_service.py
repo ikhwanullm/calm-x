@@ -30,7 +30,7 @@ def create_tag(session: Session, data: TagCreate) -> TagResponse:
             f"Tag '{data.name}' already exists",
             detail=f"A tag with the name '{existing.name}' already exists. Tag names are case-insensitive.",
         )
-    tag = Tag(name=data.name, created_at=now_utc())
+    tag = Tag(name=data.name.strip().lower(), created_at=now_utc())
     session.add(tag)
     session.flush()
     return _tag_response(tag)
@@ -53,7 +53,7 @@ def rename_tag(session: Session, tag_id: int, data: TagRename) -> TagResponse:
             f"Tag '{data.name}' already exists",
             detail=f"Tag names must be unique (case-insensitive). '{existing.name}' already exists.",
         )
-    tag.name = data.name
+    tag.name = data.name.strip().lower()
     session.flush()
     return _tag_response(tag)
 
