@@ -1,3 +1,4 @@
+import React from "react"
 import { useSearchParams } from "react-router-dom"
 import { useFilteredTasks, type FilterParams } from "@/hooks/useFilterTasks"
 import { useCompleteTask, useIncompleteTask } from "@/hooks/useTasks"
@@ -34,6 +35,7 @@ export default function AllTasksPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = paramsFromSearch(searchParams)
   const selectedTaskId = searchParams.get("task") ? Number(searchParams.get("task")) : null
+  const drawerTriggerRef = React.useRef<HTMLElement | null>(null)
 
   const { data: tasks = [], isLoading } = useFilteredTasks(filters)
   const completeTask = useCompleteTask()
@@ -47,6 +49,7 @@ export default function AllTasksPage() {
   }
 
   function openDrawer(taskId: number) {
+    drawerTriggerRef.current = document.activeElement as HTMLElement | null
     const sp = paramsToSearch(filters)
     sp.set("task", String(taskId))
     setSearchParams(sp)
@@ -54,6 +57,10 @@ export default function AllTasksPage() {
 
   function closeDrawer() {
     setSearchParams(paramsToSearch(filters))
+    requestAnimationFrame(() => {
+      drawerTriggerRef.current?.focus()
+      drawerTriggerRef.current = null
+    })
   }
 
   function handleToggleComplete(task: Task) {

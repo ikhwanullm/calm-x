@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   useInboxTasks,
   useCreateTask,
@@ -22,6 +22,20 @@ export default function InboxPage() {
   const moveTask = useMoveTask()
   const { data: allItems = [] } = useItems({ include_archived: false })
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
+  const drawerTriggerRef = useRef<HTMLElement | null>(null)
+
+  function openTaskDrawer(taskId: number) {
+    drawerTriggerRef.current = document.activeElement as HTMLElement | null
+    setSelectedTaskId(taskId)
+  }
+
+  function closeTaskDrawer() {
+    setSelectedTaskId(null)
+    requestAnimationFrame(() => {
+      drawerTriggerRef.current?.focus()
+      drawerTriggerRef.current = null
+    })
+  }
   const [showCompleted, setShowCompleted] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
 
@@ -165,7 +179,7 @@ export default function InboxPage() {
                   <TaskRow
                     task={task}
                     isSelected={selectedTaskId === task.id}
-                    onOpenDrawer={setSelectedTaskId}
+                    onOpenDrawer={openTaskDrawer}
                     onToggleComplete={handleToggleComplete}
                     isDraggable={false}
                   />
@@ -190,7 +204,7 @@ export default function InboxPage() {
                     <TaskRow
                       task={task}
                       isSelected={selectedTaskId === task.id}
-                      onOpenDrawer={setSelectedTaskId}
+                      onOpenDrawer={openTaskDrawer}
                       onToggleComplete={handleToggleComplete}
                       isDraggable={false}
                     />
@@ -202,7 +216,7 @@ export default function InboxPage() {
         </div>
       )}
 
-      <TaskDrawer taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
+      <TaskDrawer taskId={selectedTaskId} onClose={closeTaskDrawer} />
     </div>
   )
 }

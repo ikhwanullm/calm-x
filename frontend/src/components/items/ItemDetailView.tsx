@@ -361,10 +361,15 @@ function TasksSection({ item, archived }: { item: Item; archived: boolean }) {
 
   const selectedTaskId = Number(searchParams.get('task')) || null
 
+  // Save the element that triggered the drawer so we can restore focus on close
+  const drawerTriggerRef = useRef<HTMLElement | null>(null)
+
   const MAX_TASKS = 100
   const atLimit = tasks.length >= MAX_TASKS
 
   function openDrawer(taskId: number) {
+    // Save currently focused element (the task row button that was activated)
+    drawerTriggerRef.current = document.activeElement as HTMLElement | null
     setSearchParams(prev => {
       const next = new URLSearchParams(prev)
       next.set('task', String(taskId))
@@ -377,6 +382,11 @@ function TasksSection({ item, archived }: { item: Item; archived: boolean }) {
       const next = new URLSearchParams(prev)
       next.delete('task')
       return next
+    })
+    // Restore focus to the element that opened the drawer
+    requestAnimationFrame(() => {
+      drawerTriggerRef.current?.focus()
+      drawerTriggerRef.current = null
     })
   }
 
