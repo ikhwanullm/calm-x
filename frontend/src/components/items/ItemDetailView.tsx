@@ -13,7 +13,7 @@ import {
 } from '@/hooks/useItems'
 import { useItemTasks, useCreateTask, useCompleteTask, useIncompleteTask } from '@/hooks/useTasks'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
-import { ProgressBar, StatusBadge, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
+import { ProgressBar, StatusBadge, RelativeDate, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
 import { useDeadlineThreshold } from '@/hooks/useSettings'
 import { getLocalToday, formatAbsoluteDate } from '@/utils/date'
@@ -232,17 +232,16 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         </DropdownMenu>
       </div>
 
-      {/* Project deadline status */}
-      {isProject(item) && item.project_deadline && (
-        <div className="mt-2">
-          {getDeadlineStatus(item.project_deadline, item.project_status === 'completed', threshold, today) && (
-            <StatusBadge
-              status={getDeadlineStatus(item.project_deadline, item.project_status === 'completed', threshold, today)!}
-              date={item.project_deadline}
-              today={today}
-            />
-          )}
-        </div>
+      {/* Project deadline — inline editable (R4.1, R4.2) */}
+      {isProject(item) && (
+        <InlineDeadline
+          deadline={item.project_deadline}
+          isComplete={item.project_status === 'completed'}
+          disabled={archived}
+          today={today}
+          threshold={threshold}
+          onSave={(v) => updateItem.mutate({ project_deadline: v || null })}
+        />
       )}
 
       {/* Project goal */}
@@ -576,6 +575,130 @@ function InlineField({
           )}
         >
           {value || placeholder}
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Inline Deadline editor  (R4.1 / R4.2)
+// ---------------------------------------------------------------------------
+
+function InlineDeadline({
+  deadline,
+  isComplete,
+  disabled,
+  today,
+  threshold,
+  onSave,
+}: {
+  deadline: string | null
+  isComplete: boolean
+  disabled: boolean
+  today: string
+  threshold: number
+  onSave: (value: string | null) => void
+}) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(deadline ?? '')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Open editor
+  function startEdit() {
+    if (disabled) return
+    setEditValue(deadline ?? '')
+    setIsEditing(true)
+  }
+
+  // Focus date input when editing starts
+  useEffect(() => {
+    if (isEditing) inputRef.current?.focus()
+  }, [isEditing])
+
+  function handleSave() {
+    onSave(editValue || null)
+    setIsEditing(false)
+  }
+
+  function handleClear() {
+    onSave(null)
+    setIsEditing(false)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') handleSave()
+    if (e.key === 'Escape') setIsEditing(false)
+  }
+
+  const deadlineStatus = deadline && !isComplete
+    ? getDeadlineStatus(deadline, isComplete, threshold, today)
+    : null
+
+  if (isEditing) {
+    return (
+      <div className="mt-2 flex items-center gap-2 flex-wrap">
+        <input
+          ref={inputRef}
+          type="date"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          aria-label="Project deadline"
+          className={cn(
+            'h-9 px-3 rounded-control border border-border bg-surface text-text text-sm',
+            'focus:outline-2 focus:outline-accent focus:outline-offset-0'
+          )}
+        />
+        <button
+          type="button"
+          onClick={handleSave}
+          className="h-9 px-3 rounded-control bg-accent text-accent-fg text-xs font-semibold hover:opacity-90"
+        >
+          Save
+        </button>
+        {deadline && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="h-9 px-3 rounded-control border border-border text-muted text-xs font-medium hover:bg-surface-2 hover:text-danger-fg"
+          >
+            Clear deadline
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsEditing(false)}
+          className="h-9 px-3 rounded-control text-muted text-xs hover:text-text"
+        >
+          Cancel
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-2 flex items-center gap-3 flex-wrap">
+      {deadlineStatus ? (
+        <StatusBadge status={deadlineStatus} date={deadline!} today={today} />
+      ) : deadline ? (
+        // Completed project — show date without status color
+        <RelativeDate date={deadline} />
+      ) : null}
+
+      {!disabled && (
+        <button
+          type="button"
+          onClick={startEdit}
+          className={cn(
+            'text-xs font-medium',
+            deadline
+              ? 'text-muted hover:text-accent-text hover:underline'
+              : 'text-accent-text hover:underline'
+          )}
+          aria-label={deadline ? 'Edit project deadline' : 'Add project deadline'}
+        >
+          {deadline ? 'Edit deadline' : '+ Add deadline'}
         </button>
       )}
     </div>
