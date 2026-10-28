@@ -928,14 +928,14 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Verify reference links and resource links CRUD works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Phase 6: Filters, Search, Shortcuts
-  - [ ] 6.1 Create Tag management UI in Settings
+- [x] 6. Phase 6: Filters, Search, Shortcuts
+  - [x] 6.1 Create Tag management UI in Settings
     - Add "Tags" section to Settings page (/settings)
     - List all tags with rename and delete actions
     - Create new tag form
     - _Requirements: R12.1_
 
-  - [ ] 6.2 Implement filter query builder for tasks
+  - [x] 6.2 Implement filter query builder for tasks
     - Support filtering by tag IDs (OR logic within tags)
     - Support filtering by priority levels (OR logic within priorities)
     - Support filtering by due date range (start and/or end)
@@ -944,11 +944,11 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Exclude archived items from results
     - _Requirements: R12.5, R12.6, R12.7, R12.8, R12.9_
 
-  - [ ] 6.3 Add filter parameters to GET /api/tasks
+  - [x] 6.3 Add filter parameters to GET /api/tasks
     - Query params: tags, priorities, due_start, due_end, category, item_id, include_archived
     - _Requirements: R12.5, R12.6, R12.7, R12.8, R12.9_
 
-  - [ ] 6.4 Create FilterPanel component
+  - [x] 6.4 Create FilterPanel component
     - Tag multi-select (OR logic)
     - Priority multi-select (OR logic)
     - Due date range picker
@@ -956,12 +956,12 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - "Clear filters" button
     - _Requirements: R12.5, R12.6, R12.7, R12.8_
 
-  - [ ] 6.5 Display filter results
+  - [x] 6.5 Display filter results
     - Show filtered tasks across categories or within specific category
     - Empty state when no matches: "No matching tasks found"
     - _Requirements: R12.9, R12.10_
 
-  - [ ] 6.6 Implement SearchService
+  - [x] 6.6 Implement SearchService
     - Create `backend/services/search_service.py`
     - Implement `search(query, include_archived=True)` with LIKE query
     - Escape SQL wildcards (%, _, \)
@@ -970,11 +970,11 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Limit to 100 results
     - _Requirements: R9.6, R9.7_
 
-  - [ ] 6.7 Create Search API router
+  - [x] 6.7 Create Search API router
     - GET `/api/search?q={query}` - Global search
     - _Requirements: R9.6, R9.7_
 
-  - [ ] 6.8 Create Command Palette using cmdk
+  - [x] 6.8 Create Command Palette using cmdk
     - Open with Ctrl/⌘+K or / (focus search)
     - Groups: Navigation, Actions, Search results
     - Actions: New project, Quick capture, Start weekly review
@@ -982,12 +982,12 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Archived items show "(Archived)" label
     - _Requirements: R9.6, R9.7; ui-guidelines.md §2, §4_
 
-  - [ ] 6.9 Create Shortcut Help dialog
+  - [x] 6.9 Create Shortcut Help dialog
     - Opens with ? shortcut
     - List all shortcuts from ui-guidelines.md §8
     - _Requirements: R15.10; ui-guidelines.md §8_
 
-  - [ ] 6.10 Wire up all shortcuts
+  - [x] 6.10 Wire up all shortcuts
     - Q → Quick capture dialog
     - / → Focus search (command palette)
     - Ctrl/⌘+K → Command palette
@@ -995,17 +995,17 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Escape → Close overlays
     - _Requirements: R15.10_
 
-  - [ ] 6.11 Property test: Tag Filter Uses OR Logic (P11)
+  - [x] 6.11 Property test: Tag Filter Uses OR Logic (P11)
     - **Property 11: Tag Filter Uses OR Logic**
     - Filter by [T1, T2], verify tasks with T1 OR T2 are included
     - **Validates: Requirements R12.5**
 
-  - [ ] 6.12 Property test: Combined Filters Use AND Logic (P12)
+  - [x] 6.12 Property test: Combined Filters Use AND Logic (P12)
     - **Property 12: Combined Filters Use AND Logic**
     - Combine tags + priority + due date, verify AND across filter types
     - **Validates: Requirements R12.8**
 
-- [ ] 6.13 Checkpoint: Filters, Search, Shortcuts complete
+- [x] 6.13 Checkpoint: Filters, Search, Shortcuts complete
   - Create, rename, delete tags in Settings
   - Filter tasks by tags, priority, due date - verify OR/AND logic
   - Search items and tasks via command palette
