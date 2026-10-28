@@ -1131,7 +1131,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Implement `complete_review(notes)` - record review with timestamp
     - _Requirements: R10.1, R10.2, R10.3, R10.4, R10.5, R10.6, R10.7, R10.8, R10.10, R10.11_
 
-  - [ ] 9.4 Create Weekly Review API router
+  - [x] 9.4 Create Weekly Review API router
     - Create `backend/api/review.py`
     - GET `/api/weekly-review/status` - Get last review date
     - POST `/api/weekly-review/start` - Start review

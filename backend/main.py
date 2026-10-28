@@ -146,6 +146,8 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
     app.include_router(subtasks_router, prefix="/api")
     from backend.api.templates import router as templates_router
     app.include_router(templates_router, prefix="/api")
+    from backend.api.weekly_review import router as weekly_review_router
+    app.include_router(weekly_review_router, prefix="/api")
 
     # --- Extra routers (registered before SPA fallback) ---
     if extra_routers:
