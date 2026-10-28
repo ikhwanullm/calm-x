@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { ExternalLink, Trash2, Plus, GripVertical } from "lucide-react"
 import {
   DndContext,
@@ -16,11 +16,13 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   useReferenceLinks,
   useAddReferenceLink,
   useDeleteReferenceLink,
   useReorderReferenceLinks,
+  linkKeys,
 } from "@/hooks/useLinks"
 import { notify } from "@/lib/toast"
 import { cn } from "@/lib/utils"
@@ -31,18 +33,19 @@ interface ReferenceLinksProps {
   isArchived: boolean
 }
 
+// Stable empty array — avoids creating a new reference on every render
+// when useReferenceLinks has not yet resolved, which would cause an infinite
+// render loop via the useEffect pattern.
+const EMPTY_LINKS: ReferenceLink[] = []
+
 export function ReferenceLinksSection({ itemId, isArchived }: ReferenceLinksProps) {
-  const { data: serverLinks = [] } = useReferenceLinks(itemId)
+  const qc = useQueryClient()
+  const { data: links = EMPTY_LINKS } = useReferenceLinks(itemId)
   const addLink = useAddReferenceLink(itemId)
   const deleteLink = useDeleteReferenceLink(itemId)
   const reorderLinks = useReorderReferenceLinks(itemId)
   const [inputUrl, setInputUrl] = useState("")
   const [urlError, setUrlError] = useState("")
-  // Local state mirrors server order and is updated optimistically on drag
-  const [localLinks, setLocalLinks] = useState<ReferenceLink[]>([])
-
-  // Keep local list in sync with server (overwrites any unsaved order on refetch)
-  useEffect(() => { setLocalLinks(serverLinks) }, [serverLinks])
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -53,18 +56,25 @@ export function ReferenceLinksSection({ itemId, isArchived }: ReferenceLinksProp
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const oldIdx = localLinks.findIndex((l) => l.id === active.id)
-    const newIdx = localLinks.findIndex((l) => l.id === over.id)
-    const reordered = [...localLinks]
+    const oldIdx = links.findIndex((l) => l.id === active.id)
+    const newIdx = links.findIndex((l) => l.id === over.id)
+    const reordered = [...links]
     reordered.splice(newIdx, 0, reordered.splice(oldIdx, 1)[0])
 
-    // Optimistic update: show new order immediately
-    setLocalLinks(reordered)
+    // Snapshot for rollback
+    const prevLinks = links
+
+    // Optimistic update: write new order directly into the query cache
+    qc.setQueryData(linkKeys.forItem(itemId), reordered)
 
     reorderLinks.mutate(reordered.map((l) => l.id), {
+      onSuccess: () => {
+        // Refresh from server to ensure canonical sort_order values
+        qc.invalidateQueries({ queryKey: linkKeys.forItem(itemId) })
+      },
       onError: () => {
-        // Rollback to server order on failure
-        setLocalLinks(serverLinks)
+        // Rollback to the previous order
+        qc.setQueryData(linkKeys.forItem(itemId), prevLinks)
         notify.error("Could not reorder links. Changes reverted.")
       },
     })
@@ -99,18 +109,18 @@ export function ReferenceLinksSection({ itemId, isArchived }: ReferenceLinksProp
         Reference links
       </p>
 
-      {localLinks.length > 0 && (
+      {links.length > 0 && (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={isArchived ? undefined : handleDragEnd}
         >
           <SortableContext
-            items={localLinks.map((l) => l.id)}
+            items={links.map((l) => l.id)}
             strategy={verticalListSortingStrategy}
           >
             <ul className="space-y-1" aria-label="Reference links" aria-live="polite">
-              {localLinks.map((link) => (
+              {links.map((link) => (
                 <SortableLinkRow
                   key={link.id}
                   link={link}
