@@ -165,7 +165,7 @@ export function AppShell() {
       </div>
 
       <QuickCaptureDialog open={captureOpen} onOpenChange={setCaptureOpen} />
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onQuickCapture={() => { setPaletteOpen(false); setCaptureOpen(true) }} />
       <ShortcutHelp open={helpOpen} onOpenChange={setHelpOpen} />
 
     </div>

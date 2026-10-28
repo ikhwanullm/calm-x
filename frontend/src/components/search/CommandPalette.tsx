@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils"
 interface CommandPaletteProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Callback to open the Quick Capture dialog */
+  onQuickCapture?: () => void
 }
 
 function useDebouncedValue(value: string, delay = 200) {
@@ -25,7 +27,20 @@ const TYPE_ROUTE: Record<string, string> = {
   resource: "resources",
 }
 
-export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
+const NAV_ITEMS = [
+  { label: "Dashboard", route: "/" },
+  { label: "Inbox", route: "/inbox" },
+  { label: "All tasks", route: "/tasks" },
+  { label: "Projects", route: "/projects" },
+  { label: "Areas", route: "/areas" },
+  { label: "Resources", route: "/resources" },
+  { label: "Archive", route: "/archive" },
+  { label: "Templates", route: "/templates" },
+  { label: "Weekly review", route: "/review" },
+  { label: "Settings", route: "/settings" },
+]
+
+export function CommandPalette({ open, onOpenChange, onQuickCapture }: CommandPaletteProps) {
   const [input, setInput] = useState("")
   const debounced = useDebouncedValue(input, 200)
   const navigate = useNavigate()
@@ -37,6 +52,16 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   }
 
   function handleSelect(value: string) {
+    if (value === "action:quick-capture") {
+      close()
+      onQuickCapture?.()
+      return
+    }
+    if (value === "action:new-project") {
+      close()
+      navigate("/projects")
+      return
+    }
     close()
     if (value.startsWith("nav:")) {
       navigate(value.slice(4))
@@ -45,18 +70,30 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       navigate(`/${TYPE_ROUTE[type] ?? "projects"}/${id}`)
     } else if (value.startsWith("task:")) {
       const [, taskId, itemId] = value.split(":")
-      const base = itemId === "null" ? "/inbox" : `/projects/${itemId}`
-      navigate(`${base}?task=${taskId}`)
+      if (itemId === "null") {
+        navigate(`/inbox?task=${taskId}`)
+      } else {
+        // Navigate to item detail with task open
+        navigate(`/tasks?task=${taskId}`)
+      }
     }
   }
 
-  const itemResults = results.filter((r) => r.type === "item")
+  // Group search results by item_type
+  const projectResults = results.filter((r) => r.type === "item" && r.item_type === "project")
+  const areaResults = results.filter((r) => r.type === "item" && r.item_type === "area")
+  const resourceResults = results.filter((r) => r.type === "item" && r.item_type === "resource")
   const taskResults = results.filter((r) => r.type === "task")
+
+  const itemClassName = cn(
+    "flex items-center justify-between gap-2 px-2 py-1.5 rounded-control text-sm cursor-pointer",
+    "data-[selected=true]:bg-accent-soft data-[selected=true]:text-accent-text"
+  )
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) close() }}>
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden" aria-label="Command palette">
-        <Command shouldFilter={false} aria-label="Search">
+        <Command shouldFilter={false} aria-label="Command palette">
           <div className="flex items-center border-b border-border px-4">
             <Command.Input
               value={input}
@@ -71,25 +108,15 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </div>
 
           <Command.List className="max-h-96 overflow-y-auto py-2" aria-label="Search results">
-            {/* Navigation shortcuts */}
+            {/* Navigation */}
             {!debounced && (
               <Command.Group heading="Navigate" className="px-2">
-                {[
-                  { label: "Dashboard", route: "/" },
-                  { label: "Inbox", route: "/inbox" },
-                  { label: "All tasks", route: "/tasks" },
-                  { label: "Projects", route: "/projects" },
-                  { label: "Areas", route: "/areas" },
-                  { label: "Settings", route: "/settings" },
-                ].map(({ label, route }) => (
+                {NAV_ITEMS.map(({ label, route }) => (
                   <Command.Item
                     key={route}
                     value={`nav:${route}`}
                     onSelect={handleSelect}
-                    className={cn(
-                      "flex items-center gap-2 px-2 py-1.5 rounded-control text-sm text-text cursor-pointer",
-                      "data-[selected=true]:bg-accent-soft data-[selected=true]:text-accent-text"
-                    )}
+                    className={itemClassName}
                   >
                     {label}
                   </Command.Item>
@@ -101,50 +128,96 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             {!debounced && (
               <Command.Group heading="Actions" className="px-2">
                 <Command.Item
-                  value="nav:/tasks"
+                  value="action:quick-capture"
                   onSelect={handleSelect}
-                  className={cn(
-                    "flex items-center gap-2 px-2 py-1.5 rounded-control text-sm text-text cursor-pointer",
-                    "data-[selected=true]:bg-accent-soft data-[selected=true]:text-accent-text"
-                  )}
+                  className={itemClassName}
+                  aria-label="Open Quick capture"
+                >
+                  Quick capture
+                </Command.Item>
+                <Command.Item
+                  value="action:new-project"
+                  onSelect={handleSelect}
+                  className={itemClassName}
+                  aria-label="New project"
+                >
+                  New project
+                </Command.Item>
+                <Command.Item
+                  value="nav:/review"
+                  onSelect={handleSelect}
+                  className={itemClassName}
                 >
                   Start weekly review
                 </Command.Item>
               </Command.Group>
             )}
 
-            {/* Search results */}
+            {/* Search results — loading */}
             {debounced && isLoading && (
               <Command.Loading>
                 <p className="px-4 py-2 text-sm text-muted">Searching…</p>
               </Command.Loading>
             )}
 
+            {/* Search results — empty */}
             {debounced && !isLoading && results.length === 0 && (
               <Command.Empty>
-                <p className="px-4 py-6 text-center text-sm text-muted">No results for "{debounced}"</p>
+                <p className="px-4 py-6 text-center text-sm text-muted">
+                  No results for &quot;{debounced}&quot;
+                </p>
               </Command.Empty>
             )}
 
-            {itemResults.length > 0 && (
-              <Command.Group heading="Items" className="px-2">
-                {itemResults.map((r) => (
+            {/* Grouped results: Projects */}
+            {projectResults.length > 0 && (
+              <Command.Group heading="Projects" className="px-2">
+                {projectResults.map((r) => (
                   <Command.Item
                     key={`item-${r.id}`}
-                    value={`item:${r.item_type}:${r.id}`}
+                    value={`item:project:${r.id}`}
                     onSelect={handleSelect}
-                    className={cn(
-                      "flex items-center justify-between gap-2 px-2 py-1.5 rounded-control text-sm cursor-pointer",
-                      "data-[selected=true]:bg-accent-soft"
-                    )}
+                    className={itemClassName}
                   >
                     <span className={cn("text-text", r.is_archived && "text-muted")}>{r.title}</span>
-                    <span className="text-xs text-muted shrink-0 capitalize">{r.item_type}</span>
                   </Command.Item>
                 ))}
               </Command.Group>
             )}
 
+            {/* Grouped results: Areas */}
+            {areaResults.length > 0 && (
+              <Command.Group heading="Areas" className="px-2">
+                {areaResults.map((r) => (
+                  <Command.Item
+                    key={`item-${r.id}`}
+                    value={`item:area:${r.id}`}
+                    onSelect={handleSelect}
+                    className={itemClassName}
+                  >
+                    <span className={cn("text-text", r.is_archived && "text-muted")}>{r.title}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* Grouped results: Resources */}
+            {resourceResults.length > 0 && (
+              <Command.Group heading="Resources" className="px-2">
+                {resourceResults.map((r) => (
+                  <Command.Item
+                    key={`item-${r.id}`}
+                    value={`item:resource:${r.id}`}
+                    onSelect={handleSelect}
+                    className={itemClassName}
+                  >
+                    <span className={cn("text-text", r.is_archived && "text-muted")}>{r.title}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* Grouped results: Tasks */}
             {taskResults.length > 0 && (
               <Command.Group heading="Tasks" className="px-2">
                 {taskResults.map((r) => (
@@ -152,10 +225,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     key={`task-${r.id}`}
                     value={`task:${r.id}:${r.item_id ?? "null"}`}
                     onSelect={handleSelect}
-                    className={cn(
-                      "flex items-center gap-2 px-2 py-1.5 rounded-control text-sm cursor-pointer",
-                      "data-[selected=true]:bg-accent-soft"
-                    )}
+                    className={itemClassName}
                   >
                     <span className={cn("text-text", r.is_archived && "text-muted")}>{r.title}</span>
                   </Command.Item>
