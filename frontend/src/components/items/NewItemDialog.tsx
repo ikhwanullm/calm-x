@@ -368,6 +368,7 @@ export function NewItemDialog({
                   onChange={(e) => setProjectGoal(e.target.value)}
                   maxLength={500}
                   placeholder="What does success look like?"
+                  aria-label="Project goal"
                   className={cn(
                     'w-full h-10 px-3 rounded-control border border-border bg-surface text-text text-sm',
                     'focus:outline-2 focus:outline-accent focus:outline-offset-0',

@@ -696,7 +696,6 @@ function InlineDeadline({
               ? 'text-muted hover:text-accent-text hover:underline'
               : 'text-accent-text hover:underline'
           )}
-          aria-label={deadline ? 'Edit project deadline' : 'Add project deadline'}
         >
           {deadline ? 'Edit deadline' : '+ Add deadline'}
         </button>
