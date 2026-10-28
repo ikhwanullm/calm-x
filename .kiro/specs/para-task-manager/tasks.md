@@ -1151,7 +1151,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Back/Next navigation in sticky footer
     - _Requirements: R10.1, R10.2; ui-guidelines.md §4_
 
-  - [ ] 9.6 Implement Inbox review step
+  - [x] 9.6 Implement Inbox review step
     - Show one task at a time with "Task n of N" progress
     - Actions per task: Move to project (select), Move to area (select), Mark complete, Delete, Skip
     - _Requirements: R10.3_
