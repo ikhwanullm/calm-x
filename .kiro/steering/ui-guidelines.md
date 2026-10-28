@@ -64,7 +64,8 @@ variable names to the same values so generated components match.
 | `--bg` | `#F6F6F3` | `#131312` | App background |
 | `--surface` | `#FFFFFF` | `#1B1B1A` | Cards, sidebar, header, drawer, dialogs |
 | `--surface-2` | `#EFEFEA` | `#2A2A27` | Chips, tags, count pills, subtle fills |
-| `--border` | `#E3E3DE` | `#2F2F2C` | All borders and dividers |
+| `--border` | `#E3E3DE` | `#2F2F2C` | Cards, dividers, panels — decorative edge only |
+| `--border-strong` | `#8A8A85` | `#6A6A67` | Borders of form controls: input, select, textarea, checkbox, radio, outline buttons; ≥3:1 contrast against `--bg` |
 | `--text` | `#1B1B19` | `#ECECE8` | Primary text |
 | `--muted` | `#5C5C57` | `#A6A6A0` | Secondary text, labels, inactive nav |
 | `--accent` | `#3B5BDB` | `#8EA2FF` | Primary buttons, progress bars, focus ring, checkbox accent |
@@ -80,7 +81,7 @@ variable names to the same values so generated components match.
 shadcn mapping: `--background → --bg`, `--card`/`--popover → --surface`,
 `--foreground → --text`, `--muted-foreground → --muted`, `--primary → --accent`,
 `--primary-foreground → --accent-fg`, `--secondary`/`--accent (shadcn) → --surface-2`,
-`--destructive → --danger-fg`, `--border`/`--input → --border`, `--ring → --accent`.
+`--destructive → --danger-fg`, `--border`/`--input → --border-strong` (form input borders use strong token), `--ring → --accent`.
 
 Rules:
 - Do not add a color without adding it here first, with light and dark values that pass AA.
@@ -108,7 +109,7 @@ Use `font-variant-numeric: tabular-nums` for counts, percentages and dates in ta
 - Page padding 32px. Card padding 20px. Gap between cards 16px. Gap between page sections 24–28px.
 - Radius: 8px controls (buttons, inputs, nav items), 12px cards and list containers, 14–16px dialogs and large panels, 999px pills and badges.
 - Elevation: cards use `--shadow`. Dialogs and toasts use a stronger shadow. Nothing else casts a shadow.
-- Borders: 1px `--border` on every card, input, divider and panel edge.
+- Borders: 1px `--border` on every card, divider and panel edge. Form controls (input, select, textarea, checkbox, radio, outline buttons) use `--border-strong` (≥3:1 contrast) instead.
 
 ## 4. Layout
 
