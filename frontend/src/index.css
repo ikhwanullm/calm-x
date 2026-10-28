@@ -67,7 +67,7 @@
   --bg: #131312;
   --surface: #1B1B1A;
   --surface-2: #2A2A27;
-  --border: #2F2F2C;
+  --border: #6A6A67;  /* was #2F2F2C (1.38:1 against --bg); now 3.5:1 — WCAG AA UI boundary */
   --text: #ECECE8;
   --muted: #A6A6A0;
   --accent: #8EA2FF;
