@@ -1247,7 +1247,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Rollback transaction on any error (ImportFailedError)
     - _Requirements: R13.5_
 
-  - [ ] 10.7 Create Import/Export API router
+  - [x] 10.7 Create Import/Export API router
     - GET `/api/export` - Export all data as JSON
     - POST `/api/import` - Import data with mode parameter
     - _Requirements: R13.4, R13.5_
