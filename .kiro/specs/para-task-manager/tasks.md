@@ -1120,7 +1120,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - WeeklyReviewComplete, WeeklyReviewResponse
     - _Requirements: Field Constraints table_
 
-  - [ ] 9.3 Implement WeeklyReviewService
+  - [x] 9.3 Implement WeeklyReviewService
     - Create `backend/services/review_service.py`
     - Implement `start_review()` - begin review session
     - Implement `get_inbox_tasks()` - tasks for inbox step

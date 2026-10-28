@@ -102,7 +102,7 @@ def get_dashboard_data(session: Session, client_today: date) -> DashboardSchema:
         upcoming_deadlines=upcoming_deadlines,
         active_projects=active_projects_summary,
         nearest_deadline_project=nearest_deadline_project,
-        last_review_date=None,
+        last_review_date=_get_last_review_date(session),
     )
 
 
@@ -226,3 +226,14 @@ def _get_upcoming_deadlines(
     overdue = sorted([i for i in items if i.is_overdue], key=lambda x: x.deadline)
     approaching = sorted([i for i in items if not i.is_overdue], key=lambda x: x.deadline)
     return overdue + approaching
+
+def _get_last_review_date(session: Session) -> Optional[str]:
+    """Return the most recent review date as YYYY-MM-DD, or None."""
+    from backend.models.weekly_review import WeeklyReview
+    from sqlalchemy import func as sqlfunc
+    latest = session.execute(
+        select(sqlfunc.max(WeeklyReview.completed_at))
+    ).scalar_one_or_none()
+    if latest is None:
+        return None
+    return latest.date().isoformat()
