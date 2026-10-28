@@ -18,6 +18,29 @@ from backend.schemas.weekly_review import (
 from backend.services.progress_service import calculate_progress
 
 
+def _parse_tz_offset(tz_offset: Optional[str]) -> Optional[timezone]:
+    """Parse a tz_offset string like '+07:00' or '-05:30' into a timezone.
+
+    Returns None if tz_offset is None or cannot be parsed (fall back to UTC).
+    """
+    if not tz_offset:
+        return None
+    try:
+        sign = 1 if tz_offset[0] == '+' else -1
+        parts = tz_offset[1:].split(':')
+        h, m = int(parts[0]), int(parts[1])
+        return timezone(sign * timedelta(hours=h, minutes=m))
+    except (ValueError, IndexError, AttributeError):
+        return None
+
+
+def _updated_local_date(item: Item, local_tz: Optional[timezone]) -> date:
+    """Return the local date of item.updated_at in the given timezone (UTC fallback)."""
+    if local_tz is None:
+        return item.updated_at.date()
+    return item.updated_at.astimezone(local_tz).date()
+
+
 def get_last_review_date(session: Session) -> Optional[str]:
     """Return the date of the most recent completed review as YYYY-MM-DD, or None."""
     latest: datetime | None = session.execute(
@@ -59,9 +82,10 @@ def get_inbox_tasks(session: Session) -> list[ReviewTaskItem]:
 
 
 def get_projects_for_review(
-    session: Session, client_today: date
+    session: Session, client_today: date, tz_offset: Optional[str] = None
 ) -> list[ReviewProjectItem]:
     """Return active projects with task counts and staleness info."""
+    local_tz = _parse_tz_offset(tz_offset)
     projects: list[Item] = list(session.execute(
         select(Item).where(
             Item.type == "project",
@@ -103,8 +127,8 @@ def get_projects_for_review(
         done = done_map.get(p.id, 0)
         progress = calculate_progress(done, total)
 
-        # days_since_update: compare updated_at UTC date to client's local today
-        updated_date = p.updated_at.date()
+        # days_since_update: compare updated_at in client's local timezone
+        updated_date = _updated_local_date(p, local_tz)
         days_since_update = max(0, (client_today - updated_date).days)
         is_stale = days_since_update >= 30
 
@@ -127,9 +151,10 @@ def get_projects_for_review(
 
 
 def get_areas_for_review(
-    session: Session, client_today: date
+    session: Session, client_today: date, tz_offset: Optional[str] = None
 ) -> list[ReviewAreaItem]:
     """Return all active areas with open task counts and next task title."""
+    local_tz = _parse_tz_offset(tz_offset)
     areas: list[Item] = list(session.execute(
         select(Item).where(
             Item.type == "area",
@@ -165,7 +190,7 @@ def get_areas_for_review(
 
     result = []
     for a in areas:
-        updated_date = a.updated_at.date()
+        updated_date = _updated_local_date(a, local_tz)
         days_since_update = max(0, (client_today - updated_date).days)
         is_stale = days_since_update >= 30
 
@@ -183,9 +208,10 @@ def get_areas_for_review(
 
 
 def get_resources_for_review(
-    session: Session, client_today: date
+    session: Session, client_today: date, tz_offset: Optional[str] = None
 ) -> list[ReviewResourceItem]:
     """Return active resources sorted by least recently updated (stale first)."""
+    local_tz = _parse_tz_offset(tz_offset)
     resources: list[Item] = list(session.execute(
         select(Item).where(
             Item.type == "resource",
@@ -195,7 +221,7 @@ def get_resources_for_review(
 
     result = []
     for r in resources:
-        updated_date = r.updated_at.date()
+        updated_date = _updated_local_date(r, local_tz)
         days_since_update = max(0, (client_today - updated_date).days)
         is_stale = days_since_update >= 30
 

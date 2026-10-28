@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -56,30 +56,33 @@ def get_review_inbox(session: SessionDep) -> list[ReviewTaskItem]:
 def get_review_projects(
     session: SessionDep,
     today: str = Query(..., description="Client local date YYYY-MM-DD"),
+    tz_offset: Optional[str] = Query(default=None, description="Client tz offset e.g. +07:00"),
 ) -> list[ReviewProjectItem]:
     """Return active projects for review with staleness info."""
     client_today = _parse_today(today)
-    return review_service.get_projects_for_review(session, client_today)
+    return review_service.get_projects_for_review(session, client_today, tz_offset)
 
 
 @router.get("/areas", response_model=List[ReviewAreaItem])
 def get_review_areas(
     session: SessionDep,
     today: str = Query(..., description="Client local date YYYY-MM-DD"),
+    tz_offset: Optional[str] = Query(default=None, description="Client tz offset e.g. +07:00"),
 ) -> list[ReviewAreaItem]:
     """Return active areas for review."""
     client_today = _parse_today(today)
-    return review_service.get_areas_for_review(session, client_today)
+    return review_service.get_areas_for_review(session, client_today, tz_offset)
 
 
 @router.get("/resources", response_model=List[ReviewResourceItem])
 def get_review_resources(
     session: SessionDep,
     today: str = Query(..., description="Client local date YYYY-MM-DD"),
+    tz_offset: Optional[str] = Query(default=None, description="Client tz offset e.g. +07:00"),
 ) -> list[ReviewResourceItem]:
     """Return active resources sorted by least recently updated."""
     client_today = _parse_today(today)
-    return review_service.get_resources_for_review(session, client_today)
+    return review_service.get_resources_for_review(session, client_today, tz_offset)
 
 
 @router.post("/complete", response_model=WeeklyReviewResponse, status_code=201)

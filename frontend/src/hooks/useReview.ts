@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { reviewApi } from '../api/review'
 import { notify } from '../lib/toast'
 import { dashboardKeys } from './useDashboard'
-import { getLocalToday } from '../utils/date'
+import { getLocalToday, getLocalTzOffset } from '../utils/date'
 
 export * from '../api/review'
 
@@ -40,27 +40,30 @@ export function useReviewInbox() {
 
 export function useReviewProjects() {
   const today = getLocalToday()
+  const tzOffset = getLocalTzOffset()
   return useQuery({
     queryKey: reviewKeys.projects(today),
-    queryFn: () => reviewApi.getProjects(today),
+    queryFn: () => reviewApi.getProjects(today, tzOffset),
     staleTime: 0,
   })
 }
 
 export function useReviewAreas() {
   const today = getLocalToday()
+  const tzOffset = getLocalTzOffset()
   return useQuery({
     queryKey: reviewKeys.areas(today),
-    queryFn: () => reviewApi.getAreas(today),
+    queryFn: () => reviewApi.getAreas(today, tzOffset),
     staleTime: 0,
   })
 }
 
 export function useReviewResources() {
   const today = getLocalToday()
+  const tzOffset = getLocalTzOffset()
   return useQuery({
     queryKey: reviewKeys.resources(today),
-    queryFn: () => reviewApi.getResources(today),
+    queryFn: () => reviewApi.getResources(today, tzOffset),
     staleTime: 0,
   })
 }

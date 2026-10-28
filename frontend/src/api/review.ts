@@ -64,14 +64,20 @@ export const reviewApi = {
   getInbox: () =>
     apiClient.get<ReviewTaskItem[]>('/weekly-review/inbox').then(r => r.data),
 
-  getProjects: (today: string) =>
-    apiClient.get<ReviewProjectItem[]>('/weekly-review/projects', { params: { today } }).then(r => r.data),
+  getProjects: (today: string, tzOffset?: string) =>
+    apiClient.get<ReviewProjectItem[]>('/weekly-review/projects', {
+      params: { today, ...(tzOffset ? { tz_offset: tzOffset } : {}) }
+    }).then(r => r.data),
 
-  getAreas: (today: string) =>
-    apiClient.get<ReviewAreaItem[]>('/weekly-review/areas', { params: { today } }).then(r => r.data),
+  getAreas: (today: string, tzOffset?: string) =>
+    apiClient.get<ReviewAreaItem[]>('/weekly-review/areas', {
+      params: { today, ...(tzOffset ? { tz_offset: tzOffset } : {}) }
+    }).then(r => r.data),
 
-  getResources: (today: string) =>
-    apiClient.get<ReviewResourceItem[]>('/weekly-review/resources', { params: { today } }).then(r => r.data),
+  getResources: (today: string, tzOffset?: string) =>
+    apiClient.get<ReviewResourceItem[]>('/weekly-review/resources', {
+      params: { today, ...(tzOffset ? { tz_offset: tzOffset } : {}) }
+    }).then(r => r.data),
 
   complete: (payload: CompleteReviewPayload) =>
     apiClient.post<WeeklyReviewRecord>('/weekly-review/complete', payload).then(r => r.data),

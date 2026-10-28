@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { isoToLocalDateStr, formatAbsoluteDate } from '@/utils/date'
+import { isoToLocalDateStr, formatAbsoluteDate, getLocalToday } from '@/utils/date'
 
 interface ReviewCompleteProps {
   completedAt: string | null
@@ -8,6 +8,7 @@ interface ReviewCompleteProps {
 export function ReviewComplete({ completedAt }: ReviewCompleteProps) {
   const localDate = completedAt ? isoToLocalDateStr(completedAt) : null
   const absDate = localDate ? formatAbsoluteDate(localDate) : ''
+  const isToday = localDate === getLocalToday()
 
   return (
     <section
@@ -26,7 +27,7 @@ export function ReviewComplete({ completedAt }: ReviewCompleteProps) {
         <p className="text-muted max-w-sm">
           Recorded on{' '}
           <time dateTime={localDate} title={absDate}>
-            {localDate === new Date().toISOString().split('T')[0] ? 'today' : absDate}
+            {isToday ? 'today' : absDate}
           </time>
           . Your system is clear for the week ahead.
         </p>
