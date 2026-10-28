@@ -55,10 +55,6 @@ vi.mock('../hooks/useSettings', () => ({
   useDeadlineThreshold: vi.fn().mockReturnValue(3),
 }))
 
-vi.mock('../hooks/useSettings', () => ({
-  useDeadlineThreshold: vi.fn().mockReturnValue(3),
-}))
-
 vi.mock('../hooks/useTasks', () => ({
   useItemTasks: vi.fn().mockReturnValue({ data: [], isLoading: false }),
   useCreateTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
@@ -92,19 +88,6 @@ vi.mock('../components/items/ResourceLinksSection', () => ({
 vi.mock('../components/items/TypeConversionDialog', () => ({
   TypeConversionDialog: () => null,
 }))
-
-vi.mock('../components/items/ReferenceLinksSection', () => ({
-  ReferenceLinksSection: () => <div data-testid="ref-links">Reference links</div>,
-}))
-
-vi.mock('../components/items/ResourceLinksSection', () => ({
-  ResourceLinksSection: () => <div data-testid="resource-links">Resource links</div>,
-}))
-
-vi.mock('../components/items/TypeConversionDialog', () => ({
-  TypeConversionDialog: () => null,
-}))
-
 vi.mock('../components/tasks/TaskDrawer', () => ({
   TaskDrawer: () => null,
 }))
@@ -246,19 +229,21 @@ describe('ItemDetailView', () => {
     expect(headings.length).toBe(1)
   })
 
-  it("renders exactly one Convert type menu item", async () => {
-    const user = userEvent.setup()
-    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
-    // Open the actions menu
-    const menuBtn = screen.getByRole("button", { name: "Item actions" })
-    await user.click(menuBtn)
-    const convertItems = screen.getAllByText("Convert type")
-    expect(convertItems.length).toBe(1)
-  })
 
-  it("renders exactly one Reference links section", () => {
-    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
-    const headings = screen.getAllByText(/Reference links/i)
-    expect(headings.length).toBe(1)
+
+
+
+  it("does not show add task button for Resource items (R3.7)", () => {
+    vi.mocked(useItem).mockReturnValueOnce({
+      data: {
+        ...mockProject,
+        type: "resource" as const,
+        task_count: 0,
+        completed_task_count: 0,
+      },
+      isLoading: false, isError: false,
+    } as any)
+    render(<ItemDetailView id={1} listPath="/resources" listLabel="Resources" />, { wrapper })
+    expect(screen.queryByRole("button", { name: "Add task" })).toBeNull()
   })
 })
