@@ -1217,7 +1217,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - PUT `/api/settings` - Update preferences
     - _Requirements: R16.2, R16.3_
 
-  - [ ] 10.3 Implement BackupService
+  - [x] 10.3 Implement BackupService
     - Create `backend/services/backup_service.py`
     - Implement `create_backup(trigger)` using `VACUUM INTO` (safe SQLite copy)
     - Filename pattern: `calmx_backup_YYYYMMDD_HHMMSS_mmm.db`
