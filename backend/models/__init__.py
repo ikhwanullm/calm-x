@@ -11,3 +11,4 @@ from backend.models.item import (  # noqa: F401
 
 from backend.models.preference import UserPreference  # noqa: F401
 from backend.models.template import Template, TemplateTask  # noqa: F401
+from backend.models.weekly_review import WeeklyReview  # noqa: F401

@@ -1112,7 +1112,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Phase 9: Weekly Review
-  - [ ] 9.1 Create SQLAlchemy model for WeeklyReview
+- [x] 9.1 Create SQLAlchemy model for WeeklyReview
     - WeeklyReview: id, completed_at, notes
     - _Requirements: R10.10, R10.11_
 
