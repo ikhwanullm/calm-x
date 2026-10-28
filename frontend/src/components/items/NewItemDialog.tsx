@@ -266,6 +266,7 @@ export function NewItemDialog({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                aria-label="Project start date"
                 className={cn(
                   'w-full h-10 px-3 rounded-control border border-border bg-surface text-text text-sm',
                   'focus:outline-2 focus:outline-accent focus:outline-offset-0'

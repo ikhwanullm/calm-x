@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { Archive, Search, X, RotateCcw, Trash2 } from 'lucide-react'
 import { useArchivedItems, useRestoreItem, useDeleteItem } from '@/hooks/useItems'
 import {
@@ -60,6 +60,7 @@ function filtersToParams(filters: ArchiveFilters): Record<string, string> {
 
 export default function ArchivePage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const filters = useMemo(() => parseFilters(searchParams), [searchParams])
 
   // Local state for input fields (synced to URL on submit/change)
@@ -116,7 +117,7 @@ export default function ArchivePage() {
       await restoreMutation.mutateAsync(item.id)
       notify.success('Item restored', {
         description: `${item.title} moved back to ${TYPE_LABELS[item.type]}s.`,
-        action: { label: 'Open', onClick: () => { window.location.href = route } },
+        action: { label: 'Open', onClick: () => navigate(route) },
       })
     } catch {
       // Error is handled in the hook
