@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import { settingsApi } from '../api/settings'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { settingsApi, type SettingsUpdatePayload } from '../api/settings'
 import { DEFAULT_THRESHOLD } from '../utils/deadline'
 
 export const settingsKeys = {
@@ -27,4 +27,18 @@ export function useDeadlineThreshold(): number {
   if (!data?.approaching_deadline_threshold) return DEFAULT_THRESHOLD
   const parsed = parseInt(data.approaching_deadline_threshold, 10)
   return isNaN(parsed) ? DEFAULT_THRESHOLD : parsed
+}
+
+/**
+ * Mutation hook for updating preferences.
+ * On success, invalidates the settings query so all components refetch.
+ */
+export function useUpdateSettings() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: SettingsUpdatePayload) => settingsApi.update(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: settingsKeys.all })
+    },
+  })
 }

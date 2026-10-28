@@ -1276,7 +1276,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - "Create backup now" button
     - _Requirements: R13.6_
 
-  - [ ] 10.12 Update ThemeProvider to use backend preference
+  - [x] 10.12 Update ThemeProvider to use backend preference
     - On load, fetch theme from GET /api/settings
     - On change, persist to PUT /api/settings
     - Fall back to localStorage if API unavailable

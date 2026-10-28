@@ -1,4 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { settingsApi } from '../api/settings'
+import { settingsKeys } from '../hooks/useSettings'
 
 export type Theme = 'system' | 'light' | 'dark'
 
@@ -27,19 +30,30 @@ function applyTheme(theme: Theme): 'light' | 'dark' {
   return resolved
 }
 
+function readLocalTheme(): Theme {
+  try {
+    return (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? 'system'
+  } catch {
+    return 'system'
+  }
+}
+
+function writeLocalTheme(theme: Theme): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, theme)
+  } catch {
+    /* localStorage may be unavailable */
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    try {
-      return (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? 'system'
-    } catch {
-      return 'system'
-    }
-  })
+  // Initialize from localStorage immediately (no flash of wrong theme)
+  const [theme, setThemeState] = useState<Theme>(() => readLocalTheme())
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => applyTheme(theme))
+  const qc = useQueryClient()
+  const syncedFromBackend = useRef(false)
 
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() =>
-    applyTheme(theme)
-  )
-
+  // Apply theme to DOM whenever it changes
   useEffect(() => {
     const resolved = applyTheme(theme)
     setResolvedTheme(resolved)
@@ -57,13 +71,41 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mql.removeEventListener('change', handler)
   }, [theme])
 
+  // On mount: fetch from backend, update if different from localStorage.
+  // Fall back silently if API is unavailable.
+  useEffect(() => {
+    if (syncedFromBackend.current) return
+    syncedFromBackend.current = true
+
+    settingsApi.get().then(prefs => {
+      const backendTheme = prefs.theme as Theme | undefined
+      if (backendTheme && ['system', 'light', 'dark'].includes(backendTheme)) {
+        // Sync localStorage and state to backend value (backend is canonical)
+        writeLocalTheme(backendTheme)
+        setThemeState(backendTheme)
+      }
+    }).catch(() => {
+      // API unavailable — localStorage value already applied, continue silently
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Set the active theme.
+   * Updates localStorage immediately, then persists to the backend.
+   * Invalidates the settings query so other components see the new value.
+   */
   function setTheme(newTheme: Theme) {
-    try {
-      localStorage.setItem(STORAGE_KEY, newTheme)
-    } catch {
-      // localStorage may be unavailable in some contexts
-    }
+    writeLocalTheme(newTheme)
     setThemeState(newTheme)
+
+    // Persist to backend (fire and forget — failure is non-fatal)
+    settingsApi.update({ theme: newTheme })
+      .then(() => {
+        qc.invalidateQueries({ queryKey: settingsKeys.all })
+      })
+      .catch(() => {
+        // Backend unavailable; localStorage already has the value
+      })
   }
 
   return (
