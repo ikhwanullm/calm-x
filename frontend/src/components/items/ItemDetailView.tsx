@@ -28,6 +28,7 @@ import { TaskList } from '@/components/tasks/TaskList'
 import { TypeConversionDialog } from '@/components/items/TypeConversionDialog'
 import { ReferenceLinksSection } from '@/components/items/ReferenceLinksSection'
 import { ResourceLinksSection } from '@/components/items/ResourceLinksSection'
+import { LinkedResourcesSection } from '@/components/items/LinkedResourcesSection'
 import { TaskDrawer } from '@/components/tasks/TaskDrawer'
 
 interface ItemDetailViewProps {
@@ -301,9 +302,11 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
       {/* Reference links */}
       <ReferenceLinksSection itemId={item.id} isArchived={archived} />
 
-      {/* Resource linked items (only for Resources) */}
-      {item.type === 'resource' && (
+      {/* Resource links: Resources list their Projects/Areas, Projects/Areas list their Resources */}
+      {item.type === 'resource' ? (
         <ResourceLinksSection resourceId={item.id} isArchived={archived} />
+      ) : (
+        <LinkedResourcesSection itemId={item.id} isArchived={archived} />
       )}
 
 

@@ -10,6 +10,15 @@ import { useNavigate } from "react-router-dom"
 export const linkKeys = {
   forItem: (itemId: number) => ["links", "item", itemId] as const,
   linkedItems: (resourceId: number) => ["links", "resource", resourceId] as const,
+  allLinkedItems: ["links", "resource"] as const,
+  linkedResources: (itemId: number) => ["links", "item-resources", itemId] as const,
+  allLinkedResources: ["links", "item-resources"] as const,
+}
+
+/** A resource link changes both sides, so refresh both directions. */
+function invalidateResourceLinks(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: linkKeys.allLinkedItems })
+  qc.invalidateQueries({ queryKey: linkKeys.allLinkedResources })
 }
 
 // Reference links
@@ -61,7 +70,7 @@ export function useLinkResource(resourceId: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (linkedItemId: number) => linksApi.linkResource(resourceId, linkedItemId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: linkKeys.linkedItems(resourceId) }),
+    onSuccess: () => invalidateResourceLinks(qc),
     onError: (err: Error) => notify.error("Could not link item.", err.message),
   })
 }
@@ -70,8 +79,42 @@ export function useUnlinkResource(resourceId: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (itemId: number) => linksApi.unlinkResource(resourceId, itemId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: linkKeys.linkedItems(resourceId) }),
+    onSuccess: () => invalidateResourceLinks(qc),
     onError: (err: Error) => notify.error("Could not unlink item.", err.message),
+  })
+}
+
+// Resource links seen from a Project or Area
+
+export function useLinkedResources(itemId: number) {
+  return useQuery({
+    queryKey: linkKeys.linkedResources(itemId),
+    queryFn: () => linksApi.listLinkedResources(itemId),
+    enabled: itemId > 0,
+  })
+}
+
+export function useLinkResourceToItem(itemId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (resourceId: number) => linksApi.linkResource(resourceId, itemId),
+    onSuccess: () => {
+      invalidateResourceLinks(qc)
+      notify.success("Resource linked")
+    },
+    onError: (err: Error) => notify.error("Could not link resource.", err.message),
+  })
+}
+
+export function useUnlinkResourceFromItem(itemId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (resourceId: number) => linksApi.unlinkResource(resourceId, itemId),
+    onSuccess: () => {
+      invalidateResourceLinks(qc)
+      notify.success("Resource unlinked")
+    },
+    onError: (err: Error) => notify.error("Could not unlink resource.", err.message),
   })
 }
 

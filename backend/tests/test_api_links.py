@@ -149,6 +149,33 @@ def test_unlink_resource(client):
     assert r.status_code == 204
 
 
+def test_list_linked_resources_for_project(client):
+    project_id = _create_item(client, "project", "P")
+    r_b = _create_item(client, "resource", "B resource")
+    r_a = _create_item(client, "resource", "A resource")
+    _create_item(client, "resource", "Unlinked")
+    for rid in (r_b, r_a):
+        client.post(f"/api/resources/{rid}/link", json={"linked_item_id": project_id}, headers=HEADERS)
+    r = client.get(f"/api/items/{project_id}/linked-resources")
+    assert r.status_code == 200
+    assert [x["title"] for x in r.json()] == ["A resource", "B resource"]
+    assert all(x["type"] == "resource" for x in r.json())
+
+
+def test_list_linked_resources_unknown_item_404(client):
+    assert client.get("/api/items/999/linked-resources").status_code == 404
+
+
+def test_unlink_from_archived_project_rejected(client):
+    resource_id = _create_item(client, "resource", "R")
+    project_id = _create_item(client, "project", "P")
+    client.post(f"/api/resources/{resource_id}/link", json={"linked_item_id": project_id}, headers=HEADERS)
+    client.post(f"/api/items/{project_id}/archive", headers=HEADERS)
+    r = client.delete(f"/api/resources/{resource_id}/link/{project_id}", headers=HEADERS)
+    assert r.status_code == 403
+    assert len(client.get(f"/api/items/{project_id}/linked-resources").json()) == 1
+
+
 # --- Type Conversion ---
 
 def test_convert_project_to_area(client):

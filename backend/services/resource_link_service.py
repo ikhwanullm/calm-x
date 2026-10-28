@@ -39,6 +39,23 @@ def list_linked_items(session: Session, resource_id: int) -> list[LinkedItemSumm
     return result
 
 
+def list_linked_resources(session: Session, item_id: int) -> list[LinkedItemSummary]:
+    """Return all Resources linked to a Project or Area (the reverse of list_linked_items)."""
+    item = session.get(Item, item_id)
+    if item is None:
+        raise NotFoundError(f"Item {item_id} not found")
+    resources = session.execute(
+        select(Item)
+        .join(ResourceLink, ResourceLink.resource_id == Item.id)
+        .where(ResourceLink.linked_item_id == item_id)
+        .order_by(Item.title)
+    ).scalars().all()
+    return [
+        LinkedItemSummary(id=r.id, type=r.type, title=r.title, archived_at=r.archived_at)
+        for r in resources
+    ]
+
+
 def link_resource(
     session: Session, resource_id: int, linked_item_id: int
 ) -> ResourceLinkResponse:
@@ -107,6 +124,9 @@ def unlink_resource(
         raise NotFoundError(f"Resource {resource_id} not found")
     if resource.archived_at is not None:
         raise ArchivedItemError(f"Resource {resource_id} is archived")
+    linked_item = session.get(Item, linked_item_id)
+    if linked_item is not None and linked_item.archived_at is not None:
+        raise ArchivedItemError(f"Item {linked_item_id} is archived")
 
     link = session.execute(
         select(ResourceLink).where(

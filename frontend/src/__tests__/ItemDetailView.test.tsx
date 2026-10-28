@@ -74,6 +74,9 @@ vi.mock('../hooks/useLinks', () => ({
   useLinkedItems: vi.fn(() => ({ data: [] })),
   useLinkResource: vi.fn(() => ({ mutate: vi.fn() })),
   useUnlinkResource: vi.fn(() => ({ mutate: vi.fn() })),
+  useLinkedResources: vi.fn(() => ({ data: [] })),
+  useLinkResourceToItem: vi.fn(() => ({ mutate: vi.fn() })),
+  useUnlinkResourceFromItem: vi.fn(() => ({ mutate: vi.fn() })),
   useConvertItem: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
 }))
 
@@ -83,6 +86,10 @@ vi.mock('../components/items/ReferenceLinksSection', () => ({
 
 vi.mock('../components/items/ResourceLinksSection', () => ({
   ResourceLinksSection: () => <div data-testid="resource-links">Resource links</div>,
+}))
+
+vi.mock('../components/items/LinkedResourcesSection', () => ({
+  LinkedResourcesSection: () => <div data-testid="linked-resources">Linked resources</div>,
 }))
 
 vi.mock('../components/items/TypeConversionDialog', () => ({
@@ -245,5 +252,21 @@ describe('ItemDetailView', () => {
     } as any)
     render(<ItemDetailView id={1} listPath="/resources" listLabel="Resources" />, { wrapper })
     expect(screen.queryByRole("button", { name: "Add task" })).toBeNull()
+  })
+
+  it("project page shows its linked resources", () => {
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    expect(screen.getByTestId("linked-resources")).toBeTruthy()
+    expect(screen.queryByTestId("resource-links")).toBeNull()
+  })
+
+  it("resource page shows its linked projects and areas instead", () => {
+    vi.mocked(useItem).mockReturnValueOnce({
+      data: { ...mockProject, type: "resource" as const },
+      isLoading: false, isError: false,
+    } as unknown as ReturnType<typeof useItem>)
+    render(<ItemDetailView id={1} listPath="/resources" listLabel="Resources" />, { wrapper })
+    expect(screen.getByTestId("resource-links")).toBeTruthy()
+    expect(screen.queryByTestId("linked-resources")).toBeNull()
   })
 })

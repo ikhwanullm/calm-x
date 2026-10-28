@@ -81,6 +81,15 @@ def list_linked_items(resource_id: int, session: SessionDep):
     return resource_link_service.list_linked_items(session, resource_id)
 
 
+@router.get(
+    "/items/{item_id}/linked-resources",
+    response_model=list[LinkedItemSummary],
+)
+def list_linked_resources(item_id: int, session: SessionDep):
+    """List all Resources linked to a Project or Area."""
+    return resource_link_service.list_linked_resources(session, item_id)
+
+
 @router.post(
     "/resources/{resource_id}/link",
     response_model=ResourceLinkResponse,

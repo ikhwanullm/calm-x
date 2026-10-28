@@ -73,6 +73,9 @@ vi.mock('../hooks/useLinks', () => ({
   useLinkedItems: vi.fn(() => ({ data: [] })),
   useLinkResource: vi.fn(() => ({ mutate: vi.fn() })),
   useUnlinkResource: vi.fn(() => ({ mutate: vi.fn() })),
+  useLinkedResources: vi.fn(() => ({ data: [] })),
+  useLinkResourceToItem: vi.fn(() => ({ mutate: vi.fn() })),
+  useUnlinkResourceFromItem: vi.fn(() => ({ mutate: vi.fn() })),
   useConvertItem: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
   linkKeys: { forItem: (id: number) => ['links', id] },
 }))
@@ -82,6 +85,7 @@ vi.mock('../components/tasks/TaskDrawer', () => ({ TaskDrawer: () => null }))
 vi.mock('../components/items/TypeConversionDialog', () => ({ TypeConversionDialog: () => null }))
 vi.mock('../components/items/ReferenceLinksSection', () => ({ ReferenceLinksSection: () => null }))
 vi.mock('../components/items/ResourceLinksSection', () => ({ ResourceLinksSection: () => null }))
+vi.mock('../components/items/LinkedResourcesSection', () => ({ LinkedResourcesSection: () => null }))
 vi.mock('../lib/toast', () => ({ notify: { success: vi.fn(), error: vi.fn() } }))
 
 // ---------------------------------------------------------------------------

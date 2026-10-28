@@ -29,6 +29,11 @@ export const linksApi = {
       .get<LinkedItemSummary[]>(`/resources/${resourceId}/linked-items`)
       .then((r) => r.data),
 
+  listLinkedResources: (itemId: number) =>
+    apiClient
+      .get<LinkedItemSummary[]>(`/items/${itemId}/linked-resources`)
+      .then((r) => r.data),
+
   linkResource: (resourceId: number, linkedItemId: number) =>
     apiClient
       .post<ResourceLink>(`/resources/${resourceId}/link`, { linked_item_id: linkedItemId })
