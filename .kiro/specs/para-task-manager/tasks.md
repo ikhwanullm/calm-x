@@ -1361,10 +1361,8 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Updated with backup/restore, import/export, env vars
     - _Requirements: N/A (documentation)_
 
-  - [ ] 11.10 Final integration tests
-    - End-to-end flow: create project, add tasks, complete tasks, complete project, archive
-    - Test all property tests pass
-    - Test all regression tests pass
+  - [x] 11.10 Final integration tests
+    - End-to-end: project lifecycle, quick capture, tags, templates, review, dashboard
     - _Requirements: N/A (quality assurance)_
 
 - [ ] 11.11 Checkpoint: Final - Application complete
