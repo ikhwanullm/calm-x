@@ -138,6 +138,19 @@ export interface Task {
   subtask_count: number
   completed_subtask_count: number
   tags: string[]
+  focus_date: string | null      // YYYY-MM-DD local date it was put on Today
+  waiting_for: string | null     // who or what the task waits on
+  waiting_since: string | null   // ISO datetime (UTC)
+  item_title: string | null
+  item_type: ItemType | null
+}
+
+/** Open tasks for the Today view; each task is in at most one list. */
+export interface TodayTasks {
+  overdue: Task[]
+  due_today: Task[]
+  focused: Task[]
+  waiting: Task[]
 }
 
 // Create/Update payloads
@@ -158,6 +171,8 @@ export interface TaskUpdatePayload {
   due_date?: string | null
   priority?: TaskPriority
   tag_names?: string[]
+  focus_date?: string | null
+  waiting_for?: string | null
 }
 
 export interface TaskMovePayload {

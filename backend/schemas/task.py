@@ -98,6 +98,16 @@ class TaskUpdate(BaseModel):
     priority: Optional[Literal["high", "medium", "low"]] = None
     is_complete: Optional[bool] = None
     tag_names: Optional[List[str]] = Field(default=None, description="Tag names to assign (replaces existing, max 20)")
+    focus_date: Optional[date] = Field(default=None, description="Local date the task is put on Today; null removes it")
+    waiting_for: Optional[str] = Field(default=None, max_length=200, description="Who or what the task waits on; null or blank clears it")
+
+    @field_validator("waiting_for", mode="before")
+    @classmethod
+    def blank_waiting_is_none(cls, v: object) -> object:
+        if isinstance(v, str):
+            v = v.strip()
+            return v or None
+        return v
 
     @field_validator('tag_names', mode='before')
     @classmethod
@@ -135,6 +145,20 @@ class TaskResponse(BaseModel):
     subtask_count: int = 0
     completed_subtask_count: int = 0
     tags: List[str] = Field(default_factory=list)
+    focus_date: Optional[date] = None
+    waiting_for: Optional[str] = None
+    waiting_since: Optional[datetime] = None
+    item_title: Optional[str] = None
+    item_type: Optional[str] = None
+
+
+class TodayResponse(BaseModel):
+    """Open tasks for the Today view, each task in at most one list."""
+
+    overdue: List[TaskResponse]
+    due_today: List[TaskResponse]
+    focused: List[TaskResponse]
+    waiting: List[TaskResponse]
 
 
 # ---------------------------------------------------------------------------

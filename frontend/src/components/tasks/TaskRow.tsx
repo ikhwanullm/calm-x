@@ -1,4 +1,4 @@
-import { GripVertical } from 'lucide-react'
+import { GripVertical, Sun } from 'lucide-react'
 import type { Task } from '@/types/models'
 import { PriorityChip, TagChip, StatusBadge } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
@@ -18,6 +18,8 @@ export interface TaskRowProps {
   onToggleComplete: (task: Task) => void
   /** Show the due-date status badge (false for tasks of archived items, R7.8) */
   showDeadlineStatus?: boolean
+  /** Show which Project/Area the task belongs to (for cross-item lists like Today) */
+  showItem?: boolean
 }
 
 export function TaskRow({
@@ -28,7 +30,9 @@ export function TaskRow({
   isDraggable = true,
   onToggleComplete,
   showDeadlineStatus = true,
+  showItem = false,
 }: TaskRowProps) {
+  const itemLabel = showItem ? task.item_title ?? 'Inbox' : null
   const today = getLocalToday()
   const threshold = useDeadlineThreshold()
   const deadlineStatus = showDeadlineStatus && task.due_date && !task.is_complete
@@ -80,8 +84,17 @@ export function TaskRow({
         </button>
 
         {/* Meta line */}
-        {(task.priority !== 'medium' || task.subtask_count > 0 || task.tags.length > 0) && (
+        {(task.priority !== 'medium' || task.subtask_count > 0 || task.tags.length > 0 ||
+          task.waiting_for || itemLabel) && (
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            {itemLabel && (
+              <span className="text-xs text-muted truncate max-w-[16rem]">{itemLabel}</span>
+            )}
+            {task.waiting_for && (
+              <span className="inline-flex items-center h-5 px-1.5 rounded-pill bg-surface-2 text-xs text-muted">
+                Waiting · {task.waiting_for}
+              </span>
+            )}
             {task.priority !== 'medium' && (
               <PriorityChip priority={task.priority} />
             )}
@@ -96,6 +109,10 @@ export function TaskRow({
           </div>
         )}
       </div>
+
+      {task.focus_date && !task.is_complete && (
+        <Sun size={14} className="flex-shrink-0 text-accent-text" aria-label="On Today" role="img" />
+      )}
 
       {/* Status badge */}
       {deadlineStatus && task.due_date && (

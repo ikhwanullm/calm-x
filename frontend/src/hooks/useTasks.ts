@@ -3,6 +3,7 @@ import { tasksApi } from '../api/tasks'
 import { itemKeys } from './useItems'
 import { dashboardKeys } from './useDashboard'
 import { notify } from '../lib/toast'
+import { getLocalToday } from '../utils/date'
 import type {
   Task,
   TaskCreatePayload,
@@ -16,10 +17,18 @@ export const taskKeys = {
   inbox: () => [...taskKeys.all, 'inbox'] as const,
   forItem: (itemId: number) => [...taskKeys.all, 'item', itemId] as const,
   detail: (id: number) => [...taskKeys.all, 'detail', id] as const,
+  today: (today: string) => [...taskKeys.all, 'today', today] as const,
 }
 
 export function useInboxTasks() {
   return useQuery({ queryKey: taskKeys.inbox(), queryFn: () => tasksApi.inbox() })
+}
+
+/** Today view, computed with the client's local date. Lives under taskKeys.all so
+ *  every task mutation refreshes it. */
+export function useTodayTasks() {
+  const today = getLocalToday()
+  return useQuery({ queryKey: taskKeys.today(today), queryFn: () => tasksApi.today(today) })
 }
 
 export function useItemTasks(itemId: number, opts?: { include_complete?: boolean }) {

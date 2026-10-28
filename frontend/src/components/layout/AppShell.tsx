@@ -2,6 +2,7 @@ import { useState } from "react"
 import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
+  Sun,
   Inbox,
   ListFilter,
   FolderKanban,
@@ -31,6 +32,7 @@ interface NavItem {
 
 const PRIMARY_NAV: NavItem[] = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
+  { to: "/today", icon: Sun, label: "Today" },
   { to: "/inbox", icon: Inbox, label: "Inbox" },
   { to: "/tasks", icon: ListFilter, label: "All tasks" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },

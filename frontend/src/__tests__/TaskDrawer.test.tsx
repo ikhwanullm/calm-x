@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskDrawer } from '../components/tasks/TaskDrawer'
+import { useTask } from '../hooks/useTasks'
+import { getLocalToday } from '../utils/date'
 import type { Task, Subtask } from '../types/models'
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────────────
@@ -21,6 +23,7 @@ const baseTask: Task = {
   subtask_count: 2,
   completed_subtask_count: 1,
   tags: [],
+  focus_date: null, waiting_for: null, waiting_since: null, item_title: null, item_type: null,
 }
 
 const subtasks: Subtask[] = [
@@ -168,5 +171,50 @@ describe('TaskDrawer', () => {
     expect(mockMutate).toHaveBeenCalledWith(
       expect.objectContaining({ tag_names: expect.arrayContaining(['design']) })
     )
+  })
+
+  it('"Add to Today" puts the task on the local date', async () => {
+    const user = userEvent.setup()
+    renderDrawer(1)
+    await user.click(screen.getByRole('button', { name: /add to today/i }))
+    expect(mockMutate).toHaveBeenCalledWith({ focus_date: getLocalToday() })
+  })
+
+  it('a task on Today can be removed from it', async () => {
+    const user = userEvent.setup()
+    vi.mocked(useTask).mockReturnValue({ data: { ...baseTask, focus_date: '2026-10-28' }, isLoading: false } as unknown as ReturnType<typeof useTask>)
+    renderDrawer(1)
+    expect(screen.getByText('On Today')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /remove from today/i }))
+    expect(mockMutate).toHaveBeenCalledWith({ focus_date: null })
+    vi.mocked(useTask).mockReturnValue({ data: baseTask, isLoading: false } as unknown as ReturnType<typeof useTask>)
+  })
+
+  it('saves "Waiting for" when the field loses focus', async () => {
+    const user = userEvent.setup()
+    renderDrawer(1)
+    await user.type(screen.getByLabelText('Waiting for'), 'Security team')
+    await user.tab()
+    expect(mockMutate).toHaveBeenCalledWith({ waiting_for: 'Security team' })
+  })
+
+  it('does not save "Waiting for" when nothing changed', async () => {
+    const user = userEvent.setup()
+    renderDrawer(1)
+    await user.click(screen.getByLabelText('Waiting for'))
+    await user.tab()
+    expect(mockMutate).not.toHaveBeenCalledWith(expect.objectContaining({ waiting_for: expect.anything() }))
+  })
+
+  it('clears "Waiting for"', async () => {
+    const user = userEvent.setup()
+    vi.mocked(useTask).mockReturnValue({
+      data: { ...baseTask, waiting_for: 'Vendor', waiting_since: '2026-10-26T03:00:00Z' }, isLoading: false,
+    } as unknown as ReturnType<typeof useTask>)
+    renderDrawer(1)
+    expect(screen.getByText(/Waiting since/)).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Clear' }))
+    expect(mockMutate).toHaveBeenCalledWith({ waiting_for: null })
+    vi.mocked(useTask).mockReturnValue({ data: baseTask, isLoading: false } as unknown as ReturnType<typeof useTask>)
   })
 })

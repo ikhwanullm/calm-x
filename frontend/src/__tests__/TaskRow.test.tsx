@@ -25,6 +25,7 @@ const baseTask: Task = {
   subtask_count: 0,
   completed_subtask_count: 0,
   tags: [],
+  focus_date: null, waiting_for: null, waiting_since: null, item_title: null, item_type: null,
 }
 
 function renderRow(props: Partial<TaskRowProps> = {}) {
@@ -41,6 +42,24 @@ function renderRow(props: Partial<TaskRowProps> = {}) {
 }
 
 describe('TaskRow', () => {
+  it('marks tasks that are on Today', () => {
+    renderRow({ task: { ...baseTask, focus_date: '2026-10-28' } })
+    expect(screen.getByRole('img', { name: 'On Today' })).toBeTruthy()
+  })
+
+  it('shows who a task is waiting for', () => {
+    renderRow({ task: { ...baseTask, waiting_for: 'Vendor' } })
+    expect(screen.getByText('Waiting · Vendor')).toBeTruthy()
+  })
+
+  it('shows the parent item when asked, and Inbox for inbox tasks', () => {
+    const { unmount } = renderRow({ task: { ...baseTask, item_title: 'Migrate CML' }, showItem: true })
+    expect(screen.getByText('Migrate CML')).toBeTruthy()
+    unmount()
+    renderRow({ showItem: true })
+    expect(screen.getByText('Inbox')).toBeTruthy()
+  })
+
   it('shows the overdue badge for a past due date', () => {
     renderRow({ task: { ...baseTask, due_date: '2020-01-01' } })
     expect(screen.getByLabelText(/^overdue:/i)).toBeTruthy()

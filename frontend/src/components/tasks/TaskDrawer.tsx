@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Plus, Trash2 } from 'lucide-react'
+import { X, Plus, Trash2, Sun } from 'lucide-react'
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet'
 import { ProgressBar, RelativeDate, ConfirmDialog } from '@/components/common'
 import { Button } from '@/components/common'
@@ -23,6 +23,7 @@ import { useItems } from '@/hooks/useItems'
 import { useTags } from '@/hooks/useTags'
 import type { TaskPriority } from '@/types/models'
 import { cn } from '@/lib/utils'
+import { formatAbsoluteDate, formatRelativeDate, getLocalToday, isoToLocalDateStr } from '@/utils/date'
 
 export interface TaskDrawerProps {
   taskId: number | null
@@ -270,6 +271,50 @@ export function TaskDrawer({ taskId, onClose, onDeleted }: TaskDrawerProps) {
                   )}
                 </div>
               </div>
+
+              {/* Today */}
+              <div className="flex items-center gap-3">
+                <span className="w-20 text-sm text-muted shrink-0">Today</span>
+                {task?.focus_date ? (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 text-sm text-accent-text">
+                      <Sun size={14} aria-hidden="true" />
+                      On Today
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateTask.mutate({ focus_date: null })}
+                      className="text-xs text-muted hover:text-text hover:underline"
+                    >
+                      Remove from Today
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => updateTask.mutate({ focus_date: getLocalToday() })}
+                    disabled={isLoading || !task}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 h-9 px-3 rounded-control border border-border-strong',
+                      'text-sm text-text hover:bg-surface-2 disabled:opacity-50',
+                      'focus:outline-2 focus:outline-offset-2 focus:outline-accent'
+                    )}
+                  >
+                    <Sun size={14} aria-hidden="true" />
+                    Add to Today
+                  </button>
+                )}
+              </div>
+
+              {/* Waiting for */}
+              {task && (
+                <WaitingForField
+                  key={`${task.id}-${task.waiting_for ?? ''}`}
+                  waitingFor={task.waiting_for}
+                  waitingSince={task.waiting_since}
+                  onSave={(value) => updateTask.mutate({ waiting_for: value })}
+                />
+              )}
             </div>
 
             {/* Tags */}
@@ -490,6 +535,69 @@ function MoveToSelect({ taskId, currentItemId }: { taskId: number; currentItemId
 }
 
 // ── TagsSection ──────────────────────────────────────────────────────────────────────
+
+// ── WaitingForField ──────────────────────────────────────────────────────────────
+
+function WaitingForField({
+  waitingFor,
+  waitingSince,
+  onSave,
+}: {
+  waitingFor: string | null
+  waitingSince: string | null
+  onSave: (value: string | null) => void
+}) {
+  const [value, setValue] = useState(waitingFor ?? '')
+
+  function save() {
+    const next = value.trim() || null
+    if (next !== waitingFor) onSave(next)
+  }
+
+  return (
+    <div className="flex items-start gap-3">
+      <label htmlFor="task-waiting-for" className="w-20 pt-2 text-sm text-muted shrink-0">
+        Waiting for
+      </label>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <input
+            id="task-waiting-for"
+            type="text"
+            value={value}
+            maxLength={200}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={save}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur()
+              if (e.key === 'Escape') setValue(waitingFor ?? '')
+            }}
+            placeholder="Person, team or event"
+            className={cn(
+              'flex-1 min-w-0 h-9 px-3 rounded-control border border-border bg-surface text-sm text-text',
+              'placeholder:text-muted focus:outline-2 focus:outline-offset-2 focus:outline-accent'
+            )}
+          />
+          {waitingFor && (
+            <button
+              type="button"
+              onClick={() => { setValue(''); onSave(null) }}
+              className="text-xs text-muted hover:text-text hover:underline shrink-0"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        {waitingFor && waitingSince && (
+          <p className="mt-1 text-xs text-muted">
+            Waiting since {formatAbsoluteDate(isoToLocalDateStr(waitingSince))} ·{' '}
+            {formatRelativeDate(isoToLocalDateStr(waitingSince))}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
 
 function TagsSection({ taskId, currentTags }: { taskId: number; currentTags: string[] }) {
   const { data: allTags = [] } = useTags()

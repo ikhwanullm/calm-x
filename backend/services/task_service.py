@@ -1,6 +1,7 @@
 """Task management service."""
 from __future__ import annotations
 
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from sqlalchemy import func, select
@@ -9,7 +10,7 @@ from sqlalchemy.orm import Session
 from backend.exceptions import ArchivedItemError, LimitExceededError, NotFoundError, ValidationError
 from backend.models.item import Item, Subtask, Tag, Task, TaskTag
 from backend.models.utils import now_utc
-from backend.schemas.task import TaskCreate, TaskResponse, TaskUpdate
+from backend.schemas.task import TaskCreate, TaskResponse, TaskUpdate, TodayResponse
 from backend.services.guards import guard_not_archived, guard_task_item_not_archived
 from backend.services.timestamp_service import on_task_move, update_task_timestamp
 
@@ -24,6 +25,13 @@ def _guard_not_resource(item: Item | None) -> None:
             "Resources cannot have tasks. Convert to Project or Area first.",
             detail=f"item_id={item.id}",
         )
+
+
+def _as_utc(value: datetime | None) -> datetime | None:
+    """Values just written are naive UTC (see now_utc); loaded ones are aware. Return aware UTC."""
+    if value is None or value.tzinfo is not None:
+        return value
+    return value.replace(tzinfo=timezone.utc)
 
 
 def _task_to_response(session: Session, task: Task) -> TaskResponse:
@@ -53,11 +61,16 @@ def _task_to_response(session: Session, task: Task) -> TaskResponse:
         priority=task.priority,
         is_complete=bool(task.is_complete),
         sort_order=task.sort_order,
-        created_at=task.created_at,
-        updated_at=task.updated_at,
+        created_at=_as_utc(task.created_at),
+        updated_at=_as_utc(task.updated_at),
         subtask_count=total_subs,
         completed_subtask_count=done_subs,
         tags=tag_names,
+        focus_date=task.focus_date,
+        waiting_for=task.waiting_for,
+        waiting_since=_as_utc(task.waiting_since),
+        item_title=task.item.title if task.item is not None else None,
+        item_type=task.item.type if task.item is not None else None,
     )
 
 
@@ -174,6 +187,12 @@ def update_task(session: Session, task_id: int, data: TaskUpdate) -> TaskRespons
     update_fields.pop("is_complete", None)
     update_fields.pop("item_id", None)
     tag_names = update_fields.pop("tag_names", None)
+    if "waiting_for" in update_fields:
+        new_waiting = update_fields["waiting_for"]
+        if new_waiting is None:
+            task.waiting_since = None
+        elif new_waiting != task.waiting_for:
+            task.waiting_since = now_utc()
     for field, value in update_fields.items():
         setattr(task, field, value)
     task.updated_at = now_utc()
@@ -321,3 +340,54 @@ def reorder_tasks(session: Session, item_id: Optional[int], task_ids: list[int])
             task.sort_order = order
     session.flush()
     return list_tasks(session, item_id)
+
+
+_PRIORITY_RANK = {"high": 0, "medium": 1, "low": 2}
+
+
+def get_today(session: Session, client_today: date) -> TodayResponse:
+    """Open tasks for the Today view, using the client's local date.
+
+    Each open task outside archived Items lands in at most one list, in this order:
+    waiting (has waiting_for) > overdue (due before today) > due today > focused (on Today).
+    """
+    tasks = session.execute(
+        select(Task)
+        .outerjoin(Item, Task.item_id == Item.id)
+        .where(
+            Task.is_complete == 0,
+            (Task.item_id.is_(None)) | (Item.archived_at.is_(None)),
+            (Task.waiting_for.isnot(None))
+            | (Task.due_date <= client_today)
+            | (Task.focus_date.isnot(None)),
+        )
+    ).scalars().all()
+
+    waiting, overdue, due_today, focused = [], [], [], []
+    for task in tasks:
+        if task.waiting_for is not None:
+            waiting.append(task)
+        elif task.due_date is not None and task.due_date < client_today:
+            overdue.append(task)
+        elif task.due_date == client_today:
+            due_today.append(task)
+        elif task.focus_date is not None:
+            focused.append(task)
+
+    def by_priority(t: Task) -> tuple:
+        return (_PRIORITY_RANK.get(t.priority, 1), t.focus_date or client_today, t.id)
+
+    overdue.sort(key=lambda t: (t.due_date, _PRIORITY_RANK.get(t.priority, 1), t.id))
+    due_today.sort(key=by_priority)
+    focused.sort(key=by_priority)
+    waiting.sort(key=lambda t: (t.waiting_since is None, t.waiting_since, t.id))
+
+    def to_responses(group: list[Task]) -> list[TaskResponse]:
+        return [_task_to_response(session, t) for t in group]
+
+    return TodayResponse(
+        overdue=to_responses(overdue),
+        due_today=to_responses(due_today),
+        focused=to_responses(focused),
+        waiting=to_responses(waiting),
+    )

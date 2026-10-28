@@ -31,6 +31,7 @@ const TYPE_ROUTE: Record<string, string> = {
 
 const NAV_ITEMS = [
   { label: "Dashboard", route: "/" },
+  { label: "Today", route: "/today" },
   { label: "Inbox", route: "/inbox" },
   { label: "All tasks", route: "/tasks" },
   { label: "Projects", route: "/projects" },

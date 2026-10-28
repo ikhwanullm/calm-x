@@ -1,6 +1,7 @@
 """FastAPI router for Tasks."""
 from __future__ import annotations
 
+from datetime import date
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -14,6 +15,7 @@ from backend.schemas.task import (
     TaskReorderPayload,
     TaskResponse,
     TaskUpdate,
+    TodayResponse,
 )
 from backend.services import task_service
 from backend.services.filter_service import filter_tasks
@@ -81,6 +83,15 @@ def list_all_tasks(
 def get_inbox(session: SessionDep):
     """Get all Inbox tasks (item_id=None)."""
     return task_service.get_inbox_tasks(session)
+
+
+@router.get("/tasks/today", response_model=TodayResponse)
+def get_today(
+    session: SessionDep,
+    today: date = Query(..., description="Client local date YYYY-MM-DD"),
+):
+    """Overdue, due-today, focused and waiting tasks for the Today view."""
+    return task_service.get_today(session, today)
 
 
 @router.get("/items/{item_id}/tasks", response_model=list[TaskResponse])

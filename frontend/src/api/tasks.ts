@@ -5,6 +5,7 @@ import type {
   TaskMovePayload,
   TaskReorderPayload,
   TaskUpdatePayload,
+  TodayTasks,
 } from '../types/models'
 
 export const tasksApi = {
@@ -22,6 +23,9 @@ export const tasksApi = {
 
   inbox: () =>
     apiClient.get<Task[]>('/tasks/inbox').then(r => r.data),
+
+  today: (today: string) =>
+    apiClient.get<TodayTasks>('/tasks/today', { params: { today } }).then(r => r.data),
 
   listForItem: (itemId: number, params?: { include_complete?: boolean }) =>
     apiClient.get<Task[]>(`/items/${itemId}/tasks`, { params }).then(r => r.data),

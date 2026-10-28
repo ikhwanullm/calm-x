@@ -77,6 +77,9 @@ def export_data(session: Session) -> dict[str, Any]:
             "priority": t.priority, "is_complete": t.is_complete,
             "sort_order": t.sort_order,
             "created_at": _dt_to_iso(t.created_at), "updated_at": _dt_to_iso(t.updated_at),
+            "focus_date": str(t.focus_date) if t.focus_date else None,
+            "waiting_for": t.waiting_for,
+            "waiting_since": _dt_to_iso(t.waiting_since),
         }
 
     def subtask_dict(s: Subtask) -> dict:
@@ -255,6 +258,9 @@ def _validate_record_fields(data: dict) -> None:
             raise ImportValidationError(f"{ctx}: description must be ≤ 5000 chars")
         if len(r.get("notes", "")) > 10000:
             raise ImportValidationError(f"{ctx}: notes must be ≤ 10000 chars")
+        waiting_for = r.get("waiting_for")
+        if waiting_for is not None and (not isinstance(waiting_for, str) or len(waiting_for) > 200):
+            raise ImportValidationError(f"{ctx}: waiting_for must be a string ≤ 200 chars")
 
     # ── Subtasks ───────────────────────────────────────────────────────────
     for r in data["subtasks"]:
@@ -478,6 +484,9 @@ def _import_merge(session: Session, data: dict) -> dict[str, int]:
             sort_order=int(r.get("sort_order", 0)),
             created_at=_iso_to_dt(r.get("created_at")) or now,
             updated_at=_iso_to_dt(r.get("updated_at")) or now,
+            focus_date=_date.fromisoformat(r["focus_date"]) if r.get("focus_date") else None,
+            waiting_for=r.get("waiting_for"),
+            waiting_since=_iso_to_dt(r.get("waiting_since")),
         )
         session.add(t)
         session.flush()

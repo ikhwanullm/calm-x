@@ -109,6 +109,11 @@ class Task(Base):
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[UTCDateTime] = mapped_column(UTCDateTime, nullable=False)
     updated_at: Mapped[UTCDateTime] = mapped_column(UTCDateTime, nullable=False)
+    # Local date the task was put on Today (None = not on Today)
+    focus_date: Mapped[Date | None] = mapped_column(Date, nullable=True)
+    # Who or what the task is waiting on (None = not waiting)
+    waiting_for: Mapped[str | None] = mapped_column(Text, nullable=True)
+    waiting_since: Mapped[UTCDateTime | None] = mapped_column(UTCDateTime, nullable=True)
 
     # Relationships
     item: Mapped[Item | None] = relationship("Item", back_populates="tasks")
