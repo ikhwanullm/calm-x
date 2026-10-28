@@ -1200,7 +1200,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Test that exiting without completing still preserves task changes
     - **Validates: Requirements R10.9, R10.12**
 
-- [ ] 9.14 Checkpoint: Weekly Review complete
+- [x] 9.14 Checkpoint: Weekly Review complete
   - Complete full weekly review flow through all 5 steps
   - Verify actions save immediately
   - Verify "Exit review" discards review record but keeps action changes
