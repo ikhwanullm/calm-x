@@ -1038,7 +1038,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Shows ConfirmDialog with message: "This item will be permanently deleted. This action cannot be undone."
     - _Requirements: R7.9, R7.10_
 
-- [ ] 7.6 Checkpoint: Archive View complete
+- [x] 7.6 Checkpoint: Archive View complete
   - View archived items with search and filters
   - Restore items from archive
   - Permanently delete items with confirmation
