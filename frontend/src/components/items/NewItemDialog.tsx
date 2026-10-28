@@ -41,6 +41,10 @@ export function NewItemDialog({
   const [title, setTitle] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // Project-specific state for blank projects
+  const [projectGoal, setProjectGoal] = useState('')
+  const [projectDeadline, setProjectDeadline] = useState('')
+
   // Project-specific state for templates
   const [projectMode, setProjectMode] = useState<ProjectMode>('blank')
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null)
@@ -57,6 +61,8 @@ export function NewItemDialog({
       setType(defaultType)
       setTitle('')
       setErrors({})
+      setProjectGoal('')
+      setProjectDeadline('')
       setProjectMode('blank')
       setSelectedTemplateId(null)
       setStartDate(getLocalToday())
@@ -74,6 +80,8 @@ export function NewItemDialog({
     setTitle('')
     setErrors({})
     setType(defaultType)
+    setProjectGoal('')
+    setProjectDeadline('')
     setProjectMode('blank')
     setSelectedTemplateId(null)
     setStartDate(getLocalToday())
@@ -89,6 +97,12 @@ export function NewItemDialog({
     }
     if (type === 'project' && projectMode === 'template' && !selectedTemplateId) {
       newErrors.template = 'Select a template'
+    }
+    if (type === 'project' && projectDeadline) {
+      const d = new Date(projectDeadline)
+      if (isNaN(d.getTime())) {
+        newErrors.projectDeadline = 'Enter a valid date'
+      }
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -106,12 +120,21 @@ export function NewItemDialog({
           payload: {
             title: title.trim(),
             start_date: startDate,
+            project_goal: projectGoal.trim() || undefined,
+            project_deadline: projectDeadline || undefined,
           },
         })
         onCreated?.(project.id)
       } else {
-        // Create blank item
-        const item = await createItem.mutateAsync({ type, title: title.trim() })
+        // Create blank item (project_goal and project_deadline only for projects)
+        const item = await createItem.mutateAsync({
+          type,
+          title: title.trim(),
+          ...(type === 'project' && {
+            project_goal: projectGoal.trim() || undefined,
+            project_deadline: projectDeadline || undefined,
+          }),
+        })
         onCreated?.(item.id)
       }
       handleClose()
@@ -330,6 +353,58 @@ export function NewItemDialog({
               </p>
             )}
           </div>
+
+          {/* Project-specific fields: Goal + Deadline */}
+          {type === 'project' && (
+            <>
+              <div className="mb-5">
+                <label htmlFor="project-goal" className="block text-sm font-medium text-text mb-1.5">
+                  Goal <span className="font-normal text-muted">(optional)</span>
+                </label>
+                <input
+                  id="project-goal"
+                  type="text"
+                  value={projectGoal}
+                  onChange={(e) => setProjectGoal(e.target.value)}
+                  maxLength={500}
+                  placeholder="What does success look like?"
+                  className={cn(
+                    'w-full h-10 px-3 rounded-control border border-border bg-surface text-text text-sm',
+                    'focus:outline-2 focus:outline-accent focus:outline-offset-0',
+                    'placeholder:text-muted'
+                  )}
+                />
+              </div>
+
+              <div className="mb-5">
+                <label htmlFor="project-deadline" className="block text-sm font-medium text-text mb-1.5">
+                  Deadline <span className="font-normal text-muted">(optional)</span>
+                </label>
+                <input
+                  id="project-deadline"
+                  type="date"
+                  value={projectDeadline}
+                  onChange={(e) => {
+                    setProjectDeadline(e.target.value)
+                    if (errors.projectDeadline) setErrors(prev => ({ ...prev, projectDeadline: '' }))
+                  }}
+                  aria-label="Project deadline"
+                  aria-invalid={!!errors.projectDeadline}
+                  aria-describedby={errors.projectDeadline ? 'deadline-error' : undefined}
+                  className={cn(
+                    'w-full h-10 px-3 rounded-control border bg-surface text-text text-sm',
+                    'focus:outline-2 focus:outline-accent focus:outline-offset-0',
+                    errors.projectDeadline ? 'border-danger-fg' : 'border-border'
+                  )}
+                />
+                {errors.projectDeadline && (
+                  <p id="deadline-error" role="alert" className="mt-1 text-xs text-danger-fg">
+                    {errors.projectDeadline}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
 
           <DialogFooter>
             <Button
