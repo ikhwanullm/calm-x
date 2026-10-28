@@ -168,7 +168,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
             <button
               type="button"
               onClick={handleCompleteProject}
-              className="mt-3 text-sm text-accent-text hover:underline"
+              className="mt-5 text-sm text-accent-text hover:underline"
             >
               Mark project complete
             </button>
@@ -177,7 +177,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
             <button
               type="button"
               onClick={() => reopenProject.mutate(item.id)}
-              className="mt-3 text-sm text-muted hover:text-accent-text hover:underline"
+              className="mt-5 text-sm text-muted hover:text-accent-text hover:underline"
             >
               Reopen project
             </button>
