@@ -1357,13 +1357,8 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - API routes return JSON not HTML
     - _Requirements: R15.1_
 
-  - [ ] 11.9 Create README.md
-    - Project description
-    - Prerequisites (Python 3.11+, Node.js 18+)
-    - Setup instructions (install dependencies, run migrations)
-    - Development: how to run both servers
-    - Production: how to build frontend and run backend
-    - Environment variables documentation
+  - [x] 11.9 Create README.md
+    - Updated with backup/restore, import/export, env vars
     - _Requirements: N/A (documentation)_
 
   - [ ] 11.10 Final integration tests
