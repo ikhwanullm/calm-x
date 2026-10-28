@@ -1169,7 +1169,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - "+ Add task" button
     - _Requirements: R10.6_
 
-  - [ ] 9.9 Implement Resources review step
+  - [x] 9.9 Implement Resources review step
     - Show resources sorted by least recently updated
     - Stale resources (30+ days) flagged "Suggest archiving"
     - Actions: Keep, Update, Archive
