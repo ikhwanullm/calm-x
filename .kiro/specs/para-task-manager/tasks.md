@@ -1327,14 +1327,14 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Verify all status colors meet requirements
     - _Requirements: ui-guidelines.md §9_
 
-  - [ ] 11.4 Verify accessible elements
+  - [x] 11.4 Verify accessible elements
     - All interactive elements use semantic HTML (button, a, input with label)
     - No div onClick patterns
     - Icon-only buttons have aria-label
     - Decorative icons have aria-hidden="true"
     - _Requirements: R15.7; ui-guidelines.md §9_
 
-  - [ ] 11.5 Verify landmarks
+  - [x] 11.5 Verify landmarks
     - `<nav aria-label="Main">` for sidebar
     - `<header>` for app header
     - `<main>` for content area
