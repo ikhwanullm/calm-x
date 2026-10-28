@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { NavLink, Outlet } from "react-router-dom"
+import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   Inbox,
@@ -17,6 +17,7 @@ import { Kbd } from "@/components/common"
 import { QuickCaptureDialog } from "@/components/capture/QuickCaptureDialog"
 import { CommandPalette } from "@/components/search/CommandPalette"
 import { ShortcutHelp } from "@/components/search/ShortcutHelp"
+import { NewItemDialog } from "@/components/items/NewItemDialog"
 
 import { useShortcuts } from "@/hooks/useShortcuts"
 import { useInboxTasks } from "@/hooks/useTasks"
@@ -94,9 +95,11 @@ export function AppShell() {
   const [captureOpen, setCaptureOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [newProjectOpen, setNewProjectOpen] = useState(false)
 
   const { data: inboxTasks } = useInboxTasks()
   const inboxCount = inboxTasks?.filter((t) => !t.is_complete).length ?? 0
+  const navigate = useNavigate()
 
   useShortcuts({
     Q: () => !paletteOpen && !helpOpen && setCaptureOpen(true),
@@ -165,8 +168,19 @@ export function AppShell() {
       </div>
 
       <QuickCaptureDialog open={captureOpen} onOpenChange={setCaptureOpen} />
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onQuickCapture={() => { setPaletteOpen(false); setCaptureOpen(true) }} />
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        onQuickCapture={() => { setPaletteOpen(false); setCaptureOpen(true) }}
+        onNewProject={() => { setPaletteOpen(false); setNewProjectOpen(true) }}
+      />
       <ShortcutHelp open={helpOpen} onOpenChange={setHelpOpen} />
+      <NewItemDialog
+        open={newProjectOpen}
+        onOpenChange={setNewProjectOpen}
+        defaultType="project"
+        onCreated={(id) => { setNewProjectOpen(false); navigate(`/projects/${id}`) }}
+      />
 
     </div>
   )

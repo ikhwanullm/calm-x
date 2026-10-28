@@ -251,3 +251,303 @@ def test_progress_reflects_task_counts(client):
     p = next(i for i in items if i["id"] == item_id)
     assert p["task_count"] == 2
     assert p["progress_percentage"] == 100
+
+
+# ---------------------------------------------------------------------------
+# Phase 7 Archive API tests
+# ---------------------------------------------------------------------------
+
+
+def test_list_archived_only(client):
+    """archived=only returns only archived items."""
+    # Create 2 projects, archive 1
+    p1 = client.post("/api/items", json={"type": "project", "title": "Active"}, headers=HEADERS).json()
+    p2 = client.post("/api/items", json={"type": "project", "title": "Archived"}, headers=HEADERS).json()
+    client.post(f"/api/items/{p2['id']}/archive", headers=HEADERS)
+
+    # Default list excludes archived
+    resp = client.get("/api/items")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+    assert resp.json()[0]["title"] == "Active"
+
+    # archived=only returns only archived
+    resp = client.get("/api/items?archived=only")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+    assert resp.json()[0]["title"] == "Archived"
+    assert resp.json()[0]["archived_at"] is not None
+
+
+def test_archived_items_sorted_by_archived_at_desc(client):
+    """archived=only sorts by archived_at descending (newest first)."""
+    import time
+
+    # Create 3 projects and archive them in order
+    p1 = client.post("/api/items", json={"type": "project", "title": "First"}, headers=HEADERS).json()
+    time.sleep(0.01)  # small delay to ensure different timestamps
+    p2 = client.post("/api/items", json={"type": "project", "title": "Second"}, headers=HEADERS).json()
+    time.sleep(0.01)
+    p3 = client.post("/api/items", json={"type": "project", "title": "Third"}, headers=HEADERS).json()
+
+    # Archive in order: First, Second, Third
+    client.post(f"/api/items/{p1['id']}/archive", headers=HEADERS)
+    time.sleep(0.01)
+    client.post(f"/api/items/{p2['id']}/archive", headers=HEADERS)
+    time.sleep(0.01)
+    client.post(f"/api/items/{p3['id']}/archive", headers=HEADERS)
+
+    # Get archived items - should be Third, Second, First (newest archived first)
+    resp = client.get("/api/items?archived=only")
+    assert resp.status_code == 200
+    items = resp.json()
+    assert len(items) == 3
+    assert items[0]["title"] == "Third"
+    assert items[1]["title"] == "Second"
+    assert items[2]["title"] == "First"
+
+
+def test_archive_search_by_title(client):
+    """Search archived items by title."""
+    p1 = client.post("/api/items", json={"type": "project", "title": "Alpha Project"}, headers=HEADERS).json()
+    p2 = client.post("/api/items", json={"type": "area", "title": "Beta Area"}, headers=HEADERS).json()
+    client.post(f"/api/items/{p1['id']}/archive", headers=HEADERS)
+    client.post(f"/api/items/{p2['id']}/archive", headers=HEADERS)
+
+    # Search for "Alpha"
+    resp = client.get("/api/items?archived=only&q=Alpha")
+    assert resp.status_code == 200
+    items = resp.json()
+    assert len(items) == 1
+    assert items[0]["title"] == "Alpha Project"
+
+
+def test_archive_search_by_description(client):
+    """Search archived items by description."""
+    p1 = client.post("/api/items", json={"type": "project", "title": "P1", "description": "Contains important data"}, headers=HEADERS).json()
+    p2 = client.post("/api/items", json={"type": "project", "title": "P2", "description": "Nothing special"}, headers=HEADERS).json()
+    client.post(f"/api/items/{p1['id']}/archive", headers=HEADERS)
+    client.post(f"/api/items/{p2['id']}/archive", headers=HEADERS)
+
+    # Search for "important"
+    resp = client.get("/api/items?archived=only&q=important")
+    assert resp.status_code == 200
+    items = resp.json()
+    assert len(items) == 1
+    assert items[0]["title"] == "P1"
+
+
+def test_archive_filter_by_type(client):
+    """Filter archived items by type."""
+    p1 = client.post("/api/items", json={"type": "project", "title": "Project"}, headers=HEADERS).json()
+    a1 = client.post("/api/items", json={"type": "area", "title": "Area"}, headers=HEADERS).json()
+    r1 = client.post("/api/items", json={"type": "resource", "title": "Resource"}, headers=HEADERS).json()
+    client.post(f"/api/items/{p1['id']}/archive", headers=HEADERS)
+    client.post(f"/api/items/{a1['id']}/archive", headers=HEADERS)
+    client.post(f"/api/items/{r1['id']}/archive", headers=HEADERS)
+
+    # Filter by type=project
+    resp = client.get("/api/items?archived=only&type=project")
+    assert resp.status_code == 200
+    items = resp.json()
+    assert len(items) == 1
+    assert items[0]["type"] == "project"
+
+    # Filter by type=area
+    resp = client.get("/api/items?archived=only&type=area")
+    assert resp.status_code == 200
+    items = resp.json()
+    assert len(items) == 1
+    assert items[0]["type"] == "area"
+
+
+def test_archive_filter_by_date_range(client):
+    """Filter archived items by date range."""
+    import time
+    from datetime import date, timedelta
+
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+    tomorrow = today + timedelta(days=1)
+
+    # Create and archive a project
+    p1 = client.post("/api/items", json={"type": "project", "title": "P1"}, headers=HEADERS).json()
+    client.post(f"/api/items/{p1['id']}/archive", headers=HEADERS)
+
+    # Filter: archived from today - should include the item
+    resp = client.get(f"/api/items?archived=only&archived_from={today.isoformat()}")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+
+    # Filter: archived to yesterday - should exclude the item (archived today)
+    resp = client.get(f"/api/items?archived=only&archived_to={yesterday.isoformat()}")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 0
+
+    # Filter: archived to tomorrow - should include the item
+    resp = client.get(f"/api/items?archived=only&archived_to={tomorrow.isoformat()}")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+
+
+def test_archive_date_filter_requires_archived_mode(client):
+    """archived_from/archived_to require archived=only or include_archived=true."""
+    from datetime import date
+
+    today = date.today().isoformat()
+
+    # Without archived mode - should fail
+    resp = client.get(f"/api/items?archived_from={today}")
+    assert resp.status_code == 400
+    assert "archived_from" in resp.json()["detail"]["error"]
+
+
+def test_archive_combined_search_and_filter(client):
+    """Combine search and type filter on archived items."""
+    p1 = client.post("/api/items", json={"type": "project", "title": "Alpha Project"}, headers=HEADERS).json()
+    a1 = client.post("/api/items", json={"type": "area", "title": "Alpha Area"}, headers=HEADERS).json()
+    p2 = client.post("/api/items", json={"type": "project", "title": "Beta Project"}, headers=HEADERS).json()
+    client.post(f"/api/items/{p1['id']}/archive", headers=HEADERS)
+    client.post(f"/api/items/{a1['id']}/archive", headers=HEADERS)
+    client.post(f"/api/items/{p2['id']}/archive", headers=HEADERS)
+
+    # Search for "Alpha" + filter by type=project
+    resp = client.get("/api/items?archived=only&q=Alpha&type=project")
+    assert resp.status_code == 200
+    items = resp.json()
+    assert len(items) == 1
+    assert items[0]["title"] == "Alpha Project"
+    assert items[0]["type"] == "project"
+
+
+def test_archive_search_escapes_sql_wildcards(client):
+    """Search properly escapes SQL wildcards (%, _)."""
+    # Create items with special characters in title
+    p1 = client.post("/api/items", json={"type": "project", "title": "100% Complete"}, headers=HEADERS).json()
+    p2 = client.post("/api/items", json={"type": "project", "title": "file_name.txt"}, headers=HEADERS).json()
+    p3 = client.post("/api/items", json={"type": "project", "title": "Regular"}, headers=HEADERS).json()
+    client.post(f"/api/items/{p1['id']}/archive", headers=HEADERS)
+    client.post(f"/api/items/{p2['id']}/archive", headers=HEADERS)
+    client.post(f"/api/items/{p3['id']}/archive", headers=HEADERS)
+
+    # Search for "100%" - should match literally, not as wildcard
+    resp = client.get("/api/items?archived=only&q=100%25")  # URL encoded %
+    assert resp.status_code == 200
+    items = resp.json()
+    assert len(items) == 1
+    assert items[0]["title"] == "100% Complete"
+
+    # Search for "file_" - underscore should not be wildcard
+    resp = client.get("/api/items?archived=only&q=file_")
+    assert resp.status_code == 200
+    items = resp.json()
+    assert len(items) == 1
+    assert items[0]["title"] == "file_name.txt"
+
+
+def test_archived_item_includes_task_count(client):
+    """Archived items include task_count in response."""
+    # Create project with tasks
+    p1 = client.post("/api/items", json={"type": "project", "title": "P1"}, headers=HEADERS).json()
+    client.post("/api/tasks", json={"title": "T1", "item_id": p1["id"]}, headers=HEADERS)
+    client.post("/api/tasks", json={"title": "T2", "item_id": p1["id"]}, headers=HEADERS)
+    t3_id = client.post("/api/tasks", json={"title": "T3", "item_id": p1["id"]}, headers=HEADERS).json()["id"]
+    client.post(f"/api/tasks/{t3_id}/complete", headers=HEADERS)
+
+    # Archive the project
+    client.post(f"/api/items/{p1['id']}/archive", headers=HEADERS)
+
+    # Get archived items
+    resp = client.get("/api/items?archived=only")
+    assert resp.status_code == 200
+    items = resp.json()
+    assert len(items) == 1
+    assert items[0]["task_count"] == 3
+    assert items[0]["completed_task_count"] == 1
+    assert items[0]["progress_percentage"] == 33  # 1/3 = 33%
+
+
+def test_delete_item_removes_all_related_data(client):
+    """R7.9, R7.10: Deleting an item removes tasks, subtasks, task_tags, reference_links, resource_links.
+    Tags themselves should NOT be deleted."""
+    # Create a project with tasks, subtasks, tags, reference links
+    proj = client.post("/api/items", json={"type": "project", "title": "Project"}, headers=HEADERS).json()
+    proj_id = proj["id"]
+
+    # Create a resource to link to the project
+    res = client.post("/api/items", json={"type": "resource", "title": "Resource"}, headers=HEADERS).json()
+    res_id = res["id"]
+
+    # Create task with subtasks and tags
+    task = client.post("/api/tasks", json={
+        "title": "Task 1",
+        "item_id": proj_id,
+        "tag_names": ["tag1", "tag2"]
+    }, headers=HEADERS).json()
+    task_id = task["id"]
+
+    # Create subtask
+    subtask = client.post(f"/api/tasks/{task_id}/subtasks", json={"title": "Subtask 1"}, headers=HEADERS).json()
+    subtask_id = subtask["id"]
+
+    # Create reference link
+    ref_link = client.post(f"/api/items/{proj_id}/links", json={"url": "https://example.com"}, headers=HEADERS).json()
+    ref_link_id = ref_link["id"]
+
+    # Link resource to project (note: the API expects 'linked_item_id')
+    link_resp = client.post(f"/api/resources/{res_id}/link", json={"linked_item_id": proj_id}, headers=HEADERS)
+    assert link_resp.status_code == 201, f"Failed to create resource link: {link_resp.text}"
+
+    # Verify tags exist
+    tags = client.get("/api/tags").json()
+    assert len(tags) == 2
+
+    # Verify resource link exists
+    links = client.get(f"/api/resources/{res_id}/linked-items").json()
+    assert len(links) == 1
+
+    # Delete the project
+    resp = client.delete(f"/api/items/{proj_id}", headers=HEADERS)
+    assert resp.status_code == 204
+
+    # Verify project is deleted
+    assert client.get(f"/api/items/{proj_id}").status_code == 404
+
+    # Verify resource links to deleted item should be removed
+    links = client.get(f"/api/resources/{res_id}/linked-items").json()
+    assert len(links) == 0, "Resource links to deleted item should be removed"
+
+    # Verify tags still exist (tags are not deleted when items are deleted)
+    tags = client.get("/api/tags").json()
+    assert len(tags) == 2, "Tags should NOT be deleted when item is deleted"
+
+    # Verify resource still exists
+    assert client.get(f"/api/items/{res_id}").status_code == 200
+
+
+def test_delete_archived_item_cleans_up_all_data(client):
+    """Deleting an archived item also removes all related data."""
+    # Create and archive a project with data
+    proj = client.post("/api/items", json={"type": "project", "title": "Project"}, headers=HEADERS).json()
+    proj_id = proj["id"]
+
+    # Create task
+    task = client.post("/api/tasks", json={"title": "Task 1", "item_id": proj_id}, headers=HEADERS).json()
+
+    # Create reference link
+    client.post(f"/api/items/{proj_id}/links", json={"url": "https://example.com"}, headers=HEADERS)
+
+    # Archive the project
+    client.post(f"/api/items/{proj_id}/archive", headers=HEADERS)
+
+    # Verify it's in the archive
+    resp = client.get("/api/items?archived=only")
+    assert len(resp.json()) == 1
+
+    # Delete the archived project
+    resp = client.delete(f"/api/items/{proj_id}", headers=HEADERS)
+    assert resp.status_code == 204
+
+    # Verify archive is now empty
+    resp = client.get("/api/items?archived=only")
+    assert len(resp.json()) == 0

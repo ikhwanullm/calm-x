@@ -3,13 +3,13 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { itemsApi } from '../api/items'
+import { itemsApi, type ListItemsParams } from '../api/items'
 import { notify } from '../lib/toast'
 import { dashboardKeys } from './useDashboard'
+import { taskKeys } from './useTasks'
 import type {
   Item,
   ItemCreatePayload,
-  ItemType,
   ItemUpdatePayload,
 } from '../types/models'
 
@@ -18,7 +18,7 @@ import type {
 // ---------------------------------------------------------------------------
 export const itemKeys = {
   all: ['items'] as const,
-  list: (filters?: { type?: ItemType; include_archived?: boolean }) =>
+  list: (filters?: ListItemsParams) =>
     [...itemKeys.all, 'list', filters ?? {}] as const,
   detail: (id: number) => [...itemKeys.all, 'detail', id] as const,
 }
@@ -27,7 +27,27 @@ export const itemKeys = {
 // Queries
 // ---------------------------------------------------------------------------
 
-export function useItems(filters?: { type?: ItemType; include_archived?: boolean }) {
+export function useItems(filters?: ListItemsParams) {
+  return useQuery({
+    queryKey: itemKeys.list(filters),
+    queryFn: () => itemsApi.list(filters),
+  })
+}
+
+/**
+ * Hook for fetching archived items only.
+ * Supports search query, type filter, and date range filters.
+ */
+export function useArchivedItems(params?: {
+  q?: string
+  type?: 'project' | 'area' | 'resource'
+  archived_from?: string
+  archived_to?: string
+}) {
+  const filters: ListItemsParams = {
+    archived: 'only',
+    ...params,
+  }
   return useQuery({
     queryKey: itemKeys.list(filters),
     queryFn: () => itemsApi.list(filters),
@@ -96,6 +116,7 @@ export function useDeleteItem() {
       queryClient.removeQueries({ queryKey: itemKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: itemKeys.all })
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
+      queryClient.invalidateQueries({ queryKey: taskKeys.all })
     },
     onError: (err: Error) => {
       notify.error("Couldn't delete item. Try again.", err.message)
@@ -124,6 +145,7 @@ export function useRestoreItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemKeys.all })
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
+      queryClient.invalidateQueries({ queryKey: taskKeys.all })
     },
     onError: (err: Error) => {
       notify.error("Couldn't restore item. Try again.", err.message)

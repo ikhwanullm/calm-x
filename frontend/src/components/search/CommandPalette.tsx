@@ -10,6 +10,8 @@ interface CommandPaletteProps {
   onOpenChange: (open: boolean) => void
   /** Callback to open the Quick Capture dialog */
   onQuickCapture?: () => void
+  /** Callback to open the New Item dialog with project type */
+  onNewProject?: () => void
 }
 
 function useDebouncedValue(value: string, delay = 200) {
@@ -40,7 +42,7 @@ const NAV_ITEMS = [
   { label: "Settings", route: "/settings" },
 ]
 
-export function CommandPalette({ open, onOpenChange, onQuickCapture }: CommandPaletteProps) {
+export function CommandPalette({ open, onOpenChange, onQuickCapture, onNewProject }: CommandPaletteProps) {
   const [input, setInput] = useState("")
   const debounced = useDebouncedValue(input, 200)
   const navigate = useNavigate()
@@ -59,7 +61,11 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture }: CommandPa
     }
     if (value === "action:new-project") {
       close()
-      navigate("/projects")
+      if (onNewProject) {
+        onNewProject()
+      } else {
+        navigate("/projects")
+      }
       return
     }
     close()

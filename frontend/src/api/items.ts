@@ -6,8 +6,17 @@ import type {
   ItemUpdatePayload,
 } from '../types/models'
 
+export interface ListItemsParams {
+  type?: ItemType
+  include_archived?: boolean
+  archived?: 'only'
+  q?: string
+  archived_from?: string  // YYYY-MM-DD
+  archived_to?: string    // YYYY-MM-DD
+}
+
 export const itemsApi = {
-  list: (params?: { type?: ItemType; include_archived?: boolean }) =>
+  list: (params?: ListItemsParams) =>
     apiClient.get<Item[]>('/items/', { params }).then(r => r.data),
 
   get: (id: number) =>

@@ -32,13 +32,31 @@ def list_items(
     session: Session,
     type_filter: Optional[str] = None,
     include_archived: bool = False,
+    archived_only: bool = False,
+    sort_by_archived: bool = False,
 ) -> list[tuple[Item, int, int]]:
-    """Return items with task counts as (item, total_tasks, completed_tasks)."""
+    """Return items with task counts as (item, total_tasks, completed_tasks).
+
+    Args:
+        type_filter: Filter by 'project', 'area', or 'resource'.
+        include_archived: If True, return both active and archived items.
+        archived_only: If True, return only archived items (overrides include_archived).
+        sort_by_archived: If True, sort by archived_at descending (newest first).
+    """
     q = select(Item)
     if type_filter is not None:
         q = q.where(Item.type == type_filter)
-    if not include_archived:
+
+    # archived_only takes precedence
+    if archived_only:
+        q = q.where(Item.archived_at.is_not(None))
+    elif not include_archived:
         q = q.where(Item.archived_at.is_(None))
+
+    # Sort by archived_at descending if requested (for archive view)
+    if sort_by_archived:
+        q = q.order_by(Item.archived_at.desc())
+
     items = list(session.execute(q).scalars().all())
     if not items:
         return []

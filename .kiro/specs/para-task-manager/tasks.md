@@ -1013,27 +1013,27 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Phase 7: Archive View
-  - [ ] 7.1 Create ArchiveView page
+  - [x] 7.1 Create ArchiveView page
     - Display all items with archived_at != null
     - Display archive date using RelativeDate (with absolute date on hover)
     - Sort by archive date, newest first
     - _Requirements: R7.3, R7.7_
 
-  - [ ] 7.2 Implement archive search
+  - [x] 7.2 Implement archive search
     - Search bar for title and description
     - _Requirements: R7.4_
 
-  - [ ] 7.3 Implement archive filters
+  - [x] 7.3 Implement archive filters
     - Filter by type (Project, Area, Resource)
     - Filter by archive date range
     - _Requirements: R7.5_
 
-  - [ ] 7.4 Implement Restore action
+  - [x] 7.4 Implement Restore action
     - "Restore" button on each archived item
     - Calls restore endpoint, removes from archive view
     - _Requirements: R7.6_
 
-  - [ ] 7.5 Implement Delete action with confirmation
+  - [x] 7.5 Implement Delete action with confirmation
     - "Delete" button on each archived item
     - Shows ConfirmDialog with message: "This item will be permanently deleted. This action cannot be undone."
     - _Requirements: R7.9, R7.10_

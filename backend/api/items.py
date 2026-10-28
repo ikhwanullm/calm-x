@@ -1,9 +1,10 @@
 """FastAPI router for Items (Projects, Areas, Resources)."""
 from __future__ import annotations
 
+from datetime import date, datetime, timezone
 from typing import Annotated, Literal, Optional, Union
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db_session
@@ -28,14 +29,76 @@ SessionDep = Annotated[Session, Depends(get_db_session)]
 AnyItemResponse = Union[ProjectResponse, AreaResponse, ResourceResponse]
 
 
+def _escape_like(query: str) -> str:
+    """Escape SQL LIKE wildcards."""
+    return query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 @router.get("", response_model=list[AnyItemResponse])
 def list_items(
     session: SessionDep,
     type: Optional[Literal["project", "area", "resource"]] = Query(default=None),
     include_archived: bool = Query(default=False),
+    archived: Optional[Literal["only"]] = Query(default=None, description="Set to 'only' to return only archived items"),
+    q: Optional[str] = Query(default=None, max_length=200, description="Search query for title/description"),
+    archived_from: Optional[date] = Query(default=None, description="Filter archived items from this date (inclusive, client local date)"),
+    archived_to: Optional[date] = Query(default=None, description="Filter archived items to this date (inclusive, client local date)"),
 ):
-    """List items. Filter by type and/or include archived."""
-    items_with_counts = item_service.list_items(session, type_filter=type, include_archived=include_archived)
+    """List items. Filter by type and/or include archived.
+
+    For archive view, use `archived=only` to get only archived items sorted by archive date.
+    Search with `q` parameter searches title and description.
+    Date filters `archived_from`/`archived_to` filter by archive date (client local dates).
+    """
+    # Determine archived-only mode
+    archived_only = archived == "only"
+
+    # Validate date range filters - they only make sense with archived items
+    if (archived_from or archived_to) and not archived_only and not include_archived:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "archived_from and archived_to require archived=only or include_archived=true",
+                "type": "validation_error",
+            },
+        )
+
+    items_with_counts = item_service.list_items(
+        session,
+        type_filter=type,
+        include_archived=include_archived,
+        archived_only=archived_only,
+        sort_by_archived=archived_only,  # Sort by archived_at desc when viewing archive
+    )
+
+    # Apply search filter if provided
+    if q and q.strip():
+        search_term = q.strip().lower()
+        items_with_counts = [
+            (item, total, completed)
+            for item, total, completed in items_with_counts
+            if search_term in item.title.lower() or search_term in (item.description or "").lower()
+        ]
+
+    # Apply archived date range filter if provided (convert local dates to UTC boundaries)
+    if archived_from:
+        # Start of day in client local time -> treat as UTC start of day
+        from_dt = datetime(archived_from.year, archived_from.month, archived_from.day, 0, 0, 0, tzinfo=timezone.utc)
+        items_with_counts = [
+            (item, total, completed)
+            for item, total, completed in items_with_counts
+            if item.archived_at and item.archived_at >= from_dt
+        ]
+
+    if archived_to:
+        # End of day in client local time -> treat as UTC end of day (23:59:59.999999)
+        to_dt = datetime(archived_to.year, archived_to.month, archived_to.day, 23, 59, 59, 999999, tzinfo=timezone.utc)
+        items_with_counts = [
+            (item, total, completed)
+            for item, total, completed in items_with_counts
+            if item.archived_at and item.archived_at <= to_dt
+        ]
+
     return [item_to_response(item, task_count=total, completed_task_count=completed)
             for item, total, completed in items_with_counts]
 
