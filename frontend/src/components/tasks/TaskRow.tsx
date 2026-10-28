@@ -16,6 +16,8 @@ export interface TaskRowProps {
   /** Whether to show drag handle (false in inbox/list without reorder) */
   isDraggable?: boolean
   onToggleComplete: (task: Task) => void
+  /** Show the due-date status badge (false for tasks of archived items, R7.8) */
+  showDeadlineStatus?: boolean
 }
 
 export function TaskRow({
@@ -25,10 +27,11 @@ export function TaskRow({
   dragHandleProps,
   isDraggable = true,
   onToggleComplete,
+  showDeadlineStatus = true,
 }: TaskRowProps) {
   const today = getLocalToday()
   const threshold = useDeadlineThreshold()
-  const deadlineStatus = task.due_date && !task.is_complete
+  const deadlineStatus = showDeadlineStatus && task.due_date && !task.is_complete
     ? getDeadlineStatus(task.due_date, task.is_complete, threshold, today)
     : null
 

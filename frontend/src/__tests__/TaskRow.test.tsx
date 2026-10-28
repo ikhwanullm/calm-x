@@ -41,6 +41,16 @@ function renderRow(props: Partial<TaskRowProps> = {}) {
 }
 
 describe('TaskRow', () => {
+  it('shows the overdue badge for a past due date', () => {
+    renderRow({ task: { ...baseTask, due_date: '2020-01-01' } })
+    expect(screen.getByLabelText(/^overdue:/i)).toBeTruthy()
+  })
+
+  it('hides the due-date badge when showDeadlineStatus is false (archived item, R7.8)', () => {
+    renderRow({ task: { ...baseTask, due_date: '2020-01-01' }, showDeadlineStatus: false })
+    expect(screen.queryByLabelText(/^overdue:/i)).toBeNull()
+  })
+
   it('renders task title', () => {
     renderRow()
     expect(screen.getByText('Write tests')).toBeTruthy()

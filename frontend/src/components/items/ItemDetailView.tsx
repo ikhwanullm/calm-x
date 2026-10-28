@@ -435,6 +435,7 @@ function TasksSection({ item, archived }: { item: Item; archived: boolean }) {
           selectedTaskId={selectedTaskId ?? undefined}
           onOpenDrawer={openDrawer}
           onToggleComplete={handleToggleComplete}
+          showDeadlineStatus={!archived}
         />
       )}
 
@@ -631,7 +632,8 @@ function InlineDeadline({
     if (e.key === 'Escape') setIsEditing(false)
   }
 
-  const deadlineStatus = deadline && !isComplete
+  // Archived projects get no deadline badge (R7.8); disabled is set only for archived items
+  const deadlineStatus = deadline && !isComplete && !disabled
     ? getDeadlineStatus(deadline, isComplete, threshold, today)
     : null
 
@@ -682,7 +684,7 @@ function InlineDeadline({
       {deadlineStatus ? (
         <StatusBadge status={deadlineStatus} date={deadline!} today={today} />
       ) : deadline ? (
-        // Completed project — show date without status color
+        // Completed or archived project — show date without status color
         <RelativeDate date={deadline} />
       ) : null}
 

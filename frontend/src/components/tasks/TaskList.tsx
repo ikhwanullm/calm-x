@@ -25,9 +25,10 @@ interface SortableTaskRowProps {
   isSelected?: boolean
   onOpenDrawer: (id: number) => void
   onToggleComplete: (task: Task) => void
+  showDeadlineStatus?: boolean
 }
 
-function SortableTaskRow({ task, isSelected, onOpenDrawer, onToggleComplete }: SortableTaskRowProps) {
+function SortableTaskRow({ task, isSelected, onOpenDrawer, onToggleComplete, showDeadlineStatus }: SortableTaskRowProps) {
   const {
     attributes,
     listeners,
@@ -51,6 +52,7 @@ function SortableTaskRow({ task, isSelected, onOpenDrawer, onToggleComplete }: S
         isSelected={isSelected}
         onOpenDrawer={onOpenDrawer}
         onToggleComplete={onToggleComplete}
+        showDeadlineStatus={showDeadlineStatus}
         isDraggable
         dragHandleProps={{ ...attributes, ...listeners } as React.HTMLAttributes<HTMLButtonElement>}
       />
@@ -64,6 +66,8 @@ export interface TaskListProps {
   onOpenDrawer: (taskId: number) => void
   onToggleComplete: (task: Task) => void
   onReorder?: (taskIds: number[]) => void
+  /** Show due-date status badges (false for tasks of archived items, R7.8) */
+  showDeadlineStatus?: boolean
 }
 
 export function TaskList({
@@ -72,6 +76,7 @@ export function TaskList({
   onOpenDrawer,
   onToggleComplete,
   onReorder,
+  showDeadlineStatus = true,
 }: TaskListProps) {
   const [dragAnnouncement, setDragAnnouncement] = useState<string>('')
 
@@ -135,6 +140,7 @@ export function TaskList({
                   isSelected={task.id === selectedTaskId}
                   onOpenDrawer={onOpenDrawer}
                   onToggleComplete={onToggleComplete}
+                  showDeadlineStatus={showDeadlineStatus}
                 />
               </div>
             ))}

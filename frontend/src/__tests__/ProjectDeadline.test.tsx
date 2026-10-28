@@ -231,4 +231,16 @@ describe('ItemDetailView — InlineDeadline editor', () => {
     expect(screen.queryByRole('button', { name: /add deadline/i })).toBeNull()
     expect(screen.queryByRole('button', { name: /edit deadline/i })).toBeNull()
   })
+
+  it('archived project with a past deadline shows no overdue badge (R7.8)', () => {
+    setupProjectMocks({ project_deadline: '2020-01-01', archived_at: '2026-10-28T10:00:00Z' })
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    expect(screen.queryByLabelText(/^overdue:/i)).toBeNull()
+  })
+
+  it('active project with a past deadline shows the overdue badge', () => {
+    setupProjectMocks({ project_deadline: '2020-01-01' })
+    render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    expect(screen.getByLabelText(/^overdue:/i)).toBeTruthy()
+  })
 })
