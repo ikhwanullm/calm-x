@@ -1194,7 +1194,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Dashboard shows "Last weekly review today"
     - _Requirements: R10.10, R10.11, R10.13_
 
-  - [ ] 9.13 Property test: Weekly Review Action Persistence (P16)
+  - [x] 9.13 Property test: Weekly Review Action Persistence (P16)
     - **Property 16: Weekly Review Action Persistence**
     - Test that actions performed during Weekly Review are persisted immediately
     - Test that exiting without completing still preserves task changes
