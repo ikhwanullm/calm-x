@@ -1312,7 +1312,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Phase 11: Polish & Accessibility
-  - [ ] 11.1 Implement focus trap for dialogs and drawers
+- [x] 11.1 Implement focus trap for dialogs and drawers
     - Tab cycles within dialog/drawer when open
     - Focus returns to trigger element when closed
     - _Requirements: R15.7; ui-guidelines.md §6_

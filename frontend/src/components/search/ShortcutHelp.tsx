@@ -1,11 +1,11 @@
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogFooter,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { Kbd } from "@/components/common"
 
 const GLOBAL_SHORTCUTS = [
@@ -23,7 +23,7 @@ const REVIEW_SHORTCUTS = [
   { key: "C", description: "Complete (Inbox step)" },
   { key: "D", description: "Delete (with confirmation)" },
   { key: "S", description: "Skip, keep in Inbox" },
-  { key: "→", description: "Go to next step" },
+  { key: "\u2192", description: "Go to next step" },
 ]
 
 interface ShortcutHelpProps {
@@ -39,11 +39,11 @@ export function ShortcutHelp({ open, onOpenChange, reviewMode = false }: Shortcu
     : GLOBAL_SHORTCUTS
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-sm">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Keyboard shortcuts</AlertDialogTitle>
-        </AlertDialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Keyboard shortcuts</DialogTitle>
+        </DialogHeader>
 
         <ul className="space-y-2 mt-2" aria-label="Keyboard shortcuts">
           {shortcuts.map(({ key, description }) => (
@@ -54,10 +54,17 @@ export function ShortcutHelp({ open, onOpenChange, reviewMode = false }: Shortcu
           ))}
         </ul>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel>Close</AlertDialogCancel>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        <DialogFooter>
+          <DialogClose asChild>
+            <button
+              type="button"
+              className="h-9 px-4 rounded-control border border-border bg-surface text-text text-sm font-medium hover:bg-surface-2"
+            >
+              Close
+            </button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

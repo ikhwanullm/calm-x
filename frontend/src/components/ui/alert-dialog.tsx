@@ -10,7 +10,7 @@ const btnBase = [
   'focus-visible:outline-2 focus-visible:outline-offset-2',
   'disabled:opacity-50 disabled:cursor-not-allowed',
 ].join(' ')
-const btnPrimary = 'h11 px-4 bg-accent text-accent-fg hover:opacity-90'
+const btnPrimary = 'h-11 px-4 bg-accent text-accent-fg hover:opacity-90'
 const btnSecondary = 'h-11 px-4 bg-surface text-text border border-border hover:bg-surface-2 mt-2 sm:mt-0'
 
 const AlertDialog = AlertDialogPrimitive.Root
