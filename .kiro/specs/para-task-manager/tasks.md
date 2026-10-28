@@ -1156,7 +1156,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Actions per task: Move to project (select), Move to area (select), Mark complete, Delete, Skip
     - _Requirements: R10.3_
 
-  - [ ] 9.7 Implement Projects review step
+  - [x] 9.7 Implement Projects review step
     - Show one project at a time with done/total tasks, progress bar, "Updated X days ago"
     - Per task actions: Keep, Update due date, Complete, Delete
     - Per project actions: Mark complete, Archive
