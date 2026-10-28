@@ -110,13 +110,13 @@ export function AppShell() {
   })
 
   return (
-    <div className="flex min-h-screen bg-bg">
-      {/* Sidebar */}
+    <div className="flex h-screen overflow-hidden bg-bg">
+      {/* Sidebar — sticky full-height, scrollable if content exceeds viewport */}
       <aside
-        className="flex flex-col bg-surface border-r border-border shrink-0 xl:w-[232px] w-16"
+        className="flex flex-col bg-surface border-r border-border shrink-0 xl:w-[232px] w-16 overflow-y-auto"
         aria-label="Sidebar"
       >
-        <div className="flex items-center xl:justify-start justify-center h-14 px-3 xl:px-4 border-b border-border">
+        <div className="flex items-center xl:justify-start justify-center h-14 px-3 xl:px-4 border-b border-border shrink-0">
           <span className="xl:block hidden text-base font-semibold text-text tracking-tight">Calm-X</span>
           <span className="xl:hidden block text-base font-semibold text-accent">X</span>
         </div>
@@ -127,7 +127,7 @@ export function AppShell() {
           ))}
         </nav>
 
-        <div className="border-t border-border p-2 flex flex-col gap-1">
+        <div className="border-t border-border p-2 flex flex-col gap-1 mt-auto shrink-0">
           <nav aria-label="Secondary">
             {SECONDARY_NAV.map((item) => (
               <SidebarNavItem key={item.to} item={item} />
@@ -136,8 +136,8 @@ export function AppShell() {
         </div>
       </aside>
 
-      {/* Main column */}
-      <div className="flex flex-col flex-1 min-w-0">
+      {/* Main column — fills remaining space, scrolls independently */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <header className="flex items-center justify-between h-14 px-6 border-b border-border bg-surface shrink-0">
           <div className="flex items-center gap-2 flex-1 max-w-md">
             <button
@@ -161,7 +161,8 @@ export function AppShell() {
           </button>
         </header>
 
-        <main className="flex-1 p-8">
+        {/* Scrollable main content */}
+        <main className="flex-1 overflow-y-auto p-8">
           <div className="mx-auto max-w-[1240px]">
             <Outlet />
           </div>
