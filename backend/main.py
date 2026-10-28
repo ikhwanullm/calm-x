@@ -126,6 +126,8 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
         app.mount("/assets", StaticFiles(directory=str(assets_path)), name="assets")
 
     # --- Built-in API routers ---
+    from backend.api.search import router as search_router
+    app.include_router(search_router, prefix="/api")
     from backend.api.links import router as links_router
     app.include_router(links_router, prefix="/api")
     from backend.api.links import router as links_router
