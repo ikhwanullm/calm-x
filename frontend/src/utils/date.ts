@@ -93,3 +93,12 @@ export function formatRelativeDate(dateStr: string, today?: string): string {
     ? format(d, 'd MMM')       // "17 Dec"
     : format(d, 'd MMM yyyy')  // "17 Dec 2024"
 }
+
+/**
+ * Format an ISO 8601 datetime string as a human-readable local date + time.
+ * Example: "Wed, 28 Oct 2026 22:30" (in +07:00 for 2026-10-28T15:30Z)
+ */
+export function formatLocalDateTime(isoDatetime: string): string {
+  const d = new Date(isoDatetime)
+  return format(d, 'EEE, d MMM yyyy HH:mm')
+}

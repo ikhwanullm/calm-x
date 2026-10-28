@@ -6,7 +6,7 @@ import { useTheme } from "@/components/ThemeProvider"
 import { ConfirmDialog } from "@/components/common"
 import { notify } from "@/lib/toast"
 import { cn } from "@/lib/utils"
-import { isoToLocalDateStr, formatAbsoluteDate } from "@/utils/date"
+import { isoToLocalDateStr, formatLocalDateTime } from "@/utils/date"
 import type { Tag } from "@/types/models"
 import type { Theme } from "@/components/ThemeProvider"
 
@@ -137,6 +137,8 @@ function DeadlineSection() {
             value={displayValue}
             onChange={e => handleChange(e.target.value)}
             aria-label="Approaching deadline threshold (days)"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? "threshold-error" : undefined}
             className={cn(
               "inline-block w-16 h-8 px-2 mx-1 rounded-control border text-sm text-text bg-surface",
               "focus:outline-2 focus:outline-accent",
@@ -145,7 +147,7 @@ function DeadlineSection() {
           />{" "}
           days are marked as due soon.
         </label>
-        {error && <p className="text-xs text-danger-fg">{error}</p>}
+        {error && <p id="threshold-error" role="alert" className="text-xs text-danger-fg">{error}</p>}
         <p className="text-xs text-muted">Changes take effect immediately (1–30 days).</p>
       </div>
     </section>
@@ -231,8 +233,8 @@ function BackupSection() {
       ) : (
         <ul className="space-y-1.5" aria-label="Backup files">
           {backups.map(b => {
+            const localDateTime = formatLocalDateTime(b.created_at)
             const localDate = isoToLocalDateStr(b.created_at)
-            const absDate = formatAbsoluteDate(localDate)
             return (
               <li
                 key={b.filename}
@@ -240,8 +242,8 @@ function BackupSection() {
               >
                 <span className="text-text font-medium truncate">{b.filename}</span>
                 <span className="text-muted shrink-0 tabular-nums text-xs">
-                  <time dateTime={localDate} title={absDate}>
-                    {absDate}
+                  <time dateTime={localDate} title={localDateTime}>
+                    {localDateTime}
                   </time>
                   {" · "}
                   {formatSize(b.size)}

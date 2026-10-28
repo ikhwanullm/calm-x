@@ -1206,7 +1206,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Verify "Exit review" discards review record but keeps action changes
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Phase 10: Settings, Backup, Import/Export
+- [x] 10. Phase 10: Settings, Backup, Import/Export
   - [x] 10.1 Implement UserPreferenceService (update operations)
     - Extend preference_service.py with `update_preferences(prefs)`
     - Validate approaching_deadline_threshold (1-30)
