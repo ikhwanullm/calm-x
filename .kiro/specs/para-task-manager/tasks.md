@@ -1282,25 +1282,25 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Fall back to localStorage if API unavailable
     - _Requirements: R16.5_
 
-  - [ ] 10.13 Property test: Backup Retention Policy (P17)
+  - [x] 10.13 Property test: Backup Retention Policy (P17)
     - **Property 17: Backup Retention Policy**
     - After backup operation, verify ≤7 backup files exist
     - Oldest files removed first
     - **Validates: Requirements R13.6**
 
-  - [ ] 10.14 Property test: Import Merge Generates New IDs (P18)
+  - [x] 10.14 Property test: Import Merge Generates New IDs (P18)
     - **Property 18: Import Merge Generates New IDs**
     - Import data in merge mode, verify all records get new IDs
     - No conflicts with existing records
     - **Validates: Requirements R13.5**
 
-  - [ ] 10.15 Property test: UTCDateTime Round-Trip Consistency (P24)
+  - [x] 10.15 Property test: UTCDateTime Round-Trip Consistency (P24)
     - **Property 24: UTCDateTime Round-Trip Consistency**
     - Store datetime, reload, verify timezone-aware with tzinfo=timezone.utc
     - Same instant in time preserved
     - **Validates: Requirements R13.1**
 
-  - [ ] 10.16 Property test: CSRF Protection Enforced (P25)
+  - [x] 10.16 Property test: CSRF Protection Enforced (P25)
     - **Property 25: CSRF Protection Enforced**
     - Non-GET request without X-Calm-X: 1 header returns 403
     - **Validates: Requirements R15.3**
