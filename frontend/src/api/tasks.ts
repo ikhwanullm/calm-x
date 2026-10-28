@@ -16,6 +16,7 @@ export const tasksApi = {
     due_start?: string
     due_end?: string
     category?: string
+    scope?: string
   }) =>
     apiClient.get<Task[]>('/tasks', { params }).then(r => r.data),
 

@@ -30,7 +30,7 @@ export function useRenameTag() {
       qc.invalidateQueries({ queryKey: tagKeys.all })
       qc.invalidateQueries({ queryKey: taskKeys.all })
     },
-    onError: (err: Error) => notify.error("Couldn't rename tag. Try again.", err.message),
+    // No global onError: caller handles errors inline (avoids duplicate toasts)
   })
 }
 

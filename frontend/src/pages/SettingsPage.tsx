@@ -28,6 +28,8 @@ function TagsSettings() {
   const [newName, setNewName] = useState("")
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState("")
+  const [renameError, setRenameError] = useState("")
+  const [renameError, setRenameError] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<Tag | null>(null)
 
   function handleCreate(e: React.FormEvent) {
@@ -51,6 +53,7 @@ function TagsSettings() {
   function cancelEdit() {
     setEditingId(null)
     setEditValue("")
+    setRenameError("")
   }
 
   function handleRename(tag: Tag) {
@@ -60,7 +63,7 @@ function TagsSettings() {
       { id: tag.id, payload: { name } },
       {
         onSuccess: () => { cancelEdit(); notify.success(`Renamed to "${name}"`) },
-        onError: (err: Error) => notify.error("Could not rename tag.", err.message),
+        onError: (err: Error) => setRenameError(err.message),
       }
     )
   }
@@ -118,7 +121,7 @@ function TagsSettings() {
                   <input
                     type="text"
                     value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
+                    onChange={(e) => { setEditValue(e.target.value); setRenameError("") }}
                     onKeyDown={(e) => { if (e.key === "Escape") cancelEdit() }}
                     maxLength={50}
                     aria-label="Edit tag name"
@@ -128,6 +131,12 @@ function TagsSettings() {
                       "focus:outline-2 focus:outline-offset-2 focus:outline-accent"
                     )}
                   />
+                  {renameError && (
+                    <span className="text-xs text-danger-fg" role="alert">{renameError}</span>
+                  )}
+                  {renameError && (
+                    <span className="text-xs text-danger-fg" role="alert">{renameError}</span>
+                  )}
                   <button type="submit" className="text-sm text-accent-text hover:underline">Save</button>
                   <button type="button" onClick={cancelEdit} className="text-sm text-muted hover:text-text">Cancel</button>
                 </form>

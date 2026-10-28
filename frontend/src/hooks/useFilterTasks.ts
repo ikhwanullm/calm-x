@@ -16,6 +16,7 @@ export function useFilteredTasks(params: FilterParams, enabled = true) {
     queryKey: ["tasks", "filter", params],
     queryFn: () =>
       tasksApi.list({
+        scope: "all",  // include Inbox + non-archived items when no category filter
         tags,
         priorities,
         due_start: params.dueStart,
