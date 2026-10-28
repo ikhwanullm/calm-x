@@ -1317,7 +1317,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Focus returns to trigger element when closed
     - _Requirements: R15.7; ui-guidelines.md §6_
 
-  - [ ] 11.2 Implement focus management after deletion
+  - [x] 11.2 Implement focus management after deletion
     - After deleting a row, move focus to next row
     - _Requirements: ui-guidelines.md §6_
 
