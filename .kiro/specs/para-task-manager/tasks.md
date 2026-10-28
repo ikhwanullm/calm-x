@@ -1163,7 +1163,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Show stale banner for projects with no updates 30+ days
     - _Requirements: R10.4, R10.5, R10.8_
 
-  - [ ] 9.8 Implement Areas review step
+  - [x] 9.8 Implement Areas review step
     - Show all areas with open task count, next task, overdue badge
     - "Looks good" toggle per area
     - "+ Add task" button
