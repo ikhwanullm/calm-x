@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Clock } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useReviewResources, type ReviewResourceItem } from '@/hooks/useReview'
+import { useReviewResources } from '@/hooks/useReview'
 import { useArchiveItem } from '@/hooks/useItems'
 import { formatRelativeDate, getLocalToday } from '@/utils/date'
 import { useNavigate } from 'react-router-dom'
