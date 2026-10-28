@@ -20,8 +20,10 @@ describe("ShortcutHelp", () => {
   it("calls onOpenChange(false) on Close button", async () => {
     const onChange = vi.fn()
     render(<ShortcutHelp open onOpenChange={onChange} />, { wrapper })
-    const closeBtn = screen.getByRole("button", { name: /close/i })
-    closeBtn.click()
+    // The dialog footer has a "Close" button (DialogClose)
+    const closeBtns = screen.getAllByRole("button", { name: /close/i })
+    // Click the footer Close button (any of them closes the dialog)
+    closeBtns[0].click()
     expect(onChange).toHaveBeenCalledWith(false)
   })
 
