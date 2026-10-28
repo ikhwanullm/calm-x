@@ -1305,7 +1305,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Non-GET request without X-Calm-X: 1 header returns 403
     - **Validates: Requirements R15.3**
 
-- [ ] 10.17 Checkpoint: Settings, Backup, Import/Export complete
+- [x] 10.17 Checkpoint: Settings, Backup, Import/Export complete
   - Change theme and threshold settings, verify persistence
   - Create and list backups
   - Export data to JSON, import with merge and replace modes
