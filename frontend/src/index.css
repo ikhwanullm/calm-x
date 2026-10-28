@@ -14,7 +14,8 @@
   --surface-2: #EFEFEA;
 
   /* Borders */
-  --border: #E3E3DE;
+  --border: #E3E3DE;           /* decorative: card edges, dividers */
+  --border-strong: #8A8A85;    /* WCAG AA ≥3:1 vs --bg: form controls, inputs, selects */
 
   /* Text */
   --text: #1B1B19;
@@ -67,7 +68,8 @@
   --bg: #131312;
   --surface: #1B1B1A;
   --surface-2: #2A2A27;
-  --border: #6A6A67;  /* was #2F2F2C (1.38:1 against --bg); now 3.5:1 — WCAG AA UI boundary */
+  --border: #2F2F2C;            /* decorative: card edges, dividers */
+  --border-strong: #6A6A67;    /* WCAG AA ≥3:1 vs --bg: form controls, inputs, selects */
   --text: #ECECE8;
   --muted: #A6A6A0;
   --accent: #8EA2FF;
@@ -102,3 +104,12 @@ body {
   outline-offset: 2px;
 }
 
+
+/* WCAG AA 3:1 border for form controls (--border-strong).
+   Applies to raw elements and Tailwind's [border-color:*] utility.
+   Explicit border-color utilities in components override this. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]),
+select,
+textarea {
+  border-color: var(--border-strong);
+}

@@ -57,7 +57,8 @@ const LIGHT = {
   bg: '#F6F6F3',
   surface: '#FFFFFF',
   surface2: '#EFEFEA',
-  border: '#E3E3DE',
+  border: '#E3E3DE',         // Decorative borders (cards, dividers) — 1.2:1 (see note)
+  borderStrong: '#8A8A85',   // NEW: form control borders — ≥3.0:1 vs light --bg
   text: '#1B1B19',
   muted: '#5C5C57',
   accent: '#3B5BDB',
@@ -76,7 +77,8 @@ const DARK = {
   bg: '#131312',
   surface: '#1B1B1A',
   surface2: '#2A2A27',
-  border: '#6A6A67',   // Updated from #2F2F2C (was 1.38:1 → fails) to 3.5:1 — WCAG AA fix
+  border: '#2F2F2C',        // Reverted: decorative borders (cards, dividers)
+  borderStrong: '#6A6A67',  // NEW: form control borders — 3.5:1 vs dark --bg
   text: '#ECECE8',
   muted: '#A6A6A0',
   accent: '#8EA2FF',
@@ -192,22 +194,37 @@ describe('WCAG AA contrast ratios', () => {
     assertNormalText(DARK.text, DARK.surface2, 'dark text/surface-2')
   })
 
-  // ── Border/UI boundaries (≥ 3:1 required) ───────────────────────────────
+  // ── Border/UI boundaries ────────────────────────────────────────────────
 
-  it('light: --border on --bg (UI boundary — known limitation: 1.2:1, shadow provides secondary cue)', () => {
-    // Light mode card borders are supplemented by --shadow for visual distinction.
-    // Full 3:1 border contrast would require a medium-gray border that conflicts
-    // with the calm aesthetic. Documented as a known limitation.
+  it('light: --border on --bg (decorative — 1.2:1, compensated by card shadow)', () => {
     const ratio = contrastRatio(LIGHT.border, LIGHT.bg)
-    // We verify it is at least 1:1 (not a regression) and note the actual value
     expect(ratio).toBeGreaterThan(1.0)
     // eslint-disable-next-line no-console
-    console.info(`Light border/bg: ${ratio.toFixed(2)}:1 (below AA 3:1; compensated by card shadow)`)
+    console.info(`Light --border/bg: ${ratio.toFixed(2)}:1 (decorative; cards also have --shadow)`)
   })
 
-  it('dark: --border on --bg (updated to #6A6A67 for WCAG AA ≥ 3:1)', () => {
-    // Dark mode has no shadow (--shadow: none), so border is sole visual cue.
-    // Updated from #2F2F2C (1.38:1 fail) to #6A6A67 (3.5:1 pass).
-    assertLargeOrUI(DARK.border, DARK.bg, 'dark border/bg')
+  it('dark: --border on --bg (decorative — restored to #2F2F2C)', () => {
+    // Decorative border — cards/dividers. 1.38:1, below 3:1 for UI boundaries.
+    // Form controls use --border-strong instead.
+    const ratio = contrastRatio(DARK.border, DARK.bg)
+    expect(ratio).toBeGreaterThan(1.0)
+    // eslint-disable-next-line no-console
+    console.info(`Dark --border/bg: ${ratio.toFixed(2)}:1 (decorative; form controls use --border-strong)`)
+  })
+
+  it('light: --border-strong on --bg (form controls — WCAG AA ≥3:1)', () => {
+    assertLargeOrUI(LIGHT.borderStrong, LIGHT.bg, 'light border-strong/bg')
+  })
+
+  it('light: --border-strong on --surface (form controls inside cards)', () => {
+    assertLargeOrUI(LIGHT.borderStrong, LIGHT.surface, 'light border-strong/surface')
+  })
+
+  it('dark: --border-strong on --bg (form controls — WCAG AA ≥3:1)', () => {
+    assertLargeOrUI(DARK.borderStrong, DARK.bg, 'dark border-strong/bg')
+  })
+
+  it('dark: --border-strong on --surface', () => {
+    assertLargeOrUI(DARK.borderStrong, DARK.surface, 'dark border-strong/surface')
   })
 })
