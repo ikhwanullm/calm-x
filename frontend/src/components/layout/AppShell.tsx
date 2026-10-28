@@ -51,6 +51,7 @@ function SidebarNavItem({ item, inboxCount }: { item: NavItem; inboxCount?: numb
       to={item.to}
       end={item.end}
       aria-label={item.label}
+      title={item.label}
       className={({ isActive }) =>
         cn(
           "relative flex items-center gap-3 rounded-control px-3 h-11",

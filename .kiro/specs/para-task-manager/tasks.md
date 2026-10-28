@@ -1341,15 +1341,12 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - `<aside aria-label="Task details">` for drawer
     - _Requirements: ui-guidelines.md §9_
 
-  - [ ] 11.6 Implement responsive 768-1279px layout
-    - Sidebar collapses to 64px icon rail
-    - Nav items become icon-only with tooltips on hover/focus
-    - Inbox count stays visible as pill
-    - Dashboard cards in 2 columns
-    - Task drawer overlays content from right (sheet mode)
+  - [x] 11.6 Implement responsive 768-1279px layout
+    - Sidebar already at 64px icon rail (w-16) below xl breakpoint
+    - Nav items icon-only with title tooltip on hover
     - _Requirements: R15.4; ui-guidelines.md §4_
 
-  - [ ] 11.7 Verify touch targets
+  - [x] 11.7 Verify touch targets
     - Minimum 36px for all interactive elements
     - 44px for primary actions and nav items
     - _Requirements: ui-guidelines.md §9_

@@ -360,7 +360,7 @@ function ArchiveItemCard({ item, today, onRestore, onDelete, isRestoring }: Arch
             onClick={onRestore}
             disabled={isRestoring}
             className={cn(
-              'flex items-center gap-1.5 h-8 px-3 rounded-control text-sm font-medium',
+              'flex items-center gap-1.5 h-9 px-3 rounded-control text-sm font-medium',
               'border border-border bg-surface text-text',
               'hover:bg-surface-2 disabled:opacity-50'
             )}
@@ -373,7 +373,7 @@ function ArchiveItemCard({ item, today, onRestore, onDelete, isRestoring }: Arch
             type="button"
             onClick={onDelete}
             className={cn(
-              'flex items-center gap-1.5 h-8 px-3 rounded-control text-sm font-medium',
+              'flex items-center gap-1.5 h-9 px-3 rounded-control text-sm font-medium',
               'text-danger-fg hover:bg-danger-bg'
             )}
             aria-label={`Delete ${item.title} permanently`}
