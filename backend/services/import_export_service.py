@@ -199,7 +199,114 @@ def validate_export_data(data: Any) -> dict:
     for key in _REQUIRED_TOP_KEYS - {"schema_version"}:
         _require_list(data, key)
 
+    # Per-record field validation
+    _validate_record_fields(data)
+
     return data
+
+
+_VALID_TYPES = frozenset({"project", "area", "resource"})
+_VALID_PRIORITIES = frozenset({"high", "medium", "low"})
+_VALID_PROJECT_STATUSES = frozenset({"active", "completed", None})
+
+
+def _validate_record_fields(data: dict) -> None:
+    """Validate field values on every record — length limits, enums, etc.
+
+    This prevents CHECK constraint 500 errors during write and gives clear
+    field-level 400 responses instead.
+    """
+    # ── Items ──────────────────────────────────────────────────────────────
+    for r in data["items"]:
+        ctx = f"items[id={r.get('id')}]"
+        item_type = r.get("type")
+        if item_type not in _VALID_TYPES:
+            raise ImportValidationError(f"{ctx}: type must be one of {sorted(_VALID_TYPES)}, got {item_type!r}")
+        title = r.get("title", "")
+        if not isinstance(title, str) or not title.strip() or len(title) > 200:
+            raise ImportValidationError(f"{ctx}: title must be a non-empty string ≤ 200 chars")
+        if len(r.get("description", "")) > 5000:
+            raise ImportValidationError(f"{ctx}: description must be ≤ 5000 chars")
+        if len(r.get("notes", "")) > 10000:
+            raise ImportValidationError(f"{ctx}: notes must be ≤ 10000 chars")
+        if item_type == "project":
+            goal = r.get("project_goal")
+            if goal is not None and len(goal) > 500:
+                raise ImportValidationError(f"{ctx}: project_goal must be ≤ 500 chars")
+            status = r.get("project_status")
+            if status is not None and status not in ("active", "completed"):
+                raise ImportValidationError(f"{ctx}: project_status must be 'active' or 'completed'")
+        if item_type == "area":
+            notes = r.get("area_maintenance_notes")
+            if notes is not None and len(notes) > 1000:
+                raise ImportValidationError(f"{ctx}: area_maintenance_notes must be ≤ 1000 chars")
+
+    # ── Tasks ──────────────────────────────────────────────────────────────
+    for r in data["tasks"]:
+        ctx = f"tasks[id={r.get('id')}]"
+        title = r.get("title", "")
+        if not isinstance(title, str) or not title.strip() or len(title) > 200:
+            raise ImportValidationError(f"{ctx}: title must be a non-empty string ≤ 200 chars")
+        priority = r.get("priority", "medium")
+        if priority not in _VALID_PRIORITIES:
+            raise ImportValidationError(f"{ctx}: priority must be one of {sorted(_VALID_PRIORITIES)}, got {priority!r}")
+        if len(r.get("description", "")) > 5000:
+            raise ImportValidationError(f"{ctx}: description must be ≤ 5000 chars")
+        if len(r.get("notes", "")) > 10000:
+            raise ImportValidationError(f"{ctx}: notes must be ≤ 10000 chars")
+
+    # ── Subtasks ───────────────────────────────────────────────────────────
+    for r in data["subtasks"]:
+        ctx = f"subtasks[id={r.get('id')}]"
+        title = r.get("title", "")
+        if not isinstance(title, str) or not title.strip() or len(title) > 200:
+            raise ImportValidationError(f"{ctx}: title must be a non-empty string ≤ 200 chars")
+
+    # ── Tags ───────────────────────────────────────────────────────────────
+    for r in data["tags"]:
+        ctx = f"tags[id={r.get('id')}]"
+        name = r.get("name", "")
+        if not isinstance(name, str) or not name.strip() or len(name) > 50:
+            raise ImportValidationError(f"{ctx}: name must be a non-empty string ≤ 50 chars")
+
+    # ── Reference links ────────────────────────────────────────────────────
+    for r in data["reference_links"]:
+        ctx = f"reference_links[id={r.get('id')}]"
+        url = r.get("url", "")
+        if not isinstance(url, str) or not url or len(url) > 2000:
+            raise ImportValidationError(f"{ctx}: url must be a non-empty string ≤ 2000 chars")
+        if not (url.startswith("http://") or url.startswith("https://")):
+            raise ImportValidationError(f"{ctx}: url must start with http:// or https://")
+
+    # ── Templates ──────────────────────────────────────────────────────────
+    for r in data["templates"]:
+        ctx = f"templates[id={r.get('id')}]"
+        title = r.get("title", "")
+        if not isinstance(title, str) or not title.strip() or len(title) > 100:
+            raise ImportValidationError(f"{ctx}: title must be a non-empty string ≤ 100 chars")
+        if len(r.get("description", "")) > 500:
+            raise ImportValidationError(f"{ctx}: description must be ≤ 500 chars")
+
+    # ── Template tasks ─────────────────────────────────────────────────────
+    for r in data["template_tasks"]:
+        ctx = f"template_tasks[id={r.get('id')}]"
+        title = r.get("title", "")
+        if not isinstance(title, str) or not title.strip() or len(title) > 200:
+            raise ImportValidationError(f"{ctx}: title must be a non-empty string ≤ 200 chars")
+        priority = r.get("priority", "medium")
+        if priority not in _VALID_PRIORITIES:
+            raise ImportValidationError(f"{ctx}: priority must be one of {sorted(_VALID_PRIORITIES)}, got {priority!r}")
+        rel_days = r.get("relative_days", 0)
+        if not isinstance(rel_days, (int, float)) or int(rel_days) < 0 or int(rel_days) > 365:
+            raise ImportValidationError(f"{ctx}: relative_days must be 0–365, got {rel_days!r}")
+        if len(r.get("description", "")) > 5000:
+            raise ImportValidationError(f"{ctx}: description must be ≤ 5000 chars")
+
+    # ── Weekly reviews ─────────────────────────────────────────────────────
+    for r in data["weekly_reviews"]:
+        ctx = f"weekly_reviews[id={r.get('id')}]"
+        if len(r.get("notes", "")) > 500:
+            raise ImportValidationError(f"{ctx}: notes must be ≤ 500 chars")
 
 
 def _validate_import_refs(data: dict) -> None:
