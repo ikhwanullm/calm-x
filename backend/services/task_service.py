@@ -214,6 +214,8 @@ def delete_task(session: Session, task_id: int) -> None:
     parent = session.get(Item, task.item_id) if task.item_id else None
     guard_task_item_not_archived(parent)
     item_id = task.item_id
+    from backend.services.undo_service import record_task_deletion
+    record_task_deletion(session, task)
     session.delete(task)
     session.flush()
     # Update parent item timestamp

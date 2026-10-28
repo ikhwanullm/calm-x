@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db_session
 from backend.schemas.task import SubtaskCreate, SubtaskResponse, SubtaskUpdate
-from backend.services import subtask_service
+from backend.services import subtask_service, undo_service
 
 router = APIRouter(tags=["subtasks"])
 SessionDep = Annotated[Session, Depends(get_db_session)]
@@ -22,6 +22,14 @@ def list_subtasks(task_id: int, session: SessionDep):
 @router.post("/tasks/{task_id}/subtasks", response_model=SubtaskResponse, status_code=201)
 def create_subtask(task_id: int, data: SubtaskCreate, session: SessionDep):
     subtask = subtask_service.create_subtask(session, task_id, data)
+    session.commit()
+    return subtask
+
+
+@router.post("/subtasks/{subtask_id}/restore", response_model=SubtaskResponse, status_code=201)
+def restore_subtask(subtask_id: int, session: SessionDep):
+    """Undo the deletion of a subtask."""
+    subtask = undo_service.restore_subtask(session, subtask_id)
     session.commit()
     return subtask
 

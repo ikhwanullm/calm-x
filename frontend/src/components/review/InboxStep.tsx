@@ -323,7 +323,7 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
         open={deleteConfirmTaskId !== null}
         onOpenChange={open => { if (!open) setDeleteConfirmTaskId(null) }}
         title="Delete task"
-        description={`Delete "${deleteConfirmTask?.title ?? 'this task'}"? This cannot be undone.`}
+        description={`Delete "${deleteConfirmTask?.title ?? 'this task'}"? You can undo it from the message that appears.`}
         confirmLabel="Delete task"
         onConfirm={handleDeleteConfirm}
         destructive

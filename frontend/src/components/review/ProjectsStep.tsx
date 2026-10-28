@@ -150,7 +150,7 @@ export function ProjectsStep({ onCompleted, onUpdatedDueDate, onArchived }: Proj
         open={deleteConfirmTaskId !== null}
         onOpenChange={open => { if (!open) setDeleteConfirmTaskId(null) }}
         title="Delete task"
-        description="This task will be permanently deleted."
+        description="This task and its subtasks will be deleted. You can undo it from the message that appears."
         confirmLabel="Delete task"
         onConfirm={() => { if (deleteConfirmTaskId) handleDeleteTask(deleteConfirmTaskId) }}
         destructive

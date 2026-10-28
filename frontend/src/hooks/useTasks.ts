@@ -91,15 +91,42 @@ export function useUpdateTask(id: number) {
   })
 }
 
+/** How long the Undo button stays on screen after a delete. */
+export const UNDO_TOAST_MS = 8000
+
 export function useDeleteTask() {
   const qc = useQueryClient()
+
+  function refreshAll() {
+    qc.invalidateQueries({ queryKey: taskKeys.all })
+    qc.invalidateQueries({ queryKey: itemKeys.all })
+    qc.invalidateQueries({ queryKey: dashboardKeys.all })
+  }
+
+  async function undo(id: number, previousItemId: number | null | undefined) {
+    try {
+      const restored = await tasksApi.restore(id)
+      refreshAll()
+      notify.success(
+        restored.item_id === null && previousItemId
+          ? 'Task restored to the Inbox (its project or area is no longer available)'
+          : 'Task restored'
+      )
+    } catch (err) {
+      notify.error("Couldn't restore the task.", (err as Error).message)
+    }
+  }
+
   return useMutation({
     mutationFn: (id: number) => tasksApi.delete(id),
-    onSuccess: (_data, id) => {
+    onMutate: (id) => ({ previous: qc.getQueryData<Task>(taskKeys.detail(id)) }),
+    onSuccess: (_data, id, ctx) => {
       qc.removeQueries({ queryKey: taskKeys.detail(id) })
-      qc.invalidateQueries({ queryKey: taskKeys.all })
-      qc.invalidateQueries({ queryKey: itemKeys.all })
-      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+      refreshAll()
+      notify.success('Task deleted', {
+        action: { label: 'Undo', onClick: () => { void undo(id, ctx?.previous?.item_id) } },
+        duration: UNDO_TOAST_MS,
+      })
     },
     onError: (err: Error) => notify.error("Couldn't delete task. Try again.", err.message),
   })

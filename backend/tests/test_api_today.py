@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.api.deps import get_db_session
 from backend.config import Config
-from backend.database import Base, get_engine, _run_migrations
+from backend.database import Base, get_engine
 from backend.main import create_app
 
 HEADERS = {"X-Calm-X": "1"}
@@ -166,7 +166,7 @@ def test_migration_005_adds_columns_without_touching_rows(tmp_path):
     con.commit()
     con.close()
 
-    _run_migrations(url)
+    command.upgrade(cfg, "005")
 
     con = sqlite3.connect(db)
     cols = [r[1] for r in con.execute("PRAGMA table_info(tasks)")]

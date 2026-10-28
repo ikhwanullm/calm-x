@@ -4,6 +4,8 @@ import type { ExternalToast } from "sonner"
 export interface NotifyOptions {
   description?: string
   action?: { label: string; onClick: () => void }
+  /** Milliseconds; never below the 3000ms minimum. Use longer for Undo toasts. */
+  duration?: number
 }
 
 /**
@@ -22,6 +24,7 @@ export const notify = {
     } else if (options != null) {
       opts.description = options.description
       if (options.action) opts.action = options.action
+      if (options.duration) opts.duration = Math.max(3000, options.duration)
     }
     toast.success(message, opts)
   },

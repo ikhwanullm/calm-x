@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { subtasksApi } from '../api/subtasks'
 import { notify } from '../lib/toast'
-import { taskKeys } from './useTasks'
+import { taskKeys, UNDO_TOAST_MS } from './useTasks'
 import type { SubtaskCreatePayload, SubtaskUpdatePayload } from '../types/models'
 import { dashboardKeys } from './useDashboard'
 
@@ -46,12 +46,32 @@ export function useUpdateSubtask() {
 
 export function useDeleteSubtask(taskId: number) {
   const qc = useQueryClient()
+
+  function refresh() {
+    qc.invalidateQueries({ queryKey: subtaskKeys.forTask(taskId) })
+    // Deleting or restoring a subtask can complete or reopen its task (R8 sync)
+    qc.invalidateQueries({ queryKey: taskKeys.all })
+    qc.invalidateQueries({ queryKey: dashboardKeys.all })
+  }
+
+  async function undo(id: number) {
+    try {
+      await subtasksApi.restore(id)
+      refresh()
+      notify.success('Subtask restored')
+    } catch (err) {
+      notify.error("Couldn't restore the subtask.", (err as Error).message)
+    }
+  }
+
   return useMutation({
     mutationFn: (id: number) => subtasksApi.delete(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: subtaskKeys.forTask(taskId) })
-      qc.invalidateQueries({ queryKey: taskKeys.detail(taskId) })
-      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+    onSuccess: (_data, id) => {
+      refresh()
+      notify.success('Subtask deleted', {
+        action: { label: 'Undo', onClick: () => { void undo(id) } },
+        duration: UNDO_TOAST_MS,
+      })
     },
     onError: (err: Error) => notify.error("Couldn't delete subtask. Try again.", err.message),
   })

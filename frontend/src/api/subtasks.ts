@@ -14,6 +14,9 @@ export const subtasksApi = {
   delete: (id: number) =>
     apiClient.delete(`/subtasks/${id}`),
 
+  restore: (id: number) =>
+    apiClient.post<Subtask>(`/subtasks/${id}/restore`).then(r => r.data),
+
   complete: (id: number) =>
     apiClient.post<Subtask>(`/subtasks/${id}/complete`).then(r => r.data),
 

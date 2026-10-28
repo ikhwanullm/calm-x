@@ -42,6 +42,9 @@ export const tasksApi = {
   delete: (id: number) =>
     apiClient.delete(`/tasks/${id}`),
 
+  restore: (id: number) =>
+    apiClient.post<Task>(`/tasks/${id}/restore`).then(r => r.data),
+
   move: (id: number, payload: TaskMovePayload) =>
     apiClient.post<Task>(`/tasks/${id}/move`, payload).then(r => r.data),
 

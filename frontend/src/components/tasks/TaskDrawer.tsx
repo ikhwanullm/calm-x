@@ -474,7 +474,7 @@ export function TaskDrawer({ taskId, onClose, onDeleted }: TaskDrawerProps) {
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         title="Delete task"
-        description="This task will be permanently deleted. This cannot be undone."
+        description="This task and its subtasks will be deleted. You can undo it from the message that appears."
         confirmLabel="Delete task"
         onConfirm={handleDeleteTask}
         destructive

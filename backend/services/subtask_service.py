@@ -123,6 +123,8 @@ def delete_subtask(session: Session, subtask_id: int) -> None:
     task = session.get(Task, subtask.task_id)
     guard_task_item_not_archived(_get_parent_item(session, task))
 
+    from backend.services.undo_service import record_subtask_deletion
+    record_subtask_deletion(session, subtask)
     session.delete(subtask)
     session.flush()
     # R8.x: Re-evaluate task status after deletion

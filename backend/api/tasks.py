@@ -17,7 +17,7 @@ from backend.schemas.task import (
     TaskUpdate,
     TodayResponse,
 )
-from backend.services import task_service
+from backend.services import task_service, undo_service
 from backend.services.filter_service import filter_tasks
 
 class QuickCapturePayload(BaseModel):
@@ -131,6 +131,14 @@ def update_task(task_id: int, data: TaskUpdate, session: SessionDep):
 def delete_task(task_id: int, session: SessionDep):
     task_service.delete_task(session, task_id)
     session.commit()
+
+
+@router.post("/tasks/{task_id}/restore", response_model=TaskResponse, status_code=201)
+def restore_task(task_id: int, session: SessionDep):
+    """Undo the deletion of a task, with its subtasks and tags."""
+    task = undo_service.restore_task(session, task_id)
+    session.commit()
+    return task
 
 
 @router.post("/tasks/{task_id}/move", response_model=TaskResponse)

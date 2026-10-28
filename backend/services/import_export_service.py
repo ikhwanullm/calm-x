@@ -690,6 +690,8 @@ def _delete_all(session: Session) -> None:
         "task_tags", "subtasks", "resource_links", "reference_links",
         "tasks", "items", "tags", "template_tasks", "templates",
         "weekly_reviews", "user_preferences",
+        # Undo snapshots belong to the replaced data and must not resurrect it
+        "undo_entries",
     ):
         session.execute(text(f"DELETE FROM {table}"))
 
