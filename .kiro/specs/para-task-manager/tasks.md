@@ -1252,26 +1252,26 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - POST `/api/import` - Import data with mode parameter
     - _Requirements: R13.4, R13.5_
 
-  - [ ] 10.8 Create Settings page
+  - [x] 10.8 Create Settings page
     - Theme preference: System, Light, Dark radio buttons
     - Apply theme immediately on change
     - Persist to backend UserPreference table
     - _Requirements: R16.5; ui-guidelines.md §3_
 
-  - [ ] 10.9 Implement threshold setting UI
+  - [x] 10.9 Implement threshold setting UI
     - Number input for approaching_deadline_threshold (1-30)
     - Live preview: "Tasks due within X days are marked as due soon"
     - Apply within 100ms of change
     - _Requirements: R16.2, R16.3_
 
-  - [ ] 10.10 Implement Data section in Settings
+  - [x] 10.10 Implement Data section in Settings
     - "Export JSON" button - downloads file
     - "Import JSON" with file picker and mode choice (Merge/Replace)
     - Replace mode: show confirmation with backup note
     - Display file summary before confirming import
     - _Requirements: R13.4, R13.5_
 
-  - [ ] 10.11 Implement Backup list in Settings
+  - [x] 10.11 Implement Backup list in Settings
     - Display backups with dates and sizes
     - "Create backup now" button
     - _Requirements: R13.6_
