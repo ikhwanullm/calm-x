@@ -52,6 +52,11 @@ class ReferenceLinkReorder(BaseModel):
 # Resource Link schemas
 # ---------------------------------------------------------------------------
 
+class ResourceLinkCreate(BaseModel):
+    """Body for POST /resources/{id}/link."""
+    linked_item_id: int
+
+
 class ResourceLinkResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

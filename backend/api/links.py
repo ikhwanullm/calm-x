@@ -12,6 +12,7 @@ from backend.schemas.link import (
     ReferenceLinkCreate,
     ReferenceLinkReorder,
     ReferenceLinkResponse,
+    ResourceLinkCreate,
     ResourceLinkResponse,
     TypeConversionPayload,
     TypeConversionPreview,
@@ -86,11 +87,10 @@ def list_linked_items(resource_id: int, session: SessionDep):
     status_code=201,
 )
 def link_resource(
-    resource_id: int, payload: dict, session: SessionDep
+    resource_id: int, payload: ResourceLinkCreate, session: SessionDep
 ):
     """Link a Resource to a Project or Area."""
-    linked_item_id: int = payload["linked_item_id"]
-    link = resource_link_service.link_resource(session, resource_id, linked_item_id)
+    link = resource_link_service.link_resource(session, resource_id, payload.linked_item_id)
     session.commit()
     return link
 
