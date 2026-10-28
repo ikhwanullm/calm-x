@@ -1116,7 +1116,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - WeeklyReview: id, completed_at, notes
     - _Requirements: R10.10, R10.11_
 
-  - [ ] 9.2 Create Pydantic schemas for WeeklyReview
+  - [x] 9.2 Create Pydantic schemas for WeeklyReview
     - WeeklyReviewComplete, WeeklyReviewResponse
     - _Requirements: Field Constraints table_
 
