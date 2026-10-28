@@ -33,9 +33,11 @@ export const router = createBrowserRouter([
       { path: '/archive', element: <ArchivePage /> },
       { path: '/templates', element: <TemplatesPage /> },
       { path: '/templates/:id', element: <TemplateDetailPage /> },
-      { path: '/review', element: <WeeklyReviewPage /> },
       { path: '/settings', element: <SettingsPage /> },
     ...(import.meta.env.DEV ? [{ path: '/dev/components', element: <DevComponentsPage /> }] : []),
     ],
   },
+  // Weekly review uses a focused full-page layout (no sidebar) — route is
+  // outside AppShell per tasks.md Phase 9 note.
+  { path: '/review', element: <WeeklyReviewPage /> },
 ])

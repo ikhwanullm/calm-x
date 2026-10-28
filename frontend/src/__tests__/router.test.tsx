@@ -2,9 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { router } from '../router'
 
 describe('Router configuration', () => {
-  it('has a root layout route', () => {
-    expect(router.routes).toHaveLength(1)
+  it('has a root layout route and a focused review route', () => {
+    // First route: AppShell with children
     expect(router.routes[0].children).toBeDefined()
+    // Second route: /review outside AppShell (focused layout)
+    const reviewRoute = router.routes.find(r => r.path === '/review')
+    expect(reviewRoute).toBeDefined()
   })
 
   it('contains all expected paths', () => {
@@ -16,7 +19,11 @@ describe('Router configuration', () => {
     expect(paths).toContain('/projects/:id')
     expect(paths).toContain('/areas')
     expect(paths).toContain('/archive')
-    expect(paths).toContain('/review')
     expect(paths).toContain('/settings')
+    // /review is at top level (outside AppShell), not in children
+    const reviewInChildren = paths.includes('/review')
+    expect(reviewInChildren).toBe(false)
+    const topLevelReview = router.routes.find(r => r.path === '/review')
+    expect(topLevelReview).toBeDefined()
   })
 })

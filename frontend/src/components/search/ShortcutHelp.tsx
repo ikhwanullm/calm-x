@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Kbd } from "@/components/common"
 
-const SHORTCUTS = [
+const GLOBAL_SHORTCUTS = [
   { key: "Q", description: "Open Quick capture" },
   { key: "/", description: "Open command palette" },
   { key: "Ctrl+K", description: "Open command palette" },
@@ -17,12 +17,27 @@ const SHORTCUTS = [
   { key: "Enter", description: "Activate focused element / submit form" },
 ]
 
+const REVIEW_SHORTCUTS = [
+  { key: "P", description: "Move to project (Inbox step)" },
+  { key: "A", description: "Move to area (Inbox step)" },
+  { key: "C", description: "Complete (Inbox step)" },
+  { key: "D", description: "Delete (with confirmation)" },
+  { key: "S", description: "Skip, keep in Inbox" },
+  { key: "→", description: "Go to next step" },
+]
+
 interface ShortcutHelpProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** If true, show review-specific shortcuts in addition to global ones */
+  reviewMode?: boolean
 }
 
-export function ShortcutHelp({ open, onOpenChange }: ShortcutHelpProps) {
+export function ShortcutHelp({ open, onOpenChange, reviewMode = false }: ShortcutHelpProps) {
+  const shortcuts = reviewMode
+    ? [...GLOBAL_SHORTCUTS, ...REVIEW_SHORTCUTS]
+    : GLOBAL_SHORTCUTS
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="sm:max-w-sm">
@@ -31,7 +46,7 @@ export function ShortcutHelp({ open, onOpenChange }: ShortcutHelpProps) {
         </AlertDialogHeader>
 
         <ul className="space-y-2 mt-2" aria-label="Keyboard shortcuts">
-          {SHORTCUTS.map(({ key, description }) => (
+          {shortcuts.map(({ key, description }) => (
             <li key={key} className="flex items-center justify-between gap-4">
               <span className="text-sm text-text">{description}</span>
               <Kbd>{key}</Kbd>

@@ -1144,7 +1144,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - GET `/api/weekly-review/history` - Past reviews
     - _Requirements: R10.1, R10.3, R10.4, R10.5, R10.6, R10.7, R10.8, R10.10, R10.13_
 
-  - [ ] 9.5 Create Weekly Review page with focused layout
+  - [x] 9.5 Create Weekly Review page with focused layout
     - No sidebar, full-width layout
     - Top bar: "Weekly review · Started today", "Changes save as you go.", "Exit review" button
     - Stepper showing 5 steps: Inbox, Projects, Areas, Resources, Summary
