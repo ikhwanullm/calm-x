@@ -8,7 +8,15 @@ import type {
 } from '../types/models'
 
 export const tasksApi = {
-  list: (params?: { item_id?: number; include_complete?: boolean }) =>
+  list: (params?: {
+    item_id?: number
+    include_complete?: boolean
+    tags?: string
+    priorities?: string
+    due_start?: string
+    due_end?: string
+    category?: string
+  }) =>
     apiClient.get<Task[]>('/tasks', { params }).then(r => r.data),
 
   inbox: () =>
