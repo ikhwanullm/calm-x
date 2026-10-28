@@ -1321,7 +1321,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - After deleting a row, move focus to next row
     - _Requirements: ui-guidelines.md §6_
 
-  - [ ] 11.3 Verify contrast in both themes
+  - [x] 11.3 Verify contrast in both themes
     - Body text ≥ 4.5:1 contrast ratio
     - Large text and UI boundaries ≥ 3:1
     - Verify all status colors meet requirements

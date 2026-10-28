@@ -41,7 +41,6 @@ export function TaskRow({
         !isSelected && 'hover:bg-surface-2',
         task.is_complete && 'opacity-75',
       )}
-      role="row"
     >
       {/* Drag handle */}
       {isDraggable && (
