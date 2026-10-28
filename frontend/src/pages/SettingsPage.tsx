@@ -29,7 +29,7 @@ function TagsSettings() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState("")
   const [renameError, setRenameError] = useState("")
-  const [renameError, setRenameError] = useState("")
+
   const [deleteTarget, setDeleteTarget] = useState<Tag | null>(null)
 
   function handleCreate(e: React.FormEvent) {
