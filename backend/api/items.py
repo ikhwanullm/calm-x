@@ -1,13 +1,14 @@
 """FastAPI router for Items (Projects, Areas, Resources)."""
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from typing import Annotated, Literal, Optional, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db_session
+from backend.exceptions import ValidationError
 from backend.schemas.item import (
     AreaCreate,
     AreaResponse,
@@ -41,26 +42,23 @@ def list_items(
     include_archived: bool = Query(default=False),
     archived: Optional[Literal["only"]] = Query(default=None, description="Set to 'only' to return only archived items"),
     q: Optional[str] = Query(default=None, max_length=200, description="Search query for title/description"),
-    archived_from: Optional[date] = Query(default=None, description="Filter archived items from this date (inclusive, client local date)"),
-    archived_to: Optional[date] = Query(default=None, description="Filter archived items to this date (inclusive, client local date)"),
+    archived_from: Optional[datetime] = Query(default=None, description="Filter archived items from this datetime (ISO 8601 with tz offset, e.g. 2026-10-28T00:00:00+07:00)"),
+    archived_to: Optional[datetime] = Query(default=None, description="Filter archived items to this datetime (ISO 8601 with tz offset, e.g. 2026-10-28T23:59:59+07:00)"),
 ):
     """List items. Filter by type and/or include archived.
 
-    For archive view, use `archived=only` to get only archived items sorted by archive date.
-    Search with `q` parameter searches title and description.
-    Date filters `archived_from`/`archived_to` filter by archive date (client local dates).
+    For archive view, use ``archived=only`` to get only archived items sorted by archive date.
+    Search with ``q`` parameter searches title and description.
+    Date filters ``archived_from``/``archived_to`` accept ISO 8601 datetime strings with timezone
+    offset (e.g. ``2026-10-28T00:00:00+07:00``) so the server can compare correctly in UTC.
     """
     # Determine archived-only mode
     archived_only = archived == "only"
 
-    # Validate date range filters - they only make sense with archived items
+    # Validate date range filters — they only make sense with archived items
     if (archived_from or archived_to) and not archived_only and not include_archived:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": "archived_from and archived_to require archived=only or include_archived=true",
-                "type": "validation_error",
-            },
+        raise ValidationError(
+            "archived_from and archived_to require archived=only or include_archived=true"
         )
 
     items_with_counts = item_service.list_items(
@@ -80,23 +78,29 @@ def list_items(
             if search_term in item.title.lower() or search_term in (item.description or "").lower()
         ]
 
-    # Apply archived date range filter if provided (convert local dates to UTC boundaries)
+    # Apply archived datetime range filter.
+    # archived_from/archived_to are timezone-aware datetimes (sent by frontend with tz offset).
+    # item.archived_at is always UTC-aware (from UTCDateTime TypeDecorator).
+    # Naive datetimes (no tzinfo) are treated as UTC to be safe.
+    def _to_utc(dt: datetime) -> datetime:
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+
     if archived_from:
-        # Start of day in client local time -> treat as UTC start of day
-        from_dt = datetime(archived_from.year, archived_from.month, archived_from.day, 0, 0, 0, tzinfo=timezone.utc)
+        from_utc = _to_utc(archived_from)
         items_with_counts = [
             (item, total, completed)
             for item, total, completed in items_with_counts
-            if item.archived_at and item.archived_at >= from_dt
+            if item.archived_at and item.archived_at >= from_utc
         ]
 
     if archived_to:
-        # End of day in client local time -> treat as UTC end of day (23:59:59.999999)
-        to_dt = datetime(archived_to.year, archived_to.month, archived_to.day, 23, 59, 59, 999999, tzinfo=timezone.utc)
+        to_utc = _to_utc(archived_to)
         items_with_counts = [
             (item, total, completed)
             for item, total, completed in items_with_counts
-            if item.archived_at and item.archived_at <= to_dt
+            if item.archived_at and item.archived_at <= to_utc
         ]
 
     return [item_to_response(item, task_count=total, completed_task_count=completed)

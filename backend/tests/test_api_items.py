@@ -362,8 +362,11 @@ def test_archive_filter_by_type(client):
 
 
 def test_archive_filter_by_date_range(client):
-    """Filter archived items by date range."""
-    import time
+    """Filter archived items by date range.
+
+    Filters now accept ISO 8601 datetime strings with timezone offset so the
+    server can compare correctly in UTC regardless of the client's timezone.
+    """
     from datetime import date, timedelta
 
     today = date.today()
@@ -374,18 +377,18 @@ def test_archive_filter_by_date_range(client):
     p1 = client.post("/api/items", json={"type": "project", "title": "P1"}, headers=HEADERS).json()
     client.post(f"/api/items/{p1['id']}/archive", headers=HEADERS)
 
-    # Filter: archived from today - should include the item
-    resp = client.get(f"/api/items?archived=only&archived_from={today.isoformat()}")
+    # Filter: archived from start of today UTC — should include the item
+    resp = client.get(f"/api/items?archived=only&archived_from={today.isoformat()}T00:00:00Z")
     assert resp.status_code == 200
     assert len(resp.json()) == 1
 
-    # Filter: archived to yesterday - should exclude the item (archived today)
-    resp = client.get(f"/api/items?archived=only&archived_to={yesterday.isoformat()}")
+    # Filter: archived to end of yesterday UTC — should exclude the item (archived today)
+    resp = client.get(f"/api/items?archived=only&archived_to={yesterday.isoformat()}T23:59:59Z")
     assert resp.status_code == 200
     assert len(resp.json()) == 0
 
-    # Filter: archived to tomorrow - should include the item
-    resp = client.get(f"/api/items?archived=only&archived_to={tomorrow.isoformat()}")
+    # Filter: archived to end of tomorrow UTC — should include the item
+    resp = client.get(f"/api/items?archived=only&archived_to={tomorrow.isoformat()}T23:59:59Z")
     assert resp.status_code == 200
     assert len(resp.json()) == 1
 
@@ -394,12 +397,15 @@ def test_archive_date_filter_requires_archived_mode(client):
     """archived_from/archived_to require archived=only or include_archived=true."""
     from datetime import date
 
-    today = date.today().isoformat()
+    today_iso = f"{date.today().isoformat()}T00:00:00Z"
 
-    # Without archived mode - should fail
-    resp = client.get(f"/api/items?archived_from={today}")
+    # Without archived mode - should fail with CalmX ValidationError (not HTTPException)
+    resp = client.get(f"/api/items?archived_from={today_iso}")
     assert resp.status_code == 400
-    assert "archived_from" in resp.json()["detail"]["error"]
+    body = resp.json()
+    # CalmX error contract: {"error": "...", "type": "..."}
+    assert "archived_from" in body["error"]
+    assert body["type"] == "validation_error"
 
 
 def test_archive_combined_search_and_filter(client):

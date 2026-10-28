@@ -16,6 +16,51 @@ export function getLocalToday(): string {
 }
 
 /**
+ * Convert an ISO 8601 datetime string (e.g. "2026-10-27T20:00:00Z") to a
+ * YYYY-MM-DD string in the **client's local timezone**.
+ *
+ * Example: "2026-10-27T20:00:00Z" in timezone +07:00 → "2026-10-28"
+ */
+export function isoToLocalDateStr(isoDatetime: string): string {
+  const d = new Date(isoDatetime)          // JS Date in UTC internally
+  const y = d.getFullYear()                // reads local time
+  const mo = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${mo}-${day}`
+}
+
+/**
+ * Return the client's local UTC offset as ±HH:MM (e.g. "+07:00", "-05:30").
+ */
+export function getLocalTzOffset(): string {
+  const offsetMin = -new Date().getTimezoneOffset()   // getTimezoneOffset is inverted
+  const sign = offsetMin >= 0 ? '+' : '-'
+  const h = String(Math.floor(Math.abs(offsetMin) / 60)).padStart(2, '0')
+  const m = String(Math.abs(offsetMin) % 60).padStart(2, '0')
+  return `${sign}${h}:${m}`
+}
+
+/**
+ * Convert a local YYYY-MM-DD date string to a start-of-day ISO 8601 datetime
+ * string with the local timezone offset, ready to send as a query parameter.
+ *
+ * Example in +07:00: "2026-10-28" → "2026-10-28T00:00:00+07:00"
+ */
+export function localDateToStartISO(dateStr: string): string {
+  return `${dateStr}T00:00:00${getLocalTzOffset()}`
+}
+
+/**
+ * Convert a local YYYY-MM-DD date string to an end-of-day ISO 8601 datetime
+ * string with the local timezone offset, ready to send as a query parameter.
+ *
+ * Example in +07:00: "2026-10-28" → "2026-10-28T23:59:59+07:00"
+ */
+export function localDateToEndISO(dateStr: string): string {
+  return `${dateStr}T23:59:59${getLocalTzOffset()}`
+}
+
+/**
  * Format a YYYY-MM-DD date string into a human-readable absolute date.
  * Used for <time title="..."> tooltips.
  * Example: "Thu, 29 Oct 2026"

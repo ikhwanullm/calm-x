@@ -12,7 +12,14 @@ import {
 import { notify } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import type { Item, ItemType } from '@/types/models'
-import { formatAbsoluteDate, formatRelativeDate, getLocalToday } from '@/utils/date'
+import {
+  formatAbsoluteDate,
+  formatRelativeDate,
+  getLocalToday,
+  isoToLocalDateStr,
+  localDateToStartISO,
+  localDateToEndISO,
+} from '@/utils/date'
 
 const TYPE_LABELS: Record<ItemType, string> = {
   project: 'Project',
@@ -61,7 +68,8 @@ export default function ArchivePage() {
   // State for delete confirmation dialog
   const [deleteDialogItem, setDeleteDialogItem] = useState<Item | null>(null)
 
-  // Build API query params
+  // Build API query params — convert local dates to timezone-aware ISO datetimes
+  // so the backend can filter correctly across timezone boundaries.
   const queryParams = useMemo(() => {
     const params: {
       q?: string
@@ -71,8 +79,9 @@ export default function ArchivePage() {
     } = {}
     if (filters.q) params.q = filters.q
     if (filters.type) params.type = filters.type as ItemType
-    if (filters.archived_from) params.archived_from = filters.archived_from
-    if (filters.archived_to) params.archived_to = filters.archived_to
+    // Send as ISO 8601 with local tz offset so server compares in UTC correctly
+    if (filters.archived_from) params.archived_from = localDateToStartISO(filters.archived_from)
+    if (filters.archived_to) params.archived_to = localDateToEndISO(filters.archived_to)
     return params
   }, [filters])
 
@@ -102,9 +111,13 @@ export default function ArchivePage() {
 
   // Restore an item
   async function handleRestore(item: Item) {
+    const route = `/${TYPE_ROUTES[item.type]}/${item.id}`
     try {
       await restoreMutation.mutateAsync(item.id)
-      notify.success('Item restored', `${item.title} has been moved back to ${TYPE_LABELS[item.type]}s.`)
+      notify.success('Item restored', {
+        description: `${item.title} moved back to ${TYPE_LABELS[item.type]}s.`,
+        action: { label: 'Open', onClick: () => { window.location.href = route } },
+      })
     } catch {
       // Error is handled in the hook
     }
@@ -299,9 +312,9 @@ interface ArchiveItemCardProps {
 }
 
 function ArchiveItemCard({ item, today, onRestore, onDelete, isRestoring }: ArchiveItemCardProps) {
-  // Format archived date - item.archived_at is an ISO datetime string
+  // Convert archived_at (UTC ISO datetime) to local YYYY-MM-DD date string
   const archivedDate = item.archived_at
-    ? item.archived_at.split('T')[0]  // Extract YYYY-MM-DD from ISO datetime
+    ? isoToLocalDateStr(item.archived_at)
     : null
 
   const relativeDate = archivedDate ? formatRelativeDate(archivedDate, today) : ''
