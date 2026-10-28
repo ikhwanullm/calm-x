@@ -120,3 +120,75 @@ def test_filter_excludes_archived_item_tasks(client):
     r = client.get(f"/api/tasks?item_id={item_id}").json()
     # Tasks on archived item should NOT appear
     assert len(r) == 0
+
+
+def test_scope_all_returns_inbox_and_item_tasks(client):
+    """Fix 1: scope=all returns tasks from Inbox AND non-archived items."""
+    item_id = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS).json()["id"]
+    inbox_task = client.post("/api/tasks", json={"title": "Inbox T"}, headers=HEADERS).json()
+    item_task = client.post("/api/tasks", json={"title": "Item T", "item_id": item_id}, headers=HEADERS).json()
+    r = client.get("/api/tasks?scope=all")
+    assert r.status_code == 200
+    ids = {t["id"] for t in r.json()}
+    assert inbox_task["id"] in ids
+    assert item_task["id"] in ids
+
+
+def test_scope_all_excludes_archived_item_tasks(client):
+    """Fix 1: scope=all excludes tasks on archived items."""
+    item_id = client.post("/api/items", json={"type": "area", "title": "A"}, headers=HEADERS).json()["id"]
+    task = client.post("/api/tasks", json={"title": "T", "item_id": item_id}, headers=HEADERS).json()
+    client.post(f"/api/items/{item_id}/archive", headers=HEADERS)
+    r = client.get("/api/tasks?scope=all")
+    ids = {t["id"] for t in r.json()}
+    assert task["id"] not in ids
+
+
+def test_tags_invalid_string_returns_400(client):
+    """Fix 4: non-integer tags returns 400."""
+    r = client.get("/api/tasks?tags=abc")
+    assert r.status_code == 400
+    body = r.json()
+    assert "error" in body
+
+
+def test_tags_valid_integers_accepted(client):
+    """Fix 4: valid integer tags accepted."""
+    r = client.get("/api/tasks?tags=1,2,3")
+    assert r.status_code == 200
+
+
+def test_scope_all_returns_inbox_and_item_tasks(client):
+    """Fix 1: scope=all returns tasks from Inbox AND non-archived items."""
+    item_id = client.post("/api/items", json={"type": "project", "title": "P"}, headers=HEADERS).json()["id"]
+    inbox_task = client.post("/api/tasks", json={"title": "Inbox T"}, headers=HEADERS).json()
+    item_task = client.post("/api/tasks", json={"title": "Item T", "item_id": item_id}, headers=HEADERS).json()
+    r = client.get("/api/tasks?scope=all")
+    assert r.status_code == 200
+    ids = {t["id"] for t in r.json()}
+    assert inbox_task["id"] in ids
+    assert item_task["id"] in ids
+
+
+def test_scope_all_excludes_archived_item_tasks(client):
+    """Fix 1: scope=all excludes tasks on archived items."""
+    item_id = client.post("/api/items", json={"type": "area", "title": "A"}, headers=HEADERS).json()["id"]
+    task = client.post("/api/tasks", json={"title": "T", "item_id": item_id}, headers=HEADERS).json()
+    client.post(f"/api/items/{item_id}/archive", headers=HEADERS)
+    r = client.get("/api/tasks?scope=all")
+    ids = {t["id"] for t in r.json()}
+    assert task["id"] not in ids
+
+
+def test_tags_invalid_string_returns_400(client):
+    """Fix 4: non-integer tags returns 400."""
+    r = client.get("/api/tasks?tags=abc")
+    assert r.status_code == 400
+    body = r.json()
+    assert "error" in body
+
+
+def test_tags_valid_integers_accepted(client):
+    """Fix 4: valid integer tags accepted."""
+    r = client.get("/api/tasks?tags=1,2,3")
+    assert r.status_code == 200

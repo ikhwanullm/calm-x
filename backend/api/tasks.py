@@ -46,14 +46,23 @@ def list_all_tasks(
     due_start: Optional[str] = Query(default=None, description="YYYY-MM-DD"),
     due_end: Optional[str] = Query(default=None, description="YYYY-MM-DD"),
     category: Optional[str] = Query(default=None, description="project|area|inbox"),
+    scope: Optional[str] = Query(default=None, description="all: return Inbox + all non-archived items"),
 ):
     """List tasks with optional filters. Supports tag/priority/date/category filtering."""
     # If any filter param provided, use filter service; otherwise use simple list
     has_filters = any([
-        tags, priorities, due_start, due_end, category, item_id is not None,
+        tags, priorities, due_start, due_end, category,
+        item_id is not None, scope == "all",
     ])
     if has_filters:
-        tag_ids = [int(t.strip()) for t in tags.split(",") if t.strip()] if tags else None
+        if tags:
+            try:
+                tag_ids = [int(t.strip()) for t in tags.split(",") if t.strip()]
+            except ValueError:
+                from backend.exceptions import ValidationError as _VE
+                raise _VE("tags must be comma-separated integers", detail="e.g. tags=1,2,3")
+        else:
+            tag_ids = None
         priority_list = [p.strip() for p in priorities.split(",") if p.strip()] if priorities else None
         return filter_tasks(
             session,
