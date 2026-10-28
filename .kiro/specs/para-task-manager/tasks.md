@@ -1044,33 +1044,33 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Permanently delete items with confirmation
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Phase 8: Templates
-  - [ ] 8.1 Create SQLAlchemy models for Templates
+- [x] 8. Phase 8: Templates
+  - [x] 8.1 Create SQLAlchemy models for Templates
     - Template: id, title, description, created_at, updated_at
     - TemplateTask: id, template_id, title, description, priority, relative_days (0-365), sort_order
     - _Requirements: R11.1, R11.2_
 
-  - [ ] 8.2 Create Pydantic schemas for Templates
+  - [x] 8.2 Create Pydantic schemas for Templates
     - TemplateCreate, TemplateUpdate, TemplateResponse
     - TemplateTaskCreate, TemplateTaskResponse
     - Validate 50 task limit per template
     - _Requirements: Field Constraints table, R11.1_
 
-  - [ ] 8.3 Implement TemplateService
+  - [x] 8.3 Implement TemplateService
     - Create `backend/services/template_service.py`
     - Implement `create_template()`, `update_template()`, `delete_template()`
     - Implement `get_template()`, `list_templates()`
     - Validate 50 task limit
     - _Requirements: R11.1, R11.2, R11.5_
 
-  - [ ] 8.4 Implement create project from template
+  - [x] 8.4 Implement create project from template
     - Implement `create_project_from_template(template_id, title, start_date, project_goal, project_deadline)`
     - Copy template data to new project
     - Calculate actual due dates: start_date + relative_days
     - Default start_date to today if not provided
     - _Requirements: R11.3, R11.4_
 
-  - [ ] 8.5 Create Templates API router
+  - [x] 8.5 Create Templates API router
     - Create `backend/api/templates.py`
     - GET `/api/templates` - List templates
     - GET `/api/templates/{id}` - Get template with tasks
@@ -1080,19 +1080,19 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - POST `/api/templates/{id}/create-project` - Create project from template
     - _Requirements: R11.1, R11.3, R11.4_
 
-  - [ ] 8.6 Create Templates page
+  - [x] 8.6 Create Templates page
     - List of templates (title, description, task count)
     - Create, edit, delete templates
     - _Requirements: R11.1_
 
-  - [ ] 8.7 Create Template editor
+  - [x] 8.7 Create Template editor
     - Title and description fields
     - Task list with: title, description, priority, relative day offset (0-365)
     - Drag-and-drop task reordering
     - Add/remove tasks (max 50)
     - _Requirements: R11.1, R11.2_
 
-  - [ ] 8.8 Implement "Create from template" flow
+  - [x] 8.8 Implement "Create from template" flow
     - On "New project", offer "Start from template" or "Blank project"
     - Template selection with preview
     - Editable title (prefilled from template)
@@ -1101,12 +1101,12 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Validation errors inline with data retained
     - _Requirements: R11.3, R11.4, R11.5_
 
-  - [ ] 8.9 Enable "Start from template" in NewItemDialog
+  - [x] 8.9 Enable "Start from template" in NewItemDialog
     - Enable the previously disabled template option in NewItemDialog (task 2.10)
     - When user selects Project type, enable template selection
     - _Requirements: R11.4_
 
-- [ ] 8.10 Checkpoint: Templates complete
+- [x] 8.10 Checkpoint: Templates complete
   - Create, edit, delete templates
   - Create project from template with correct due dates
   - Ensure all tests pass, ask the user if questions arise.

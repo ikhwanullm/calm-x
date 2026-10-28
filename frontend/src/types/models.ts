@@ -210,3 +210,67 @@ export interface TagRenamePayload {
 export function isComplete(task: Task): boolean {
   return task.is_complete
 }
+
+// ---------------------------------------------------------------------------
+// Template
+// ---------------------------------------------------------------------------
+
+export interface TemplateTask {
+  id: number
+  template_id: number
+  title: string
+  description: string
+  priority: Priority
+  relative_days: number
+  sort_order: number
+}
+
+export interface Template {
+  id: number
+  title: string
+  description: string
+  task_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface TemplateDetail extends Template {
+  tasks: TemplateTask[]
+}
+
+// Create/Update payloads
+export interface TemplateTaskCreatePayload {
+  title: string
+  description?: string
+  priority?: Priority
+  relative_days?: number
+}
+
+export interface TemplateTaskUpdatePayload {
+  title?: string
+  description?: string
+  priority?: Priority
+  relative_days?: number
+}
+
+export interface TemplateCreatePayload {
+  title: string
+  description?: string
+  tasks?: TemplateTaskCreatePayload[]
+}
+
+export interface TemplateUpdatePayload {
+  title?: string
+  description?: string
+}
+
+export interface CreateProjectFromTemplatePayload {
+  title: string
+  start_date?: string  // YYYY-MM-DD
+  project_goal?: string | null
+  project_deadline?: string | null  // YYYY-MM-DD
+}
+
+export interface TemplateTaskReorderPayload {
+  task_ids: number[]
+}

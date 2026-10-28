@@ -11,6 +11,7 @@ import ResourcesPage from './pages/ResourcesPage'
 import ResourceDetailPage from './pages/ResourceDetailPage'
 import ArchivePage from './pages/ArchivePage'
 import TemplatesPage from './pages/TemplatesPage'
+import TemplateDetailPage from './pages/TemplateDetailPage'
 import WeeklyReviewPage from './pages/WeeklyReviewPage'
 import SettingsPage from './pages/SettingsPage'
 // DEV-only component gallery for visual verification
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: '/resources/:id', element: <ResourceDetailPage /> },
       { path: '/archive', element: <ArchivePage /> },
       { path: '/templates', element: <TemplatesPage /> },
+      { path: '/templates/:id', element: <TemplateDetailPage /> },
       { path: '/review', element: <WeeklyReviewPage /> },
       { path: '/settings', element: <SettingsPage /> },
     ...(import.meta.env.DEV ? [{ path: '/dev/components', element: <DevComponentsPage /> }] : []),

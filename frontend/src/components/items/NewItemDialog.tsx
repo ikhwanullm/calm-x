@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { format, addDays, parseISO } from 'date-fns'
 import { Button } from '@/components/common/Button'
 import {
   Dialog,
@@ -8,9 +9,11 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useCreateItem } from '@/hooks/useItems'
+import { useTemplates, useTemplate, useCreateProjectFromTemplate } from '@/hooks/useTemplates'
 import { extractApiError } from '@/api/client'
 import type { ItemType } from '@/types/models'
 import { cn } from '@/lib/utils'
+import { getLocalToday } from '@/utils/date'
 
 interface NewItemDialogProps {
   open: boolean
@@ -26,6 +29,8 @@ const TYPE_OPTIONS: { value: ItemType; label: string; description: string }[] = 
   { value: 'resource', label: 'Resource', description: 'Reference material or information' },
 ]
 
+type ProjectMode = 'blank' | 'template'
+
 export function NewItemDialog({
   open,
   onOpenChange,
@@ -35,12 +40,43 @@ export function NewItemDialog({
   const [type, setType] = useState<ItemType>(defaultType)
   const [title, setTitle] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Project-specific state for templates
+  const [projectMode, setProjectMode] = useState<ProjectMode>('blank')
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null)
+  const [startDate, setStartDate] = useState(getLocalToday())
+
   const createItem = useCreateItem()
+  const createFromTemplate = useCreateProjectFromTemplate()
+  const { data: templates } = useTemplates()
+  const { data: selectedTemplate } = useTemplate(selectedTemplateId ?? 0)
+
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      setType(defaultType)
+      setTitle('')
+      setErrors({})
+      setProjectMode('blank')
+      setSelectedTemplateId(null)
+      setStartDate(getLocalToday())
+    }
+  }, [open, defaultType])
+
+  // Auto-fill title from template when selected
+  useEffect(() => {
+    if (selectedTemplate && !title) {
+      setTitle(selectedTemplate.title)
+    }
+  }, [selectedTemplate]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleClose() {
     setTitle('')
     setErrors({})
     setType(defaultType)
+    setProjectMode('blank')
+    setSelectedTemplateId(null)
+    setStartDate(getLocalToday())
     onOpenChange(false)
   }
 
@@ -51,6 +87,9 @@ export function NewItemDialog({
     } else if (title.trim().length > 200) {
       newErrors.title = 'Title must be 200 characters or less'
     }
+    if (type === 'project' && projectMode === 'template' && !selectedTemplateId) {
+      newErrors.template = 'Select a template'
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -58,27 +97,42 @@ export function NewItemDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!validate()) return
+
     try {
-      const item = await createItem.mutateAsync({ type, title: title.trim() })
-      onCreated?.(item.id)
+      if (type === 'project' && projectMode === 'template' && selectedTemplateId) {
+        // Create from template
+        const project = await createFromTemplate.mutateAsync({
+          templateId: selectedTemplateId,
+          payload: {
+            title: title.trim(),
+            start_date: startDate,
+          },
+        })
+        onCreated?.(project.id)
+      } else {
+        // Create blank item
+        const item = await createItem.mutateAsync({ type, title: title.trim() })
+        onCreated?.(item.id)
+      }
       handleClose()
     } catch (err) {
       const apiErr = extractApiError(err)
       if (apiErr.fields) {
-        // Show server validation errors inline under the relevant fields
         const newErrors: Record<string, string> = {}
         for (const [field, messages] of Object.entries(apiErr.fields)) {
           newErrors[field === '' ? 'title' : field] = messages[0] ?? 'Invalid'
         }
         setErrors(newErrors)
       }
-      // notify.error is called by useCreateItem.onError for non-field errors
     }
   }
 
+  const isPending = createItem.isPending || createFromTemplate.isPending
+  const hasTemplates = templates && templates.length > 0
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle>New item</DialogTitle>
         </DialogHeader>
@@ -104,22 +158,147 @@ export function NewItemDialog({
                     name="type"
                     value={opt.value}
                     checked={type === opt.value}
-                    onChange={() => setType(opt.value)}
+                    onChange={() => {
+                      setType(opt.value)
+                      // Reset template mode when switching away from project
+                      if (opt.value !== 'project') {
+                        setProjectMode('blank')
+                        setSelectedTemplateId(null)
+                      }
+                    }}
                     className="mt-0.5 accent-[var(--accent)]"
                   />
                   <span>
                     <span className="text-sm font-medium text-text">{opt.label}</span>
                     <span className="block text-xs text-muted mt-0.5">{opt.description}</span>
-                    {opt.value === 'project' && (
-                      <span className="block text-xs text-muted mt-1 italic">
-                        Start from template — coming soon
-                      </span>
-                    )}
                   </span>
                 </label>
               ))}
             </div>
           </fieldset>
+
+          {/* Project mode selection (only when Project is selected) */}
+          {type === 'project' && (
+            <fieldset className="mb-5">
+              <legend className="text-sm font-semibold text-text mb-2">Start from</legend>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProjectMode('blank')
+                    setSelectedTemplateId(null)
+                    setTitle('')
+                  }}
+                  className={cn(
+                    'flex-1 py-2 px-3 rounded-control border text-sm font-medium',
+                    'transition-colors duration-150',
+                    projectMode === 'blank'
+                      ? 'border-accent bg-accent-soft text-accent-text'
+                      : 'border-border text-muted hover:bg-surface-2'
+                  )}
+                >
+                  Blank project
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProjectMode('template')}
+                  disabled={!hasTemplates}
+                  className={cn(
+                    'flex-1 py-2 px-3 rounded-control border text-sm font-medium',
+                    'transition-colors duration-150',
+                    projectMode === 'template'
+                      ? 'border-accent bg-accent-soft text-accent-text'
+                      : 'border-border text-muted hover:bg-surface-2',
+                    !hasTemplates && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  From template {!hasTemplates && '(none available)'}
+                </button>
+              </div>
+            </fieldset>
+          )}
+
+          {/* Template selection (when mode is template) */}
+          {type === 'project' && projectMode === 'template' && hasTemplates && (
+            <div className="mb-5">
+              <label htmlFor="template-select" className="block text-sm font-medium text-text mb-1.5">
+                Template <span className="text-danger-fg" aria-hidden="true">*</span>
+              </label>
+              <select
+                id="template-select"
+                value={selectedTemplateId ?? ''}
+                onChange={(e) => {
+                  const id = e.target.value ? Number(e.target.value) : null
+                  setSelectedTemplateId(id)
+                  // Clear title when template changes so it auto-fills
+                  if (id) setTitle('')
+                }}
+                aria-invalid={!!errors.template}
+                className={cn(
+                  'w-full h-10 px-3 rounded-control border bg-surface text-text text-sm',
+                  'focus:outline-2 focus:outline-accent focus:outline-offset-0',
+                  errors.template ? 'border-danger-fg' : 'border-border'
+                )}
+              >
+                <option value="">Select a template...</option>
+                {templates?.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title} ({t.task_count} tasks)
+                  </option>
+                ))}
+              </select>
+              {errors.template && (
+                <p role="alert" className="mt-1 text-xs text-danger-fg">
+                  {errors.template}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Start date (when using template) */}
+          {type === 'project' && projectMode === 'template' && selectedTemplateId && (
+            <div className="mb-5">
+              <label htmlFor="start-date" className="block text-sm font-medium text-text mb-1.5">
+                Start date
+              </label>
+              <input
+                id="start-date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className={cn(
+                  'w-full h-10 px-3 rounded-control border border-border bg-surface text-text text-sm',
+                  'focus:outline-2 focus:outline-accent focus:outline-offset-0'
+                )}
+              />
+              <p className="mt-1 text-xs text-muted">
+                Task due dates will be calculated from this date
+              </p>
+            </div>
+          )}
+
+          {/* Live preview of due dates */}
+          {type === 'project' && projectMode === 'template' && selectedTemplate && selectedTemplate.tasks.length > 0 && (
+            <div className="mb-5 p-3 rounded-control bg-surface-2 border border-border">
+              <p className="text-xs font-medium text-text mb-2">Task preview</p>
+              <ul className="space-y-1.5 max-h-32 overflow-y-auto">
+                {selectedTemplate.tasks.slice(0, 5).map((task) => {
+                  const dueDate = addDays(parseISO(startDate), task.relative_days)
+                  return (
+                    <li key={task.id} className="flex items-center justify-between text-xs">
+                      <span className="text-muted truncate mr-2">{task.title}</span>
+                      <span className="text-text shrink-0">{format(dueDate, 'MMM d, yyyy')}</span>
+                    </li>
+                  )
+                })}
+                {selectedTemplate.tasks.length > 5 && (
+                  <li className="text-xs text-muted">
+                    + {selectedTemplate.tasks.length - 5} more tasks
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
 
           {/* Title field */}
           <div className="mb-5">
@@ -162,9 +341,9 @@ export function NewItemDialog({
             <Button
               type="submit"
               variant="primary"
-              disabled={createItem.isPending}
+              disabled={isPending}
             >
-              {createItem.isPending ? 'Creating…' : `Create ${TYPE_OPTIONS.find(o => o.value === type)?.label.toLowerCase()}`}
+              {isPending ? 'Creating…' : `Create ${TYPE_OPTIONS.find(o => o.value === type)?.label.toLowerCase()}`}
             </Button>
           </DialogFooter>
         </form>
