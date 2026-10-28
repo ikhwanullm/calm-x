@@ -148,6 +148,8 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
     app.include_router(templates_router, prefix="/api")
     from backend.api.weekly_review import router as weekly_review_router
     app.include_router(weekly_review_router, prefix="/api")
+    from backend.api.backup import router as backup_router
+    app.include_router(backup_router, prefix="/api")
 
     # --- Extra routers (registered before SPA fallback) ---
     if extra_routers:
@@ -203,6 +205,13 @@ def main() -> None:
 
     # Initialise database (runs migrations)
     init_database(config.absolute_db_path)
+
+    # Startup backup — non-fatal if it fails
+    try:
+        from backend.services.backup_service import check_startup_backup
+        check_startup_backup(config.absolute_db_path, config.absolute_backup_dir)
+    except Exception as exc:
+        logger.warning("Startup backup check raised unexpectedly: %s", exc)
 
     app = create_app(config)
 

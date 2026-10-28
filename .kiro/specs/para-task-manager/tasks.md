@@ -1226,7 +1226,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Implement `cleanup_old_backups()` - keep 7 most recent
     - _Requirements: R13.6_
 
-  - [ ] 10.4 Create Backup API router
+  - [x] 10.4 Create Backup API router
     - Create `backend/api/backup.py`
     - GET `/api/backup/list` - List backups
     - POST `/api/backup/create` - Create manual backup
