@@ -435,7 +435,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Verify delete confirmation dialog appears
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 3. Phase 3: Tasks & Subtasks
+- [x] 3. Phase 3: Tasks & Subtasks
   - [x] 3.1 Create SQLAlchemy ORM models for Tasks and Subtasks
     - Create `backend/models/task.py` with Task model
     - Fields: id, item_id (nullable for Inbox), title, description, notes, due_date, priority, is_complete, sort_order, created_at, updated_at
@@ -1012,7 +1012,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - All keyboard shortcuts work
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Phase 7: Archive View
+- [x] 7. Phase 7: Archive View
   - [x] 7.1 Create ArchiveView page
     - Display all items with archived_at != null
     - Display archive date using RelativeDate (with absolute date on hover)
@@ -1111,7 +1111,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
   - Create project from template with correct due dates
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Phase 9: Weekly Review
+- [x] 9. Phase 9: Weekly Review
 - [x] 9.1 Create SQLAlchemy model for WeeklyReview
     - WeeklyReview: id, completed_at, notes
     - _Requirements: R10.10, R10.11_
