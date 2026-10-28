@@ -244,3 +244,23 @@ def test_update_task_20_tags_accepted(client):
     resp = client.put(f"/api/tasks/{task_id}", json={"tag_names": tags}, headers=HEADERS)
     assert resp.status_code == 200
     assert len(resp.json()["tags"]) == 20
+
+
+def test_create_task_on_resource_rejected(client):
+    """R3.7: cannot create a task whose item_id points to a Resource."""
+    resource = client.post("/api/items", json={"type": "resource", "title": "R"}, headers=HEADERS).json()
+    r = client.post("/api/tasks", json={"title": "T", "item_id": resource["id"]}, headers=HEADERS)
+    assert r.status_code == 400
+    body = r.json()
+    assert "error" in body
+    assert "type" in body
+
+
+def test_move_task_to_resource_rejected(client):
+    """R3.7: cannot move a task to a Resource."""
+    resource = client.post("/api/items", json={"type": "resource", "title": "R"}, headers=HEADERS).json()
+    task = client.post("/api/tasks", json={"title": "T"}, headers=HEADERS).json()
+    r = client.post(f"/api/tasks/{task['id']}/move", json={"item_id": resource["id"]}, headers=HEADERS)
+    assert r.status_code == 400
+    body = r.json()
+    assert "error" in body

@@ -6,7 +6,7 @@ from typing import Optional
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.exceptions import ArchivedItemError, LimitExceededError, NotFoundError
+from backend.exceptions import ArchivedItemError, LimitExceededError, NotFoundError, ValidationError
 from backend.models.item import Item, Subtask, Tag, Task, TaskTag
 from backend.models.utils import now_utc
 from backend.schemas.task import TaskCreate, TaskResponse, TaskUpdate
@@ -15,6 +15,15 @@ from backend.services.timestamp_service import on_task_move, update_task_timesta
 
 MAX_TASKS_PER_ITEM = 100
 MAX_TASKS_ERROR = "This item has reached the maximum of 100 tasks."
+
+
+def _guard_not_resource(item: Item | None) -> None:
+    """Raise ValidationError if item is a Resource (R3.7)."""
+    if item is not None and item.type == "resource":
+        raise ValidationError(
+            "Resources cannot have tasks. Convert to Project or Area first.",
+            detail=f"item_id={item.id}",
+        )
 
 
 def _task_to_response(session: Session, task: Task) -> TaskResponse:
@@ -115,6 +124,7 @@ def create_task(session: Session, data: TaskCreate) -> TaskResponse:
     # Guard: parent item not archived
     parent_item = session.get(Item, data.item_id) if data.item_id is not None else None
     guard_task_item_not_archived(parent_item)
+    _guard_not_resource(parent_item)
 
     # Enforce 100-task limit only on Project/Area items, not Inbox
     if data.item_id is not None:
@@ -214,6 +224,7 @@ def move_task(session: Session, task_id: int, target_item_id: Optional[int]) -> 
                 f"Cannot move task to archived item '{target_item.title}'",
                 detail=f"item_id={target_item_id}",
             )
+        _guard_not_resource(target_item)
         # Enforce 100-task limit on target (excluding the task being moved if same item)
         count = _count_item_tasks(session, target_item_id)
         if task.item_id != target_item_id and count >= MAX_TASKS_PER_ITEM:

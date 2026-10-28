@@ -54,17 +54,11 @@ def test_p14_task_belongs_to_inbox_or_one_item(db_session):
 
 
 def test_p14_task_cannot_be_on_resource(db_session):
-    """P14: creating a task on a Resource documents current behaviour.
-
-    Resources don't have tasks by spec (R3.7). The service guard only blocks
-    archived items; a live resource allows task creation. This test documents
-    the current behaviour.
-    """
+    """P14 + R3.7: creating a task on a Resource is rejected with ValidationError."""
+    from backend.exceptions import ValidationError
     resource = _item(db_session, "resource")
-    # Current implementation allows creating tasks on Resources (no type guard)
-    # Future: add type guard. For now just verify item_id is correct.
-    resp = task_service.create_task(db_session, TaskCreate(title="R task", item_id=resource.id))
-    assert resp.item_id == resource.id
+    with pytest.raises(ValidationError):
+        task_service.create_task(db_session, TaskCreate(title="R task", item_id=resource.id))
 
 
 # ---------------------------------------------------------------------------

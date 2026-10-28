@@ -308,8 +308,10 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
       )}
 
 
-      {/* Tasks section */}
-      <TasksSection item={item} archived={archived} />
+      {/* Tasks section — not shown for Resources (R3.7) */}
+      {item.type !== 'resource' && (
+        <TasksSection item={item} archived={archived} />
+      )}
 
       {/* 2.15: Archive prompt after completing project (R1.6) */}
       <ConfirmDialog
