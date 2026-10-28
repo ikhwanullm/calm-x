@@ -3,7 +3,7 @@ import { useDashboard } from "@/hooks/useDashboard"
 import { useDeadlineThreshold } from "@/hooks/useSettings"
 import { ProgressBar, StatusBadge, Skeleton, EmptyState } from "@/components/common"
 import { getDeadlineStatus } from "@/utils/deadline"
-import { getLocalToday, formatRelativeDate } from '@/utils/date'
+import { getLocalToday, formatRelativeDate, formatAbsoluteDate } from '@/utils/date'
 import type { DeadlineItem, ProjectSummary } from "@/types/dashboard"
 
 export default function DashboardPage() {
@@ -47,7 +47,25 @@ export default function DashboardPage() {
           loading={isLoading}
           stat={data?.active_projects_count ?? 0}
           statLabel="active"
-          sub={data ? `${data.active_task_count} open ${data.active_task_count === 1 ? "task" : "tasks"}${data.nearest_deadline_project ? " · nearest " + data.nearest_deadline_project : ""}` : undefined}
+          sub={
+            data
+              ? (() => {
+                  const taskPart = `${data.active_task_count} open ${data.active_task_count === 1 ? "task" : "tasks"}`
+                  const nd = data.nearest_deadline_project
+                  if (!nd) return taskPart
+                  const rel = formatRelativeDate(nd, today).toLowerCase()
+                  const abs = formatAbsoluteDate(nd)
+                  return (
+                    <>
+                      {taskPart} · nearest{" "}
+                      <time dateTime={nd} title={abs} className="underline decoration-dotted underline-offset-2">
+                        {rel}
+                      </time>
+                    </>
+                  )
+                })()
+              : undefined
+          }
         />
         <SummaryCard
           title="Areas"
@@ -129,7 +147,7 @@ function SummaryCard({
   loading: boolean
   stat: number
   statLabel: string
-  sub?: string
+  sub?: React.ReactNode
   action?: React.ReactNode
 }) {
   return (
