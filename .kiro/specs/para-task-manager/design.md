@@ -418,6 +418,70 @@ Goal: Publish a portfolio with three case studies…
 | Read-only (archived) | Banner + disabled controls (R7.2) |
 | Validation | Inline message under the field, using the server's `fields` map |
 
+### Frontend Route Table
+
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/` | `DashboardPage` | Summary cards, Needs attention, Active projects |
+| `/inbox` | `InboxPage` | Inbox tasks with inline capture and Move to... |
+| `/tasks` | `AllTasksPage` | All tasks across categories with `FilterPanel` |
+| `/projects` | `ProjectsPage` | List of active projects |
+| `/projects/:id` | `ProjectDetailPage` | Project detail with tasks |
+| `/areas` | `AreasPage` | List of areas |
+| `/areas/:id` | `AreaDetailPage` | Area detail with tasks |
+| `/resources` | `ResourcesPage` | List of resources |
+| `/resources/:id` | `ResourceDetailPage` | Resource detail with linked items |
+| `/archive` | `ArchivePage` | Archived items |
+| `/templates` | `TemplatesPage` | Template management |
+| `/review` | `WeeklyReviewPage` | Weekly review (focused mode, no sidebar) |
+| `/settings` | `SettingsPage` | Tag management, preferences |
+
+#### AllTasksPage Component Tree
+
+```
+AllTasksPage
+  FilterPanel          (tag/priority/date/category filters, state in URL query string)
+    useTags             -> GET /api/tags
+    useFilteredTasks    -> GET /api/tasks?scope=all&tags=...&priorities=...
+  TaskRow[]             (one per filtered task, isDraggable=false)
+  TaskDrawer            (opens on row click, taskId in ?task= query param)
+```
+
+Filter state is serialised to the URL query string so it can be bookmarked and shared.
+Empty results show: "No matching tasks found."
+
+### Frontend Route Table
+
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/` | `DashboardPage` | Summary cards, Needs attention, Active projects |
+| `/inbox` | `InboxPage` | Inbox tasks with inline capture and Move to... |
+| `/tasks` | `AllTasksPage` | All tasks across categories with `FilterPanel` |
+| `/projects` | `ProjectsPage` | List of active projects |
+| `/projects/:id` | `ProjectDetailPage` | Project detail with tasks |
+| `/areas` | `AreasPage` | List of areas |
+| `/areas/:id` | `AreaDetailPage` | Area detail with tasks |
+| `/resources` | `ResourcesPage` | List of resources |
+| `/resources/:id` | `ResourceDetailPage` | Resource detail with linked items |
+| `/archive` | `ArchivePage` | Archived items |
+| `/templates` | `TemplatesPage` | Template management |
+| `/review` | `WeeklyReviewPage` | Weekly review (focused mode, no sidebar) |
+| `/settings` | `SettingsPage` | Tag management, preferences |
+
+#### AllTasksPage Component Tree
+
+```
+AllTasksPage
+  FilterPanel          (tag/priority/date/category filters, state in URL query string)
+    useTags             -> GET /api/tags
+    useFilteredTasks    -> GET /api/tasks?scope=all&tags=...&priorities=...
+  TaskRow[]             (one per filtered task, isDraggable=false)
+  TaskDrawer            (opens on row click, taskId in ?task= query param)
+```
+
+Filter state is serialised to the URL query string so it can be bookmarked and shared.
+Empty results show: "No matching tasks found."
+
 ### Frontend Additions to the Component Hierarchy
 
 In addition to the hierarchy above:
