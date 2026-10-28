@@ -1232,13 +1232,13 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - POST `/api/backup/create` - Create manual backup
     - _Requirements: R13.6_
 
-  - [ ] 10.5 Implement export functionality
+  - [x] 10.5 Implement export functionality
     - Create `backend/services/import_export_service.py`
     - Implement `export_data()` returning JSON with schema_version and all tables
     - Tables: items, tasks, subtasks, tags, task_tags, reference_links, resource_links, templates, template_tasks, weekly_reviews, user_preferences
     - _Requirements: R13.4_
 
-  - [ ] 10.6 Implement import with validation
+  - [x] 10.6 Implement import with validation
     - Implement `import_data(data, mode)` with mode: merge/replace
     - Validate JSON structure with Pydantic (ImportValidationError on failure)
     - Validate internal FK references before any modification
