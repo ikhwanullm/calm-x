@@ -1213,7 +1213,7 @@ When implementing Phase 9, move the /review route **outside** the AppShell layou
     - Support theme preference (system/light/dark)
     - _Requirements: R16.2, R16.3, R16.4, R16.5_
 
-  - [ ] 10.2 Add PUT to Settings API router
+  - [x] 10.2 Add PUT to Settings API router
     - PUT `/api/settings` - Update preferences
     - _Requirements: R16.2, R16.3_
 
