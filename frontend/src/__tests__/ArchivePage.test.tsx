@@ -168,14 +168,14 @@ describe('ArchivePage', () => {
 
   it('shows empty state when no items match', async () => {
     const { useArchivedItems } = vi.mocked(await import('../hooks/useItems'))
-    useArchivedItems.mockReturnValueOnce({ data: [], isLoading: false, isError: false } as ReturnType<typeof useArchivedItems>)
+    useArchivedItems.mockReturnValueOnce({ data: [], isLoading: false, isError: false } as unknown as ReturnType<typeof useArchivedItems>)
     render(<ArchivePage />, { wrapper })
     expect(screen.getByText(/archive is empty/i)).toBeTruthy()
   })
 
   it('shows loading skeletons while loading', async () => {
     const { useArchivedItems } = vi.mocked(await import('../hooks/useItems'))
-    useArchivedItems.mockReturnValueOnce({ data: undefined, isLoading: true, isError: false } as ReturnType<typeof useArchivedItems>)
+    useArchivedItems.mockReturnValueOnce({ data: undefined, isLoading: true, isError: false } as unknown as ReturnType<typeof useArchivedItems>)
     render(<ArchivePage />, { wrapper })
     // Skeleton group is present
     const loadingRegion = document.querySelector('[aria-label="Loading archived items"]')

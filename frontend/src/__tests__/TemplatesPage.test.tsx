@@ -122,7 +122,7 @@ describe('TemplatesPage', () => {
 
   it('shows empty state when no templates', async () => {
     const { useTemplates } = vi.mocked(await import('../hooks/useTemplates'))
-    useTemplates.mockReturnValueOnce({ data: [], isLoading: false, isError: false } as ReturnType<typeof useTemplates>)
+    useTemplates.mockReturnValueOnce({ data: [], isLoading: false, isError: false } as unknown as ReturnType<typeof useTemplates>)
     render(<TemplatesPage />, { wrapper })
     expect(screen.getByText(/no templates yet/i)).toBeTruthy()
   })

@@ -162,4 +162,22 @@ describe('TemplateDetailPage', () => {
     const handles = screen.getAllByRole('button', { name: /reorder/i })
     expect(handles.length).toBe(3)
   })
+
+  it('drag handles have role=button and aria-label', () => {
+    render(<TemplateDetailPage />, { wrapper })
+    const handle = screen.getByRole('button', { name: /reorder define requirements/i })
+    expect(handle).toBeTruthy()
+    expect(handle.getAttribute('aria-label')).toBe('Reorder Define requirements')
+  })
+
+  it('task list has role=list', () => {
+    render(<TemplateDetailPage />, { wrapper })
+    expect(screen.getByRole('list', { name: /template tasks/i })).toBeTruthy()
+  })
+
+  it('each task row has role=listitem', () => {
+    render(<TemplateDetailPage />, { wrapper })
+    const items = screen.getAllByRole('listitem')
+    expect(items.length).toBe(3)
+  })
 })

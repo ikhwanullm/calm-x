@@ -78,9 +78,9 @@ export default function TemplateDetailPage() {
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [editedDescription, setEditedDescription] = useState('')
 
-  // DnD sensors
+  // DnD sensors — activationConstraint prevents accidental drag on button clicks
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -372,7 +372,7 @@ export default function TemplateDetailPage() {
               items={template.tasks.map((t) => t.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="space-y-2">
+              <div role="list" aria-label="Template tasks" className="space-y-2">
                 {template.tasks.map((task) => (
                   <SortableTaskRow
                     key={task.id}
@@ -445,6 +445,7 @@ function SortableTaskRow({ task, onEdit, onDelete }: SortableTaskRowProps) {
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,  // ref for the drag activator (handle) element
     transform,
     transition,
     isDragging,
@@ -455,22 +456,29 @@ function SortableTaskRow({ task, onEdit, onDelete }: SortableTaskRowProps) {
     transition,
   }
 
-  return (
+    // attributes go on the container so keyboard sensor can track this node.
+    // Destructure role out so we can explicitly set role="listitem" without clash.
+    const { role: _dndRole, ...restAttributes } = attributes
+
+    return (
+    // restAttributes includes tabIndex, aria-* etc needed for keyboard DnD
     <div
       ref={setNodeRef}
       style={style}
+      role="listitem"
+      {...restAttributes}
       className={cn(
         'flex items-center gap-3 p-3 rounded-control border border-border bg-surface',
         'hover:bg-surface-2',
         isDragging && 'opacity-50 shadow-lg'
       )}
     >
-      {/* Drag handle */}
+      {/* Drag handle — setActivatorNodeRef + listeners only */}
       <button
         type="button"
+        ref={setActivatorNodeRef}
         className="flex items-center justify-center w-6 h-6 text-muted hover:text-text cursor-grab"
         aria-label={`Reorder ${task.title}`}
-        {...attributes}
         {...listeners}
       >
         <GripVertical size={16} strokeWidth={1.75} aria-hidden="true" />
