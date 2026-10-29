@@ -33,6 +33,24 @@ interface ItemBase {
 // Type-specific Item interfaces
 // ---------------------------------------------------------------------------
 
+export interface NextTask {
+  id: number
+  title: string
+  due_date: string | null
+}
+
+/** Sent with the Projects list when it is asked for with `today`. */
+export interface ProjectStats {
+  open_task_count: number
+  overdue_task_count: number
+  waiting_task_count: number
+  next_task: NextTask | null
+  next_meeting_at: string | null   // ISO datetime (UTC)
+  last_meeting_at: string | null
+  linked_resource_count: number
+  last_activity_at: string         // ISO datetime (UTC)
+}
+
 export interface Project extends ItemBase {
   type: 'project'
   project_goal: string | null
@@ -42,6 +60,7 @@ export interface Project extends ItemBase {
   area_id: number | null
   area_title: string | null
   area_archived: boolean
+  stats?: ProjectStats | null
 }
 
 export interface Area extends ItemBase {

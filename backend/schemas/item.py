@@ -96,6 +96,25 @@ class ItemUpdate(BaseModel):
 # Type-specific response schemas
 # ---------------------------------------------------------------------------
 
+class NextTask(BaseModel):
+    id: int
+    title: str
+    due_date: Optional[date] = None
+
+
+class ProjectStats(BaseModel):
+    """Numbers for a Projects list card; only sent when the list is asked for with `today`."""
+
+    open_task_count: int
+    overdue_task_count: int
+    waiting_task_count: int
+    next_task: Optional[NextTask] = None
+    next_meeting_at: Optional[datetime] = None
+    last_meeting_at: Optional[datetime] = None
+    linked_resource_count: int
+    last_activity_at: datetime
+
+
 class ProjectResponse(BaseModel):
     """Response schema for Project items."""
 
@@ -119,6 +138,7 @@ class ProjectResponse(BaseModel):
     task_count: int = 0
     completed_task_count: int = 0
     progress_percentage: int = 0
+    stats: Optional[ProjectStats] = None
 
 
 class AreaResponse(BaseModel):

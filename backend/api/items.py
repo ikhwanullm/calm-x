@@ -1,7 +1,7 @@
 """FastAPI router for Items (Projects, Areas, Resources)."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Annotated, Literal, Optional, Union
 
 from fastapi import APIRouter, Depends, Query
@@ -21,7 +21,7 @@ from backend.schemas.item import (
     ResourceResponse,
     item_to_response,
 )
-from backend.services import backup_service, item_service
+from backend.services import backup_service, item_service, project_stats_service
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -47,6 +47,7 @@ def list_items(
     archived_from: Optional[datetime] = Query(default=None, description="Filter archived items from this datetime (ISO 8601 with tz offset, e.g. 2026-10-28T00:00:00+07:00)"),
     archived_to: Optional[datetime] = Query(default=None, description="Filter archived items to this datetime (ISO 8601 with tz offset, e.g. 2026-10-28T23:59:59+07:00)"),
     area_id: Optional[int] = Query(default=None, description="Only Projects that belong to this Area"),
+    today: Optional[str] = Query(default=None, description="Client local date YYYY-MM-DD; adds `stats` to each Project"),
 ):
     """List items. Filter by type and/or include archived.
 
@@ -55,6 +56,13 @@ def list_items(
     Date filters ``archived_from``/``archived_to`` accept ISO 8601 datetime strings with timezone
     offset (e.g. ``2026-10-28T00:00:00+07:00``) so the server can compare correctly in UTC.
     """
+    client_today: Optional[date] = None
+    if today:
+        try:
+            client_today = date.fromisoformat(today)
+        except ValueError:
+            raise ValidationError(f"Invalid date: {today!r}. Expected YYYY-MM-DD.")
+
     # Determine archived-only mode
     archived_only = archived == "only"
 
@@ -107,8 +115,15 @@ def list_items(
             if item.archived_at and item.archived_at <= to_utc
         ]
 
-    return [item_to_response(item, task_count=total, completed_task_count=completed)
-            for item, total, completed in items_with_counts]
+    responses = [item_to_response(item, task_count=total, completed_task_count=completed)
+                 for item, total, completed in items_with_counts]
+    if client_today is not None:
+        projects = [item for item, _, _ in items_with_counts if item.type == "project"]
+        stats = project_stats_service.get_project_stats(session, projects, client_today)
+        for response in responses:
+            if response.type == "project":
+                response.stats = stats[response.id]
+    return responses
 
 
 @router.get("/{item_id}", response_model=AnyItemResponse)

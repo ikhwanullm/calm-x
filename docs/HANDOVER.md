@@ -4,16 +4,18 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the week view (`59bc57a`) is pushed to `origin/main`.
+- Everything up to the dialog scroll fix (`9c02e85`) is pushed to `origin/main`. The Projects list rework is committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
-- Tests at the last commit: backend 570 passed, frontend 858 passed (69 files), `tsc -b` clean.
+- Tests at the last commit: backend 581 passed, frontend 895 passed (71 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
+| (newest) | Projects list: search, sort, filters, card/compact-list toggle, per-project stats (`GET /api/items?type=project&today=`) |
+| `9c02e85` | Dialogs scroll when taller than the window |
 | `59bc57a` | Week view on `/today`: 7-day strip (meetings, due, planned, deadlines, starts), week navigation in the URL, day selection, drag a task to another day to change its due date (with Undo), `GET /api/calendar/week` |
 | `6b38a9f` | Sidebar toggle: collapse/expand button; on screens < 1280px it opens as an overlay |
 | `93406d8` | Meeting notes, part B: "From last meeting" block on + Meeting, Weekly Review "Meetings" step |
@@ -213,12 +215,31 @@ stay below it. Only meetings have a time; everything else is date-only, so it is
   warn, overdue danger, deadlines a bordered chip with a flag icon, starts muted.
 - Not done: dragging with the keyboard, showing overdue tasks of earlier weeks in the strip.
 
-## Next up: richer Projects and All tasks lists (designed with the owner, 2026-10-29)
+## Richer Projects and All tasks lists (designed with the owner, 2026-10-29)
 
-The owner finds the list pages static: no sorting, few filters, little information per card. Start with **Projects**
-and **All tasks** (Areas and Resources follow later with the same pattern). Two commits: Projects, then All tasks.
+The owner found the list pages static. **Projects is built; All tasks is next** (Areas and Resources follow later with the
+same pattern). Two commits: Projects, then All tasks.
 
-### Decisions already made
+### Projects: how it works (done)
+
+- **API**: `GET /api/items?type=project&today=YYYY-MM-DD` adds `stats` to each project (`services/project_stats_service.py`,
+  one grouped query per aggregate for the whole list, test asserts the query count stays flat): `open_task_count` and
+  `overdue_task_count` / `waiting_task_count` (open = not complete and not Someday), `next_task` (earliest due date, else
+  first by sort order; not Someday, not deferred past today), `next_meeting_at` / `last_meeting_at`, `linked_resource_count`
+  (active resources only), `last_activity_at` (latest of the project, its tasks and its meetings). No `today` = no `stats`.
+- **UI**: `pages/ProjectsPage.tsx` (replaces `ItemListView` for projects), `components/lists/ListToolbar.tsx` (reusable: search
+  with 250 ms debounce, sort, toggle/select chips, view toggle, Clear filters), `components/projects/ProjectCard.tsx` and
+  `ProjectList.tsx`, `utils/projectList.ts` (filter + sort, pure), `utils/projectFacts.ts` (meeting and activity labels),
+  hooks `useUrlParams` and `useViewMode`. Filtering and sorting happen in the browser on the full list. URL params:
+  `sort` (omitted = deadline), `q`, `active=0`, `completed=1`, `area` (id or `none`), `deadline` (overdue/week/30days/none),
+  `overdue=1`, `stale=1`. The card/list choice is in `localStorage` (`calmx.view.projects`), not in the URL.
+- **Chosen by me**: Active/Completed are two toggle chips (both off shows nothing); "this week" means up to Sunday;
+  a completed project is never "overdue"; the meeting chip shows the next meeting, else "Last meeting …"; Someday and
+  not-yet-started tasks are left out of the open count and the Next line.
+- `ItemListView` is still used by Areas and Resources; its project-only area filter is now dead code.
+- Not done: the filter toolbar for Areas/Resources, server-side sorting (not needed at this size).
+
+### Decisions already made (apply to both pages)
 
 - Both pages get a **card view and a compact list view** with a toggle; the choice is remembered per page
   (`localStorage`, wrapped in try/catch, falling back to cards).
@@ -231,19 +252,6 @@ and **All tasks** (Areas and Resources follow later with the same pattern). Two 
 Search box (filters as you type, debounced), Sort select, filter chips (toggle chips and dropdown chips), view toggle
 (grid / list icons with `aria-label`s and `aria-pressed`), and a "Clear filters" link when anything is active.
 Empty result: "No projects match these filters" with Clear filters.
-
-### Projects page
-
-- **Card**: title; deadline badge (existing StatusBadge; "No deadline" muted); line 2 = Area name · "updated {relative}"
-  (or, if no activity for 30+ days, "no activity for N days" in warning colour); progress bar with `done/total`;
-  **Next:** the next open task (earliest due date, else first by sort order) with its relative due date; footer chips:
-  `N overdue` (danger), `N waiting`, next/last meeting ("Meeting today 09:00" / "Meeting Tue"), `N resources`.
-  A project with no open tasks shows "No open tasks. Add a next step or archive it." instead of Next.
-- **Compact list**: one row per project with columns Title, Area, Progress (bar + done/total), Next task, Deadline,
-  Overdue, Last activity. Clicking a row opens the project.
-- **Sort**: Deadline (soonest, default), Progress (lowest first), Most overdue, Last activity (most recent), Name.
-- **Filters**: status chips Active (default on) / Completed; Area (dropdown, incl. "No area"); Deadline (dropdown:
-  any, overdue, this week, next 30 days, no deadline); "Has overdue"; "Stale 30+ days". Keep the existing `?area=`.
 
 ### All tasks page
 
@@ -259,11 +267,6 @@ Empty result: "No projects match these filters" with Clear filters.
 
 ### Backend
 
-- Projects list needs per-project aggregates the API doesn't send yet: `open_task_count`, `overdue_task_count`
-  (needs the client's `today`), `waiting_task_count`, `next_task` (`{id, title, due_date}`), `next_meeting_at` /
-  `last_meeting_at`, `linked_resource_count`, `last_activity_at` (latest of the item's and its tasks'/meetings'
-  `updated_at`). Add them to the project response when `?today=` is passed, computed with **one grouped query per
-  aggregate for the whole list**, not per project.
 - Tasks list: extend `GET /api/tasks` (scope=all) with `q`, `status`, `waiting`, `deferred`, `someday`, `from_meeting`,
   `sort`, `order`; grouping can stay client-side. Validate params (400 on unknown sort/status).
 - Escape LIKE wildcards in `q` like SearchService does.
