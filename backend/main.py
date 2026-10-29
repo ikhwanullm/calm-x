@@ -158,6 +158,8 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
     app.include_router(import_export_router, prefix="/api")
     from backend.api.meetings import router as meetings_router
     app.include_router(meetings_router, prefix="/api")
+    from backend.api.calendar import router as calendar_router
+    app.include_router(calendar_router, prefix="/api")
 
     # --- Extra routers (registered before SPA fallback) ---
     if extra_routers:

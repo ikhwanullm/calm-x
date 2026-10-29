@@ -151,6 +151,19 @@ export interface Task {
 }
 
 /** Open tasks for the Today view; each task is in at most one list. */
+export interface CalendarDay {
+  date: string                   // YYYY-MM-DD
+  meetings: MeetingSummary[]
+  due: Task[]
+  planned: Task[]                // only in today's column
+  deadlines: { id: number; title: string }[]
+  starts: Task[]
+}
+
+export interface CalendarWeek {
+  days: CalendarDay[]            // seven, Monday first
+}
+
 export interface TodayTasks {
   overdue: Task[]
   due_today: Task[]
