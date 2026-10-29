@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import date as _date, datetime, timezone
 from typing import Any
 
 from sqlalchemy import select, text
@@ -80,6 +80,8 @@ def export_data(session: Session) -> dict[str, Any]:
             "focus_date": str(t.focus_date) if t.focus_date else None,
             "waiting_for": t.waiting_for,
             "waiting_since": _dt_to_iso(t.waiting_since),
+            "defer_until": str(t.defer_until) if t.defer_until else None,
+            "is_someday": t.is_someday,
         }
 
     def subtask_dict(s: Subtask) -> dict:
@@ -261,6 +263,12 @@ def _validate_record_fields(data: dict) -> None:
         waiting_for = r.get("waiting_for")
         if waiting_for is not None and (not isinstance(waiting_for, str) or len(waiting_for) > 200):
             raise ImportValidationError(f"{ctx}: waiting_for must be a string ≤ 200 chars")
+        defer_until = r.get("defer_until")
+        if defer_until is not None:
+            try:
+                _date.fromisoformat(defer_until)
+            except (TypeError, ValueError):
+                raise ImportValidationError(f"{ctx}: defer_until must be a YYYY-MM-DD date")
 
     # ── Subtasks ───────────────────────────────────────────────────────────
     for r in data["subtasks"]:
@@ -487,6 +495,8 @@ def _import_merge(session: Session, data: dict) -> dict[str, int]:
             focus_date=_date.fromisoformat(r["focus_date"]) if r.get("focus_date") else None,
             waiting_for=r.get("waiting_for"),
             waiting_since=_iso_to_dt(r.get("waiting_since")),
+            defer_until=_date.fromisoformat(r["defer_until"]) if r.get("defer_until") else None,
+            is_someday=1 if r.get("is_someday") else 0,
         )
         session.add(t)
         session.flush()

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskDrawer } from '../components/tasks/TaskDrawer'
 import { useTask } from '../hooks/useTasks'
@@ -23,7 +23,7 @@ const baseTask: Task = {
   subtask_count: 2,
   completed_subtask_count: 1,
   tags: [],
-  focus_date: null, waiting_for: null, waiting_since: null, item_title: null, item_type: null,
+  focus_date: null, waiting_for: null, waiting_since: null, defer_until: null, is_someday: false, item_title: null, item_type: null,
 }
 
 const subtasks: Subtask[] = [
@@ -187,6 +187,39 @@ describe('TaskDrawer', () => {
     expect(screen.getByText('On Today')).toBeTruthy()
     await user.click(screen.getByRole('button', { name: /remove from today/i }))
     expect(mockMutate).toHaveBeenCalledWith({ focus_date: null })
+    vi.mocked(useTask).mockReturnValue({ data: baseTask, isLoading: false } as unknown as ReturnType<typeof useTask>)
+  })
+
+  it('sets and clears "Defer until"', async () => {
+    const user = userEvent.setup()
+    renderDrawer(1)
+    fireEvent.change(screen.getByLabelText('Defer until'), { target: { value: '2026-11-05' } })
+    expect(mockMutate).toHaveBeenCalledWith({ defer_until: '2026-11-05' })
+    vi.mocked(useTask).mockReturnValue({
+      data: { ...baseTask, defer_until: '2026-11-05' }, isLoading: false,
+    } as unknown as ReturnType<typeof useTask>)
+    renderDrawer(1)
+    await user.click(screen.getAllByRole('button', { name: 'Clear' })[0])
+    expect(mockMutate).toHaveBeenCalledWith({ defer_until: null })
+    vi.mocked(useTask).mockReturnValue({ data: baseTask, isLoading: false } as unknown as ReturnType<typeof useTask>)
+  })
+
+  it('limits "Defer until" to the due date', () => {
+    renderDrawer(1)
+    expect(screen.getByLabelText('Defer until').getAttribute('max')).toBe('2099-12-31')
+  })
+
+  it('moves a task to Someday and back', async () => {
+    const user = userEvent.setup()
+    renderDrawer(1)
+    await user.click(screen.getByRole('button', { name: /move to someday/i }))
+    expect(mockMutate).toHaveBeenCalledWith({ is_someday: true })
+    vi.mocked(useTask).mockReturnValue({
+      data: { ...baseTask, is_someday: true }, isLoading: false,
+    } as unknown as ReturnType<typeof useTask>)
+    renderDrawer(1)
+    await user.click(screen.getByRole('button', { name: /move back to active/i }))
+    expect(mockMutate).toHaveBeenCalledWith({ is_someday: false })
     vi.mocked(useTask).mockReturnValue({ data: baseTask, isLoading: false } as unknown as ReturnType<typeof useTask>)
   })
 

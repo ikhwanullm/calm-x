@@ -94,6 +94,12 @@ def get_today(
     return task_service.get_today(session, today)
 
 
+@router.get("/tasks/someday", response_model=list[TaskResponse])
+def get_someday(session: SessionDep):
+    """Open tasks parked as Someday."""
+    return task_service.list_someday(session)
+
+
 @router.get("/items/{item_id}/tasks", response_model=list[TaskResponse])
 def list_item_tasks(item_id: int, session: SessionDep, include_complete: bool = Query(default=True)):
     """Get tasks for a specific item."""

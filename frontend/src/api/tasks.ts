@@ -27,6 +27,9 @@ export const tasksApi = {
   today: (today: string) =>
     apiClient.get<TodayTasks>('/tasks/today', { params: { today } }).then(r => r.data),
 
+  someday: () =>
+    apiClient.get<Task[]>('/tasks/someday').then(r => r.data),
+
   listForItem: (itemId: number, params?: { include_complete?: boolean }) =>
     apiClient.get<Task[]>(`/items/${itemId}/tasks`, { params }).then(r => r.data),
 

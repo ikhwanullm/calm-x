@@ -114,6 +114,10 @@ class Task(Base):
     # Who or what the task is waiting on (None = not waiting)
     waiting_for: Mapped[str | None] = mapped_column(Text, nullable=True)
     waiting_since: Mapped[UTCDateTime | None] = mapped_column(UTCDateTime, nullable=True)
+    # Hidden from Today until this local date (None = not deferred)
+    defer_until: Mapped[Date | None] = mapped_column(Date, nullable=True)
+    # Parked idea, kept out of Today (0/1)
+    is_someday: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
 
     # Relationships
     item: Mapped[Item | None] = relationship("Item", back_populates="tasks")

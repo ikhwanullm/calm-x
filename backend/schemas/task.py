@@ -100,6 +100,8 @@ class TaskUpdate(BaseModel):
     tag_names: Optional[List[str]] = Field(default=None, description="Tag names to assign (replaces existing, max 20)")
     focus_date: Optional[date] = Field(default=None, description="Local date the task is put on Today; null removes it")
     waiting_for: Optional[str] = Field(default=None, max_length=200, description="Who or what the task waits on; null or blank clears it")
+    defer_until: Optional[date] = Field(default=None, description="Local date the task starts; null clears it")
+    is_someday: Optional[bool] = Field(default=None, description="Park the task as a Someday idea")
 
     @field_validator("waiting_for", mode="before")
     @classmethod
@@ -148,6 +150,8 @@ class TaskResponse(BaseModel):
     focus_date: Optional[date] = None
     waiting_for: Optional[str] = None
     waiting_since: Optional[datetime] = None
+    defer_until: Optional[date] = None
+    is_someday: bool = False
     item_title: Optional[str] = None
     item_type: Optional[str] = None
 

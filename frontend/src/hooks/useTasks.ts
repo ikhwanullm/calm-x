@@ -18,6 +18,12 @@ export const taskKeys = {
   forItem: (itemId: number) => [...taskKeys.all, 'item', itemId] as const,
   detail: (id: number) => [...taskKeys.all, 'detail', id] as const,
   today: (today: string) => [...taskKeys.all, 'today', today] as const,
+  someday: () => [...taskKeys.all, 'someday'] as const,
+}
+
+/** Open Someday tasks. Lives under taskKeys.all so every task mutation refreshes it. */
+export function useSomedayTasks() {
+  return useQuery({ queryKey: taskKeys.someday(), queryFn: () => tasksApi.someday() })
 }
 
 export function useInboxTasks() {

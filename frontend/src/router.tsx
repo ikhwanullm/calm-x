@@ -4,6 +4,7 @@ import DashboardPage from './pages/DashboardPage'
 import TodayPage from './pages/TodayPage'
 import AllTasksPage from './pages/AllTasksPage'
 import InboxPage from './pages/InboxPage'
+import SomedayPage from './pages/SomedayPage'
 import ProjectsPage from './pages/ProjectsPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import AreasPage from './pages/AreasPage'
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: '/', element: <DashboardPage /> },
       { path: '/today', element: <TodayPage /> },
       { path: '/inbox', element: <InboxPage /> },
+      { path: '/someday', element: <SomedayPage /> },
       { path: '/tasks', element: <AllTasksPage /> },
       { path: '/projects', element: <ProjectsPage /> },
       { path: '/projects/:id', element: <ProjectDetailPage /> },

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Plus, Trash2, Sun } from 'lucide-react'
+import { X, Plus, Trash2, Sun, CloudMoon } from 'lucide-react'
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet'
 import { ProgressBar, RelativeDate, ConfirmDialog } from '@/components/common'
 import { Button } from '@/components/common'
@@ -302,6 +302,71 @@ export function TaskDrawer({ taskId, onClose, onDeleted }: TaskDrawerProps) {
                   >
                     <Sun size={14} aria-hidden="true" />
                     Add to Today
+                  </button>
+                )}
+              </div>
+
+              {/* Defer until */}
+              <div className="flex items-center gap-3">
+                <label htmlFor="task-defer-until" className="w-20 text-sm text-muted shrink-0">
+                  Defer until
+                </label>
+                <div className="flex-1 flex items-center gap-2">
+                  <input
+                    id="task-defer-until"
+                    type="date"
+                    value={task?.defer_until ?? ''}
+                    max={task?.due_date ?? undefined}
+                    onChange={(e) => updateTask.mutate({ defer_until: e.target.value || null })}
+                    disabled={isLoading || !task}
+                    className={cn(
+                      'h-9 px-3 rounded-control border border-border bg-surface text-sm text-text',
+                      'focus:outline-2 focus:outline-offset-2 focus:outline-accent',
+                      'disabled:opacity-50'
+                    )}
+                  />
+                  {task?.defer_until && (
+                    <button
+                      type="button"
+                      onClick={() => updateTask.mutate({ defer_until: null })}
+                      className="text-xs text-muted hover:text-text hover:underline"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Someday */}
+              <div className="flex items-center gap-3">
+                <span className="w-20 text-sm text-muted shrink-0">Someday</span>
+                {task?.is_someday ? (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 text-sm text-text">
+                      <CloudMoon size={14} aria-hidden="true" />
+                      Parked for later
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateTask.mutate({ is_someday: false })}
+                      className="text-xs text-muted hover:text-text hover:underline"
+                    >
+                      Move back to active
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => updateTask.mutate({ is_someday: true })}
+                    disabled={isLoading || !task}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 h-9 px-3 rounded-control border border-border-strong',
+                      'text-sm text-text hover:bg-surface-2 disabled:opacity-50',
+                      'focus:outline-2 focus:outline-offset-2 focus:outline-accent'
+                    )}
+                  >
+                    <CloudMoon size={14} aria-hidden="true" />
+                    Move to Someday
                   </button>
                 )}
               </div>

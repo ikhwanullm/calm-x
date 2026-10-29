@@ -31,7 +31,7 @@ const makeTask = (id: number, title = `Task ${id}`): Task => ({
   id, item_id: null, title, is_complete: false, sort_order: 0,
   description: "", notes: "", due_date: null, priority: "medium",
   created_at: "", updated_at: "", subtask_count: 0, completed_subtask_count: 0, tags: [],
-  focus_date: null, waiting_for: null, waiting_since: null, item_title: null, item_type: null,
+  focus_date: null, waiting_for: null, waiting_since: null, defer_until: null, is_someday: false, item_title: null, item_type: null,
 })
 
 function wrapper({ children }: { children: React.ReactNode }) {

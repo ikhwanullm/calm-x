@@ -141,6 +141,8 @@ export interface Task {
   focus_date: string | null      // YYYY-MM-DD local date it was put on Today
   waiting_for: string | null     // who or what the task waits on
   waiting_since: string | null   // ISO datetime (UTC)
+  defer_until: string | null     // YYYY-MM-DD local date the task starts
+  is_someday: boolean            // parked idea
   item_title: string | null
   item_type: ItemType | null
 }
@@ -173,6 +175,8 @@ export interface TaskUpdatePayload {
   tag_names?: string[]
   focus_date?: string | null
   waiting_for?: string | null
+  defer_until?: string | null
+  is_someday?: boolean
 }
 
 export interface TaskMovePayload {

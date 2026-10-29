@@ -3,7 +3,7 @@ import type { Task } from '@/types/models'
 import { PriorityChip, TagChip, StatusBadge } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
 import { useDeadlineThreshold } from '@/hooks/useSettings'
-import { getLocalToday } from '@/utils/date'
+import { formatAbsoluteDate, getLocalToday } from '@/utils/date'
 import { cn } from '@/lib/utils'
 
 export interface TaskRowProps {
@@ -34,6 +34,9 @@ export function TaskRow({
 }: TaskRowProps) {
   const itemLabel = showItem ? task.item_title ?? 'Inbox' : null
   const today = getLocalToday()
+  const isDeferred = !!task.defer_until && task.defer_until > today && !task.is_complete
+  const isParked = task.is_someday && !task.is_complete
+  const deferLabel = isDeferred && task.defer_until ? `Starts ${formatAbsoluteDate(task.defer_until)}` : null
   const threshold = useDeadlineThreshold()
   const deadlineStatus = showDeadlineStatus && task.due_date && !task.is_complete
     ? getDeadlineStatus(task.due_date, task.is_complete, threshold, today)
@@ -47,6 +50,7 @@ export function TaskRow({
         isSelected && 'bg-accent-soft border-accent',
         !isSelected && 'hover:bg-surface-2',
         task.is_complete && 'opacity-75',
+        (isDeferred || isParked) && 'opacity-60',
       )}
     >
       {/* Drag handle */}
@@ -85,10 +89,20 @@ export function TaskRow({
 
         {/* Meta line */}
         {(task.priority !== 'medium' || task.subtask_count > 0 || task.tags.length > 0 ||
-          task.waiting_for || itemLabel) && (
+          task.waiting_for || itemLabel || deferLabel || isParked) && (
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             {itemLabel && (
               <span className="text-xs text-muted truncate max-w-[16rem]">{itemLabel}</span>
+            )}
+            {isParked && (
+              <span className="inline-flex items-center h-5 px-1.5 rounded-pill bg-surface-2 text-xs text-muted">
+                Someday
+              </span>
+            )}
+            {deferLabel && (
+              <span className="inline-flex items-center h-5 px-1.5 rounded-pill bg-surface-2 text-xs text-muted">
+                {deferLabel}
+              </span>
             )}
             {task.waiting_for && (
               <span className="inline-flex items-center h-5 px-1.5 rounded-pill bg-surface-2 text-xs text-muted">

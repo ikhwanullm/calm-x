@@ -3,7 +3,8 @@ import { cn } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/common'
 import { useReviewInbox, reviewKeys } from '@/hooks/useReview'
 import { useItems } from '@/hooks/useItems'
-import { useMoveTask, useCompleteTask, useDeleteTask } from '@/hooks/useTasks'
+import { useMoveTask, useCompleteTask, useDeleteTask, taskKeys } from '@/hooks/useTasks'
+import { tasksApi } from '@/api/tasks'
 import { useShortcuts } from '@/hooks/useShortcuts'
 import { useQueryClient } from '@tanstack/react-query'
 import { formatRelativeDate, getLocalToday } from '@/utils/date'
@@ -114,6 +115,14 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
     onCompleted()
   }, [activeTask]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleSomeday = useCallback(async () => {
+    if (!activeTask) return
+    await tasksApi.update(activeTask.id, { is_someday: true })
+    qc.invalidateQueries({ queryKey: taskKeys.all })
+    advanceQueue(activeTask.id)
+    onOrganized()
+  }, [activeTask]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSkip = useCallback(() => {
     if (!activeTask) return
     skipQueue()
@@ -133,6 +142,7 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
     P: () => { if (!deleteConfirmTask) handleMoveToProject() },
     A: () => { if (!deleteConfirmTask) handleMoveToArea() },
     C: () => { if (!deleteConfirmTask) handleComplete() },
+    M: () => { if (!deleteConfirmTask) handleSomeday() },
     D: () => { if (!deleteConfirmTask && activeTask) setDeleteConfirmTaskId(activeTask.id) },
     S: () => { if (!deleteConfirmTask) handleSkip() },
   })
@@ -298,6 +308,13 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
               className="flex-1 h-11 rounded-control border border-border bg-surface text-text text-sm font-semibold hover:bg-surface-2 disabled:opacity-50"
             >
               Mark complete <span className="text-xs text-muted">[C]</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleSomeday}
+              className="flex-1 h-11 rounded-control border border-border bg-surface text-text text-sm font-semibold hover:bg-surface-2"
+            >
+              Someday <span className="text-xs text-muted">[M]</span>
             </button>
             <button
               type="button"

@@ -23,7 +23,9 @@ def get_dashboard_data(session: Session, client_today: date) -> DashboardSchema:
 
     # --- Inbox count (open tasks with no item) ---
     inbox_count: int = session.execute(
-        select(func.count()).where(Task.item_id.is_(None), Task.is_complete == 0)
+        select(func.count()).where(
+            Task.item_id.is_(None), Task.is_complete == 0, Task.is_someday == 0
+        )
     ).scalar_one()
 
     # --- Active projects ---

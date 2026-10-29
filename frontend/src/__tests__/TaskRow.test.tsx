@@ -25,7 +25,7 @@ const baseTask: Task = {
   subtask_count: 0,
   completed_subtask_count: 0,
   tags: [],
-  focus_date: null, waiting_for: null, waiting_since: null, item_title: null, item_type: null,
+  focus_date: null, waiting_for: null, waiting_since: null, defer_until: null, is_someday: false, item_title: null, item_type: null,
 }
 
 function renderRow(props: Partial<TaskRowProps> = {}) {
@@ -50,6 +50,24 @@ describe('TaskRow', () => {
   it('shows who a task is waiting for', () => {
     renderRow({ task: { ...baseTask, waiting_for: 'Vendor' } })
     expect(screen.getByText('Waiting · Vendor')).toBeTruthy()
+  })
+
+  it('shows a "Starts" chip and dims a task deferred past today', () => {
+    const { container } = renderRow({ task: { ...baseTask, defer_until: '2099-01-05' } })
+    expect(screen.getByText(/^Starts /)).toBeTruthy()
+    expect(container.firstChild).toHaveClass('opacity-60')
+  })
+
+  it('shows no "Starts" chip once the defer date has arrived', () => {
+    const { container } = renderRow({ task: { ...baseTask, defer_until: '2020-01-05' } })
+    expect(screen.queryByText(/^Starts /)).toBeNull()
+    expect(container.firstChild).not.toHaveClass('opacity-60')
+  })
+
+  it('shows a "Someday" chip and dims a parked task', () => {
+    const { container } = renderRow({ task: { ...baseTask, is_someday: true } })
+    expect(screen.getByText('Someday')).toBeTruthy()
+    expect(container.firstChild).toHaveClass('opacity-60')
   })
 
   it('shows the parent item when asked, and Inbox for inbox tasks', () => {

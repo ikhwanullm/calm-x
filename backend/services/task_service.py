@@ -69,6 +69,8 @@ def _task_to_response(session: Session, task: Task) -> TaskResponse:
         focus_date=task.focus_date,
         waiting_for=task.waiting_for,
         waiting_since=_as_utc(task.waiting_since),
+        defer_until=task.defer_until,
+        is_someday=bool(task.is_someday),
         item_title=task.item.title if task.item is not None else None,
         item_type=task.item.type if task.item is not None else None,
     )
@@ -103,7 +105,8 @@ def list_tasks(
 
 
 def get_inbox_tasks(session: Session) -> list[TaskResponse]:
-    return list_tasks(session, item_id=None)
+    """Inbox tasks, without the ones parked as Someday."""
+    return [t for t in list_tasks(session, item_id=None) if not t.is_someday]
 
 
 
@@ -187,6 +190,17 @@ def update_task(session: Session, task_id: int, data: TaskUpdate) -> TaskRespons
     update_fields.pop("is_complete", None)
     update_fields.pop("item_id", None)
     tag_names = update_fields.pop("tag_names", None)
+    if update_fields.get("is_someday", True) is None:
+        update_fields.pop("is_someday")
+    elif "is_someday" in update_fields:
+        update_fields["is_someday"] = int(update_fields["is_someday"])
+    new_due = update_fields.get("due_date", task.due_date)
+    new_defer = update_fields.get("defer_until", task.defer_until)
+    if new_due is not None and new_defer is not None and new_due < new_defer:
+        raise ValidationError(
+            "Due date cannot be before the defer date.",
+            detail=f"due_date={new_due}, defer_until={new_defer}",
+        )
     if "waiting_for" in update_fields:
         new_waiting = update_fields["waiting_for"]
         if new_waiting is None:
@@ -347,17 +361,35 @@ def reorder_tasks(session: Session, item_id: Optional[int], task_ids: list[int])
 _PRIORITY_RANK = {"high": 0, "medium": 1, "low": 2}
 
 
+def list_someday(session: Session) -> list[TaskResponse]:
+    """Open Someday tasks outside archived Items, newest first."""
+    tasks = session.execute(
+        select(Task)
+        .outerjoin(Item, Task.item_id == Item.id)
+        .where(
+            Task.is_complete == 0,
+            Task.is_someday == 1,
+            (Task.item_id.is_(None)) | (Item.archived_at.is_(None)),
+        )
+        .order_by(Task.updated_at.desc(), Task.id.desc())
+    ).scalars().all()
+    return [_task_to_response(session, t) for t in tasks]
+
+
 def get_today(session: Session, client_today: date) -> TodayResponse:
     """Open tasks for the Today view, using the client's local date.
 
     Each open task outside archived Items lands in at most one list, in this order:
     waiting (has waiting_for) > overdue (due before today) > due today > focused (on Today).
+    Someday tasks and tasks deferred past today are left out entirely.
     """
     tasks = session.execute(
         select(Task)
         .outerjoin(Item, Task.item_id == Item.id)
         .where(
             Task.is_complete == 0,
+            Task.is_someday == 0,
+            (Task.defer_until.is_(None)) | (Task.defer_until <= client_today),
             (Task.item_id.is_(None)) | (Item.archived_at.is_(None)),
             (Task.waiting_for.isnot(None))
             | (Task.due_date <= client_today)

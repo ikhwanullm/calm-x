@@ -4,17 +4,18 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- `main` = `origin/main` at `9cb3772` ("feat: Undo for deleted tasks and subtasks"). Working tree clean.
+- `origin/main` is at `9cb3772`; local `main` has the docs commit and the Defer + Someday commit on top (not pushed).
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
-- Schema head: **migration 006**. The owner's real DB was at 005 when last checked; it upgrades to 006
+- Schema head: **migration 007**. The owner's real DB was at 006 when last checked (2026-10-29); it upgrades to 007
   automatically the next time the app starts.
-- Tests at the last commit: backend 464 passed, frontend 717 passed (58 files), `tsc -b` clean.
+- Tests at the last commit: backend 480 passed, frontend 731 passed (59 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
+| (newest) | Defer + Someday: `tasks.defer_until` / `tasks.is_someday` (migration 007), "Defer until" and "Move to Someday" in the drawer, "Starts {date}" / "Someday" chips, `/someday` page + sidebar entry, `GET /api/tasks/someday`, "Someday [M]" in the Weekly Review Inbox step |
 | `9cb3772` | Undo for deleted tasks/subtasks: server-side snapshots in `undo_entries` (24 h), `POST /api/tasks/{id}/restore`, `POST /api/subtasks/{id}/restore`, 8 s Undo toast |
 | `aaa5054` | `/today` page (Overdue, Due today, Planned for today, Waiting for) + Add to Today + Waiting for on tasks |
 | `e1fded6` | `Start Calm-X.cmd` / `start-calmx.ps1` double-click launcher |
@@ -96,19 +97,16 @@ Migrations: after starting on the copy, compare row counts of every table before
 - **Noise you can ignore**: git "CRLF will be replaced by LF" warnings; Vite "chunks larger than 500 kB" and
   `INEFFECTIVE_DYNAMIC_IMPORT` (SettingsPage) warnings. `tsc -b` leaves `frontend/tsconfig.tsbuildinfo`; delete it.
 
-## Next up: Defer + Someday (agreed, not started)
+## Defer + Someday: how it behaves (decided with the owner, 2026-10-29)
 
-Goal: keep work lists to what can be done now. Proposed design; confirm open points with the owner first.
-
-- Migration 007 on `tasks`: `defer_until DATE NULL` (task is hidden from Today until that local date) and
-  `is_someday INTEGER NOT NULL DEFAULT 0` (parked idea). Plain `ADD COLUMN`.
-- `TaskUpdate` accepts both; `TaskResponse` returns both; export/import + undo snapshot carry them.
-- `/api/tasks/today`: exclude `is_someday` and `defer_until > today`.
-- UI: drawer gets "Defer until" (date) and "Move to Someday" toggle; task rows show a "Starts {date}" or
-  "Someday" chip and are dimmed; a Someday list (new `/someday` page or a view in All tasks).
-- Weekly Review Inbox step could offer "Someday" as an action.
-- Open questions for the owner: should deferred tasks also hide from Project/Area lists or only show dimmed?
-  Should a due date before the defer date be allowed? Does Someday get its own sidebar entry?
+- **Defer** (`defer_until`, local date): the task is hidden from Today (all four lists) until that date.
+  In Project/Area/Inbox/All-tasks lists it stays visible, dimmed, with a "Starts {date}" chip.
+- **Someday** (`is_someday`): parked idea. Hidden from Today, from the Inbox page, the Weekly Review Inbox step and the
+  dashboard inbox count. Listed on `/someday` (open tasks of non-archived items). Still shown dimmed with a "Someday"
+  chip in Project/Area lists and All tasks. Moving it back to active returns it to where it was (an Inbox task is back in the Inbox).
+- **Validation**: `due_date < defer_until` is rejected with 400 (checked against the merged old + new values).
+- Export/import and undo snapshots carry both fields; old undo snapshots without them restore as not deferred/not someday.
+- Not done: no "show deferred" filter, and Someday tasks are not excluded from search or tag filters.
 
 ## Other ideas the owner liked (backlog, not prioritised yet)
 

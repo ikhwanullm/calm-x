@@ -33,6 +33,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", route: "/" },
   { label: "Today", route: "/today" },
   { label: "Inbox", route: "/inbox" },
+  { label: "Someday", route: "/someday" },
   { label: "All tasks", route: "/tasks" },
   { label: "Projects", route: "/projects" },
   { label: "Areas", route: "/areas" },

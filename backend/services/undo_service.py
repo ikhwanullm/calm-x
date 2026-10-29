@@ -70,6 +70,7 @@ def record_task_deletion(session: Session, task: Task) -> None:
         "is_complete": task.is_complete, "sort_order": task.sort_order,
         "created_at": _iso(task.created_at), "focus_date": _iso(task.focus_date),
         "waiting_for": task.waiting_for, "waiting_since": _iso(task.waiting_since),
+        "defer_until": _iso(task.defer_until), "is_someday": task.is_someday,
         "tags": list(tag_names),
         "subtasks": [_subtask_dict(s) for s in subtasks],
     })
@@ -106,6 +107,9 @@ def restore_task(session: Session, task_id: int):
         created_at=_dt(snap["created_at"]) or now, updated_at=now,
         focus_date=date.fromisoformat(snap["focus_date"]) if snap["focus_date"] else None,
         waiting_for=snap["waiting_for"], waiting_since=_dt(snap["waiting_since"]),
+        # .get: snapshots recorded before migration 007 lack these keys
+        defer_until=date.fromisoformat(snap["defer_until"]) if snap.get("defer_until") else None,
+        is_someday=int(snap.get("is_someday") or 0),
     )
     if session.get(Task, snap["id"]) is None:
         task.id = snap["id"]

@@ -65,7 +65,7 @@ def get_inbox_tasks(session: Session) -> list[ReviewTaskItem]:
     """Return all open inbox tasks (item_id IS NULL, is_complete = 0)."""
     tasks: list[Task] = list(session.execute(
         select(Task)
-        .where(Task.item_id.is_(None), Task.is_complete == 0)
+        .where(Task.item_id.is_(None), Task.is_complete == 0, Task.is_someday == 0)
         .order_by(Task.sort_order, Task.created_at)
     ).scalars().all())
 
