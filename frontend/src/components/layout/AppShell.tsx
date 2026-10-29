@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
@@ -14,6 +14,8 @@ import {
   LayoutTemplate,
   CalendarCheck,
   Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Kbd } from "@/components/common"
@@ -51,18 +53,42 @@ const SECONDARY_NAV: NavItem[] = [
   { to: "/settings", icon: Settings, label: "Settings" },
 ]
 
-function SidebarNavItem({ item, inboxCount }: { item: NavItem; inboxCount?: number }) {
+const WIDE_QUERY = "(min-width: 1280px)"
+const COLLAPSED_KEY = "calmx.sidebar.collapsed"
+
+/** True on screens >= 1280px (Tailwind `xl`). Treated as wide where matchMedia is missing (tests). */
+function useIsWide(): boolean {
+  const [wide, setWide] = useState(() => (typeof window.matchMedia === "function" ? window.matchMedia(WIDE_QUERY).matches : true))
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return
+    const mq = window.matchMedia(WIDE_QUERY)
+    const onChange = () => setWide(mq.matches)
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+  return wide
+}
+
+function readCollapsed(): boolean {
+  try { return localStorage.getItem(COLLAPSED_KEY) === "1" } catch { return false }
+}
+
+function SidebarNavItem({
+  item, inboxCount, expanded, onNavigate,
+}: { item: NavItem; inboxCount?: number; expanded: boolean; onNavigate: () => void }) {
   return (
     <NavLink
       to={item.to}
       end={item.end}
       aria-label={item.label}
       title={item.label}
+      onClick={onNavigate}
       className={({ isActive }) =>
         cn(
           "relative flex items-center gap-3 rounded-control px-3 h-11",
           "text-sm font-medium transition-colors",
-          "xl:w-full w-11 xl:justify-start justify-center overflow-hidden",
+          "overflow-hidden",
+          expanded ? "w-full justify-start" : "w-11 justify-center",
           isActive
             ? "bg-accent-soft text-accent-text"
             : "text-muted hover:bg-surface-2 hover:text-text"
@@ -77,19 +103,22 @@ function SidebarNavItem({ item, inboxCount }: { item: NavItem; inboxCount?: numb
             aria-hidden="true"
             className="shrink-0"
           />
-          <span className="xl:block hidden truncate">{item.label}</span>
+          {expanded && <span className="truncate">{item.label}</span>}
           {item.label === "Inbox" && inboxCount != null && inboxCount > 0 && (
             <>
+              {expanded ? (
               <span
-                className="xl:flex hidden ml-auto items-center justify-center min-w-5 h-5 px-1 rounded-pill bg-surface-2 text-xs font-semibold tabular-nums"
+                className="flex ml-auto items-center justify-center min-w-5 h-5 px-1 rounded-pill bg-surface-2 text-xs font-semibold tabular-nums"
                 aria-label={`${inboxCount} inbox items`}
               >
                 {inboxCount > 99 ? "99+" : inboxCount}
               </span>
+              ) : (
               <span
-                className="xl:hidden absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-accent"
+                className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-accent"
                 aria-hidden="true"
               />
+              )}
             </>
           )}
         </>
@@ -108,6 +137,31 @@ export function AppShell() {
   const inboxCount = inboxTasks?.filter((t) => !t.is_complete).length ?? 0
   const navigate = useNavigate()
 
+  // Wide screens: the sidebar pushes the content and the choice is remembered.
+  // Narrow screens: it is icons only; opening it overlays the content and closes again after a click.
+  const isWide = useIsWide()
+  const [collapsedWide, setCollapsedWide] = useState(readCollapsed)
+  const [overlayOpen, setOverlayOpen] = useState(false)
+  const expanded = isWide ? !collapsedWide : overlayOpen
+  const overlay = !isWide && overlayOpen
+
+  function toggleSidebar() {
+    if (isWide) {
+      const next = !collapsedWide
+      setCollapsedWide(next)
+      try { localStorage.setItem(COLLAPSED_KEY, next ? "1" : "0") } catch { /* remembering is optional */ }
+    } else {
+      setOverlayOpen((open) => !open)
+    }
+  }
+
+  useEffect(() => {
+    if (!overlay) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOverlayOpen(false) }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [overlay])
+
   useShortcuts({
     Q: () => !paletteOpen && !helpOpen && setCaptureOpen(true),
     "/": () => { setCaptureOpen(false); setPaletteOpen(true) },
@@ -117,30 +171,58 @@ export function AppShell() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
-      {/* Sidebar — sticky full-height, scrollable if content exceeds viewport */}
-      <aside
-        className="flex flex-col bg-surface border-r border-border shrink-0 xl:w-[232px] w-16 overflow-y-auto"
-        aria-label="Sidebar"
-      >
-        <div className="flex items-center xl:justify-start justify-center h-14 px-3 xl:px-4 border-b border-border shrink-0">
-          <span className="xl:block hidden text-base font-semibold text-text tracking-tight">Calm-X</span>
-          <span className="xl:hidden block text-base font-semibold text-accent">X</span>
-        </div>
+      {/* Sidebar — the wrapper keeps its space in the layout; an open overlay is drawn over the content */}
+      <div className={cn("relative shrink-0 transition-[width]", isWide && expanded ? "w-[232px]" : "w-16")}>
+        {overlay && (
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label="Close sidebar"
+            className="fixed inset-0 z-20 bg-black/30 cursor-default"
+            onClick={() => setOverlayOpen(false)}
+          />
+        )}
+        <aside
+          className={cn(
+            "absolute inset-y-0 left-0 z-30 flex flex-col bg-surface border-r border-border overflow-y-auto overflow-x-hidden transition-[width]",
+            expanded ? "w-[232px]" : "w-16"
+          )}
+          aria-label="Sidebar"
+        >
+          <div
+            className={cn(
+              "flex items-center h-14 border-b border-border shrink-0",
+              expanded ? "justify-between px-4" : "justify-center px-3"
+            )}
+          >
+            {expanded && <span className="text-base font-semibold text-text tracking-tight">Calm-X</span>}
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+              aria-expanded={expanded}
+              title={expanded ? "Collapse sidebar" : "Expand sidebar"}
+              className="inline-flex items-center justify-center w-9 h-9 rounded-control text-muted hover:bg-surface-2 hover:text-text"
+            >
+              {expanded ? <PanelLeftClose size={18} strokeWidth={1.75} aria-hidden="true" /> : <PanelLeftOpen size={18} strokeWidth={1.75} aria-hidden="true" />}
+            </button>
+          </div>
 
-        <nav aria-label="Main" className="flex flex-col gap-1 p-2 flex-1">
-          {PRIMARY_NAV.map((item) => (
-            <SidebarNavItem key={item.to} item={item} inboxCount={inboxCount} />
-          ))}
-        </nav>
-
-        <div className="border-t border-border p-2 flex flex-col gap-1 mt-auto shrink-0">
-          <nav aria-label="Secondary">
-            {SECONDARY_NAV.map((item) => (
-              <SidebarNavItem key={item.to} item={item} />
+          <nav aria-label="Main" className="flex flex-col gap-1 p-2 flex-1">
+            {PRIMARY_NAV.map((item) => (
+              <SidebarNavItem key={item.to} item={item} inboxCount={inboxCount} expanded={expanded} onNavigate={() => setOverlayOpen(false)} />
             ))}
           </nav>
-        </div>
-      </aside>
+
+          <div className="border-t border-border p-2 flex flex-col gap-1 mt-auto shrink-0">
+            <nav aria-label="Secondary">
+              {SECONDARY_NAV.map((item) => (
+                <SidebarNavItem key={item.to} item={item} expanded={expanded} onNavigate={() => setOverlayOpen(false)} />
+              ))}
+            </nav>
+          </div>
+        </aside>
+      </div>
 
       {/* Main column — fills remaining space, scrolls independently */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">

@@ -4,17 +4,18 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to meeting notes part A (`f4cdc76`) is pushed to `origin/main`; part B is committed locally, not pushed.
+- Everything up to meeting notes part A (`f4cdc76`) is pushed to `origin/main`; part B (`93406d8`) too.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
-- Tests at the last commit: backend 559 passed, frontend 817 passed (66 files), `tsc -b` clean.
+- Tests at the last commit: backend 559 passed, frontend 820 passed (66 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
-| (newest) | Meeting notes, part B: "From last meeting" block on + Meeting, Weekly Review "Meetings" step |
+| (newest) | Sidebar toggle: collapse/expand button; on screens < 1280px it opens as an overlay |
+| `93406d8` | Meeting notes, part B: "From last meeting" block on + Meeting, Weekly Review "Meetings" step |
 | `f4cdc76` | Meeting notes, part A: `meetings` table + `tasks.meeting_id` (migration 008), Markdown notes with autosave, action lines turned into tasks, `/meetings` page, Meetings section on Project/Area pages, "From meeting" link in the task drawer, Undo for deleted meetings |
 | `5a0c4d5` | Safety round: duplicate-test guard, daily backups while running + `pre-delete` backup, Needs attention follows the Today rules |
 | `7b110e1` | Defer + Someday: `tasks.defer_until` / `tasks.is_someday` (migration 007), "Defer until" and "Move to Someday" in the drawer, "Starts {date}" / "Someday" chips, `/someday` page + sidebar entry, `GET /api/tasks/someday`, "Someday [M]" in the Weekly Review Inbox step |
