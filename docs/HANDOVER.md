@@ -127,6 +127,75 @@ Three small fixes from the read-only end-to-end review, one commit each.
   exclude them instead, add `Task.waiting_for.is_(None)` to the query in `dashboard_service._get_upcoming_deadlines`
   and drop the label in `NeedsAttentionRow`.
 
+## Next up: Meeting notes (designed with the owner, 2026-10-29)
+
+The owner has 3–5 meetings a week, almost always about one project. One growing Notes field per project doesn't
+work for that. Notes are for the owner only (nothing is shared or sent). Build it in two commits: **A** then **B**.
+
+### Decisions already made
+
+- A meeting belongs to exactly **one Project or Area** (not a Resource; not an archived item). No multi-item links.
+- The body is **Markdown** (GitHub-flavoured, incl. task lists). Render safely: no raw HTML; links open in a new tab
+  with `rel="noopener noreferrer"`.
+- No separate "series" entity: continuity comes from **carrying over** the previous meeting of the same item (part B).
+- Action items for other people only become Waiting-for tasks for the owner. No export/share.
+
+### Data model (migration 008)
+
+- New table `meetings`: `id`, `item_id` (FK items, ON DELETE CASCADE, required), `title` (≤200), `held_at`
+  (datetime UTC, entered as local date + time), `attendees` (text ≤500, free text), `body` (Markdown, ≤50 000 chars),
+  `processed_at` (datetime NULL), `created_at`, `updated_at`.
+- `tasks.meeting_id INTEGER NULL REFERENCES meetings(id) ON DELETE SET NULL` (plain `ADD COLUMN`): the meeting a
+  task was created from.
+- Export/import (remap ids, include `meeting_id` on tasks), Replace clears `meetings`, undo snapshots of tasks carry
+  `meeting_id`. Deleting a meeting uses ConfirmDialog and the same Undo pattern as tasks (`undo_entries` kind `meeting`).
+- Meetings of an archived item are read-only, like everything else on it.
+
+### Line syntax parsed from the body
+
+| Line (optionally inside a list, `- …`) | Meaning | On "Process" |
+|---|---|---|
+| `[ ] text` or `- [ ] text` | my action | task in the meeting's item, `meeting_id` set |
+| `@Who: text` | someone else's action | task with `waiting_for = Who` (title = text), `meeting_id` set |
+| `? text` | open question | stays in the notes; carried over in part B |
+| `! text` | decision | stays in the notes; listed in the meeting summary |
+
+After a line is turned into a task, rewrite it in the body as `[→] text` (or `@→Who: text`) so it is visibly done
+and never converted twice. Parsing lives in one backend function used by both the preview and the process endpoint.
+No natural-language dates in this round: due dates are set in the process dialog.
+
+### Part A — meetings, editor, processing
+
+- API: `GET/POST /api/items/{id}/meetings`, `GET/PUT/DELETE /api/meetings/{id}`, `GET /api/meetings` (all, newest
+  first, `q` search on title + attendees + body with escaped LIKE), `GET /api/meetings/{id}/actions` (parsed lines),
+  `POST /api/meetings/{id}/process` (body: the confirmed actions with optional due date / priority; creates tasks in
+  one transaction, respects the 100-task limit, rewrites the converted lines, sets `processed_at`).
+- Project and Area pages: a **Meetings** section (newest first; each row shows date, title and "N actions to process"
+  while unconverted `[ ]`/`@` lines remain) with **+ Meeting**, which creates one prefilled with
+  title "{item title} meeting", now as `held_at`, and a template body:
+  `## Agenda`, `## Notes`, `## Decisions`, `## Actions` (with an example `[ ] ` line), `## Questions`.
+- Meeting page `/meetings/:id`: title, date/time, item link, attendees; Markdown **Edit / Preview** toggle; autosave
+  (debounced ~1 s and on blur, with a visible "Saved" state; never lose typing on navigation); a side panel listing the
+  parsed lines live; **Process actions** button opening a dialog to tick lines, set due date/priority, then create.
+- `/meetings` page + sidebar entry "Meetings": list with search, grouped by week.
+- Task drawer: "From meeting: {title}, {date}" linking to the meeting.
+- Command palette search includes meetings.
+
+### Part B — continuity and review
+
+- **+ Meeting** on an item that already has meetings adds a "From last meeting" block to the new body: the previous
+  meeting's unconverted `? ` questions, and links to tasks created from it that are still open.
+- Weekly Review: show meetings of the past week that still have actions to process, with a link to process them.
+- Keep the parsed decisions (`! `) and created tasks easy to query; the future weekly report will use them.
+
+### Tests and verification
+
+Backend: parser cases (each prefix, inside lists, already converted lines, ordinary text), process creates tasks with
+`meeting_id`/`waiting_for` and rewrites lines, re-processing creates nothing new, 100-task limit, archived item
+read-only, cascade on item delete, `SET NULL` on meeting delete, export/import round trip, migration 008 pinned test.
+Frontend: section on Project/Area, autosave, preview renders Markdown but not raw HTML, process dialog, drawer link.
+Browser check on a DB copy, as in the recipe above.
+
 ## Other ideas the owner liked (backlog, not prioritised yet)
 
 Recurring tasks; weekly status report generated at the end of Weekly Review; one "next action" per project;
