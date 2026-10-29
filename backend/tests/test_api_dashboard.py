@@ -221,27 +221,3 @@ def test_dashboard_reference_link_count_for_resources(engine):
     assert data.reference_link_count == 2
 
 
-
-
-def test_dashboard_reference_link_count_for_resources(engine):
-    """Fix 3: reference_link_count counts reference links on non-archived resources."""
-    from backend.services.reference_link_service import add_reference_link
-    from backend.schemas.link import ReferenceLinkCreate
-
-    with Session(engine) as s:
-        now = now_utc()
-        resource = Item(type="resource", title="R", description="", notes="",
-                        created_at=now, updated_at=now)
-        s.add(resource); s.flush()
-        resource_id = resource.id
-        s.commit()
-        with Session(engine) as s2:
-            add_reference_link(s2, resource_id, ReferenceLinkCreate(url="https://a.com"))
-            add_reference_link(s2, resource_id, ReferenceLinkCreate(url="https://b.com"))
-            s2.commit()
-
-    with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert data.reference_link_count == 2
-
-
