@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from backend.exceptions import ImportFailedError, ImportValidationError
 from backend.models.item import (
-    Item, Task, Subtask, Tag, TaskTag, ReferenceLink, ResourceLink,
+    Item, Meeting, Task, Subtask, Tag, TaskTag, ReferenceLink, ResourceLink,
 )
 from backend.models.preference import UserPreference
 from backend.models.template import Template, TemplateTask
@@ -82,6 +82,15 @@ def export_data(session: Session) -> dict[str, Any]:
             "waiting_since": _dt_to_iso(t.waiting_since),
             "defer_until": str(t.defer_until) if t.defer_until else None,
             "is_someday": t.is_someday,
+            "meeting_id": t.meeting_id,
+        }
+
+    def meeting_dict(m: Meeting) -> dict:
+        return {
+            "id": m.id, "item_id": m.item_id, "title": m.title,
+            "held_at": _dt_to_iso(m.held_at), "attendees": m.attendees, "body": m.body,
+            "processed_at": _dt_to_iso(m.processed_at),
+            "created_at": _dt_to_iso(m.created_at), "updated_at": _dt_to_iso(m.updated_at),
         }
 
     def subtask_dict(s: Subtask) -> dict:
@@ -135,6 +144,7 @@ def export_data(session: Session) -> dict[str, Any]:
         "exported_at": _dt_to_iso(datetime.now(timezone.utc)),
         "items": [item_dict(i) for i in session.execute(select(Item)).scalars()],
         "tasks": [task_dict(t) for t in session.execute(select(Task)).scalars()],
+        "meetings": [meeting_dict(m) for m in session.execute(select(Meeting)).scalars()],
         "subtasks": [subtask_dict(s) for s in session.execute(select(Subtask)).scalars()],
         "tags": [tag_dict(t) for t in session.execute(select(Tag)).scalars()],
         "task_tags": [task_tag_dict(tt) for tt in session.execute(select(TaskTag)).scalars()],
@@ -204,6 +214,8 @@ def validate_export_data(data: Any) -> dict:
     # that happens in _validate_import_refs)
     for key in _REQUIRED_TOP_KEYS - {"schema_version"}:
         _require_list(data, key)
+    if "meetings" in data:  # optional: exports made before meetings existed don't have it
+        _require_list(data, "meetings")
 
     # Per-record field validation
     _validate_record_fields(data)
@@ -263,12 +275,28 @@ def _validate_record_fields(data: dict) -> None:
         waiting_for = r.get("waiting_for")
         if waiting_for is not None and (not isinstance(waiting_for, str) or len(waiting_for) > 200):
             raise ImportValidationError(f"{ctx}: waiting_for must be a string ≤ 200 chars")
+        meeting_id = r.get("meeting_id")
+        if meeting_id is not None and not isinstance(meeting_id, int):
+            raise ImportValidationError(f"{ctx}: meeting_id must be an integer")
         defer_until = r.get("defer_until")
         if defer_until is not None:
             try:
                 _date.fromisoformat(defer_until)
             except (TypeError, ValueError):
                 raise ImportValidationError(f"{ctx}: defer_until must be a YYYY-MM-DD date")
+
+    # ── Meetings (absent in exports made before meetings existed) ──────────
+    for r in data.get("meetings", []):
+        ctx = f"meetings[id={r.get('id')}]"
+        title = r.get("title", "")
+        if not isinstance(title, str) or not title.strip() or len(title) > 200:
+            raise ImportValidationError(f"{ctx}: title must be a non-empty string ≤ 200 chars")
+        if not isinstance(r.get("held_at"), str) or _iso_to_dt(r["held_at"]) is None:
+            raise ImportValidationError(f"{ctx}: held_at must be an ISO datetime")
+        if not isinstance(r.get("attendees", ""), str) or len(r.get("attendees", "")) > 500:
+            raise ImportValidationError(f"{ctx}: attendees must be a string ≤ 500 chars")
+        if not isinstance(r.get("body", ""), str) or len(r.get("body", "")) > 50000:
+            raise ImportValidationError(f"{ctx}: body must be a string ≤ 50000 chars")
 
     # ── Subtasks ───────────────────────────────────────────────────────────
     for r in data["subtasks"]:
@@ -344,6 +372,19 @@ def _validate_import_refs(data: dict) -> None:
             raise ImportValidationError(f"Item id={r.get('id')} is not a project but has area_id={area_id}")
         if item_types.get(area_id) != "area":
             raise ImportValidationError(f"Project id={r.get('id')} references area_id={area_id}, which is not an Area in the file")
+
+    # meetings.item_id → a Project or Area in the file; tasks.meeting_id → a meeting in the file
+    meeting_ids = {r["id"] for r in data.get("meetings", []) if isinstance(r.get("id"), int)}
+    for m in data.get("meetings", []):
+        item_id = m.get("item_id")
+        if item_id not in item_ids:
+            raise ImportValidationError(f"Meeting id={m.get('id')} references unknown item_id={item_id}")
+        if item_types.get(item_id) == "resource":
+            raise ImportValidationError(f"Meeting id={m.get('id')} belongs to a Resource, which cannot have meetings")
+    for t in data["tasks"]:
+        meeting_id = t.get("meeting_id")
+        if meeting_id is not None and meeting_id not in meeting_ids:
+            raise ImportValidationError(f"Task id={t.get('id')} references unknown meeting_id={meeting_id}")
 
     # tasks.item_id → items.id (NULL is allowed = inbox)
     for t in data["tasks"]:
@@ -478,6 +519,21 @@ def _import_merge(session: Session, data: dict) -> dict[str, int]:
             session.get(Item, item_id_map[r["id"]]).area_id = item_id_map[r["area_id"]]
     session.flush()
 
+    # ── Meetings (before tasks, which may point at them) ───────────────────
+    meeting_id_map: dict[int, int] = {}
+    for r in data.get("meetings", []):
+        meeting = Meeting(
+            item_id=item_id_map[r["item_id"]], title=r["title"],
+            held_at=_iso_to_dt(r["held_at"]), attendees=r.get("attendees", ""), body=r.get("body", ""),
+            processed_at=_iso_to_dt(r.get("processed_at")),
+            created_at=_iso_to_dt(r.get("created_at")) or now,
+            updated_at=_iso_to_dt(r.get("updated_at")) or now,
+        )
+        session.add(meeting)
+        session.flush()
+        meeting_id_map[r["id"]] = meeting.id
+    counts["meetings"] = len(meeting_id_map)
+
     # ── Tasks ──────────────────────────────────────────────────────────────
     for r in data["tasks"]:
         t = Task(
@@ -497,6 +553,7 @@ def _import_merge(session: Session, data: dict) -> dict[str, int]:
             waiting_since=_iso_to_dt(r.get("waiting_since")),
             defer_until=_date.fromisoformat(r["defer_until"]) if r.get("defer_until") else None,
             is_someday=1 if r.get("is_someday") else 0,
+            meeting_id=meeting_id_map.get(r["meeting_id"]) if r.get("meeting_id") is not None else None,
         )
         session.add(t)
         session.flush()
@@ -698,7 +755,7 @@ def _delete_all(session: Session) -> None:
     # but deleting parent tables first in safe order is also fine
     for table in (
         "task_tags", "subtasks", "resource_links", "reference_links",
-        "tasks", "items", "tags", "template_tasks", "templates",
+        "tasks", "meetings", "items", "tags", "template_tasks", "templates",
         "weekly_reviews", "user_preferences",
         # Undo snapshots belong to the replaced data and must not resurrect it
         "undo_entries",

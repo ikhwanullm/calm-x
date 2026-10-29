@@ -7,6 +7,7 @@ from backend.models.item import (  # noqa: F401
     TaskTag,
     ReferenceLink,
     ResourceLink,
+    Meeting,
 )
 
 from backend.models.preference import UserPreference  # noqa: F401

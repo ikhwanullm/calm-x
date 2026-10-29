@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { MemoryRouter } from "react-router-dom"
+import { MemoryRouter, useLocation } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import React from "react"
 import { CommandPalette } from "../components/search/CommandPalette"
+import { searchApi } from "../api/search"
 
 // Mock cmdk entirely to avoid jsdom browser API issues
 vi.mock("cmdk", () => {
@@ -81,12 +82,27 @@ describe("CommandPalette", () => {
     }, { timeout: 1500 })
   })
 
+  it("finds meetings and opens one", async () => {
+    vi.mocked(searchApi.search).mockResolvedValueOnce([
+      { id: 5, type: "meeting", item_type: "project", title: "Firewall sync", is_archived: false, item_id: 3 },
+    ])
+    const user = userEvent.setup()
+    function Where() { return <p data-testid="where">{useLocation().pathname}</p> }
+    render(<><CommandPalette open onOpenChange={vi.fn()} /><Where /></>, { wrapper })
+    await user.type(screen.getByRole("textbox", { name: "Search query" }), "firewall")
+    await waitFor(() => expect(screen.getByText("Meetings", { selector: "span" })).toBeTruthy(), { timeout: 1500 })
+    await user.click(screen.getByText("Firewall sync"))
+    expect(screen.getByTestId("where").textContent).toBe("/meetings/5")
+  })
+
   it("sidebar navigate items are all present", async () => {
     render(<CommandPalette open onOpenChange={vi.fn()} />, { wrapper })
     await waitFor(() => {
       expect(screen.getByText("Resources")).toBeTruthy()
       expect(screen.getByText("Archive")).toBeTruthy()
       expect(screen.getByText("Weekly review")).toBeTruthy()
+      expect(screen.getByText("Someday")).toBeTruthy()
+      expect(screen.getByText("Meetings")).toBeTruthy()
     })
   })
 })

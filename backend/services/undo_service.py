@@ -13,7 +13,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from backend.exceptions import LimitExceededError, NotFoundError
-from backend.models.item import Item, Subtask, Tag, Task, TaskTag
+from backend.models.item import Item, Meeting, Subtask, Tag, Task, TaskTag
 from backend.models.undo import UndoEntry
 from backend.models.utils import now_utc
 
@@ -71,6 +71,7 @@ def record_task_deletion(session: Session, task: Task) -> None:
         "created_at": _iso(task.created_at), "focus_date": _iso(task.focus_date),
         "waiting_for": task.waiting_for, "waiting_since": _iso(task.waiting_since),
         "defer_until": _iso(task.defer_until), "is_someday": task.is_someday,
+        "meeting_id": task.meeting_id,
         "tags": list(tag_names),
         "subtasks": [_subtask_dict(s) for s in subtasks],
     })
@@ -110,6 +111,8 @@ def restore_task(session: Session, task_id: int):
         # .get: snapshots recorded before migration 007 lack these keys
         defer_until=date.fromisoformat(snap["defer_until"]) if snap.get("defer_until") else None,
         is_someday=int(snap.get("is_someday") or 0),
+        # the meeting may have been deleted since; old snapshots lack the key
+        meeting_id=snap.get("meeting_id") if snap.get("meeting_id") and session.get(Meeting, snap["meeting_id"]) else None,
     )
     if session.get(Task, snap["id"]) is None:
         task.id = snap["id"]
@@ -155,3 +158,56 @@ def restore_subtask(session: Session, subtask_id: int):
     session.flush()
     _reevaluate_task_status(session, task)
     return SubtaskResponse.model_validate(subtask)
+
+
+def record_meeting_deletion(session: Session, meeting: Meeting, linked_task_ids: list[int]) -> None:
+    """Snapshot a meeting and the tasks that were created from it (to re-link on restore)."""
+    _record(session, "meeting", meeting.id, {
+        "id": meeting.id, "item_id": meeting.item_id, "title": meeting.title,
+        "held_at": _iso(meeting.held_at), "attendees": meeting.attendees, "body": meeting.body,
+        "processed_at": _iso(meeting.processed_at), "created_at": _iso(meeting.created_at),
+        "linked_task_ids": linked_task_ids,
+    })
+
+
+def restore_meeting(session: Session, meeting_id: int):
+    """Re-create a deleted meeting and re-link the tasks that still exist and are unlinked.
+
+    Unlike a task, a meeting can't fall back to the Inbox: if its Project/Area is gone or archived
+    the restore is refused (and the snapshot kept, so it can be retried after un-archiving).
+    """
+    from backend.exceptions import ArchivedItemError
+    from backend.services.meeting_service import to_response
+
+    entry = session.execute(
+        select(UndoEntry).where(UndoEntry.kind == "meeting", UndoEntry.entity_id == meeting_id)
+        .order_by(UndoEntry.id.desc())
+    ).scalars().first()
+    if entry is None or entry.created_at.replace(tzinfo=None) < now_utc() - UNDO_RETENTION:
+        raise NotFoundError("Nothing to undo for this meeting; the undo window has passed")
+    snap = json.loads(entry.payload)
+
+    item = session.get(Item, snap["item_id"])
+    if item is None:
+        raise NotFoundError("The meeting's project or area no longer exists")
+    if item.archived_at is not None:
+        raise ArchivedItemError(f"'{item.title}' is archived; restore it first, then undo.", detail=f"item_id={item.id}")
+    session.delete(entry)
+
+    now = now_utc()
+    meeting = Meeting(
+        item_id=item.id, title=snap["title"], held_at=_dt(snap["held_at"]), attendees=snap["attendees"],
+        body=snap["body"], processed_at=_dt(snap["processed_at"]),
+        created_at=_dt(snap["created_at"]) or now, updated_at=now,
+    )
+    if session.get(Meeting, snap["id"]) is None:
+        meeting.id = snap["id"]
+    session.add(meeting)
+    session.flush()
+    for task_id in snap["linked_task_ids"]:
+        task = session.get(Task, task_id)
+        if task is not None and task.meeting_id is None:
+            task.meeting_id = meeting.id
+    item.updated_at = now
+    session.flush()
+    return to_response(session, meeting)

@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.exceptions import ArchivedItemError, LimitExceededError, NotFoundError, ValidationError
-from backend.models.item import Item, Subtask, Tag, Task, TaskTag
+from backend.models.item import Item, Meeting, Subtask, Tag, Task, TaskTag
 from backend.models.utils import now_utc
 from backend.schemas.task import TaskCreate, TaskResponse, TaskUpdate, TodayResponse
 from backend.services.guards import guard_not_archived, guard_task_item_not_archived
@@ -51,6 +51,7 @@ def _task_to_response(session: Session, task: Task) -> TaskResponse:
             .order_by(Tag.name)
         ).scalars().all()
     )
+    meeting = session.get(Meeting, task.meeting_id) if task.meeting_id is not None else None
     return TaskResponse(
         id=task.id,
         item_id=task.item_id,
@@ -73,6 +74,9 @@ def _task_to_response(session: Session, task: Task) -> TaskResponse:
         is_someday=bool(task.is_someday),
         item_title=task.item.title if task.item is not None else None,
         item_type=task.item.type if task.item is not None else None,
+        meeting_id=task.meeting_id,
+        meeting_title=meeting.title if meeting is not None else None,
+        meeting_held_at=_as_utc(meeting.held_at) if meeting is not None else None,
     )
 
 

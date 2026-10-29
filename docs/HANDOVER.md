@@ -4,17 +4,20 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Defer + Someday (`7b110e1`) is pushed. The safety-round commits after it are local until the owner asks for a push.
+- Everything up to the safety round (`5a0c4d5`) is pushed. Meeting notes part A is committed locally; push only when the owner asks.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
-- Schema head: **migration 007**. The owner's real DB is already at 007 (checked read-only on 2026-10-29).
-- Tests at the last commit: backend 504 passed, frontend 732 passed (59 files), `tsc -b` clean.
+- Schema head: **migration 008**. The owner's real DB was at 007 when last checked (2026-10-29); it upgrades to 008
+  automatically the next time the app starts.
+- Tests at the last commit: backend 549 passed, frontend 805 passed (65 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
-| (newest) | Defer + Someday: `tasks.defer_until` / `tasks.is_someday` (migration 007), "Defer until" and "Move to Someday" in the drawer, "Starts {date}" / "Someday" chips, `/someday` page + sidebar entry, `GET /api/tasks/someday`, "Someday [M]" in the Weekly Review Inbox step |
+| (newest) | Meeting notes, part A: `meetings` table + `tasks.meeting_id` (migration 008), Markdown notes with autosave, action lines turned into tasks, `/meetings` page, Meetings section on Project/Area pages, "From meeting" link in the task drawer, Undo for deleted meetings |
+| `5a0c4d5` | Safety round: duplicate-test guard, daily backups while running + `pre-delete` backup, Needs attention follows the Today rules |
+| `7b110e1` | Defer + Someday: `tasks.defer_until` / `tasks.is_someday` (migration 007), "Defer until" and "Move to Someday" in the drawer, "Starts {date}" / "Someday" chips, `/someday` page + sidebar entry, `GET /api/tasks/someday`, "Someday [M]" in the Weekly Review Inbox step |
 | `9cb3772` | Undo for deleted tasks/subtasks: server-side snapshots in `undo_entries` (24 h), `POST /api/tasks/{id}/restore`, `POST /api/subtasks/{id}/restore`, 8 s Undo toast |
 | `aaa5054` | `/today` page (Overdue, Due today, Planned for today, Waiting for) + Add to Today + Waiting for on tasks |
 | `e1fded6` | `Start Calm-X.cmd` / `start-calmx.ps1` double-click launcher |
@@ -127,59 +130,45 @@ Three small fixes from the read-only end-to-end review, one commit each.
   exclude them instead, add `Task.waiting_for.is_(None)` to the query in `dashboard_service._get_upcoming_deadlines`
   and drop the label in `NeedsAttentionRow`.
 
-## Next up: Meeting notes (designed with the owner, 2026-10-29)
+## Meeting notes (designed with the owner, 2026-10-29)
 
-The owner has 3–5 meetings a week, almost always about one project. One growing Notes field per project doesn't
-work for that. Notes are for the owner only (nothing is shared or sent). Build it in two commits: **A** then **B**.
+The owner has 3–5 meetings a week, almost always about one project. Notes are for the owner only (nothing is shared or
+sent). **Part A is built; part B is next.**
 
 ### Decisions already made
 
 - A meeting belongs to exactly **one Project or Area** (not a Resource; not an archived item). No multi-item links.
-- The body is **Markdown** (GitHub-flavoured, incl. task lists). Render safely: no raw HTML; links open in a new tab
-  with `rel="noopener noreferrer"`.
+- The body is **Markdown** (GitHub-flavoured, incl. task lists). Rendered with `react-markdown` + `remark-gfm` (added in part A):
+  raw HTML is never rendered (shown as text), `javascript:` links are dropped, links open in a new tab with `rel="noopener noreferrer"`.
 - No separate "series" entity: continuity comes from **carrying over** the previous meeting of the same item (part B).
 - Action items for other people only become Waiting-for tasks for the owner. No export/share.
 
-### Data model (migration 008)
+### Part A: how it works (done)
 
-- New table `meetings`: `id`, `item_id` (FK items, ON DELETE CASCADE, required), `title` (≤200), `held_at`
-  (datetime UTC, entered as local date + time), `attendees` (text ≤500, free text), `body` (Markdown, ≤50 000 chars),
-  `processed_at` (datetime NULL), `created_at`, `updated_at`.
-- `tasks.meeting_id INTEGER NULL REFERENCES meetings(id) ON DELETE SET NULL` (plain `ADD COLUMN`): the meeting a
-  task was created from.
-- Export/import (remap ids, include `meeting_id` on tasks), Replace clears `meetings`, undo snapshots of tasks carry
-  `meeting_id`. Deleting a meeting uses ConfirmDialog and the same Undo pattern as tasks (`undo_entries` kind `meeting`).
-- Meetings of an archived item are read-only, like everything else on it.
-
-### Line syntax parsed from the body
-
-| Line (optionally inside a list, `- …`) | Meaning | On "Process" |
-|---|---|---|
-| `[ ] text` or `- [ ] text` | my action | task in the meeting's item, `meeting_id` set |
-| `@Who: text` | someone else's action | task with `waiting_for = Who` (title = text), `meeting_id` set |
-| `? text` | open question | stays in the notes; carried over in part B |
-| `! text` | decision | stays in the notes; listed in the meeting summary |
-
-After a line is turned into a task, rewrite it in the body as `[→] text` (or `@→Who: text`) so it is visibly done
-and never converted twice. Parsing lives in one backend function used by both the preview and the process endpoint.
-No natural-language dates in this round: due dates are set in the process dialog.
-
-### Part A — meetings, editor, processing
-
-- API: `GET/POST /api/items/{id}/meetings`, `GET/PUT/DELETE /api/meetings/{id}`, `GET /api/meetings` (all, newest
-  first, `q` search on title + attendees + body with escaped LIKE), `GET /api/meetings/{id}/actions` (parsed lines),
-  `POST /api/meetings/{id}/process` (body: the confirmed actions with optional due date / priority; creates tasks in
-  one transaction, respects the 100-task limit, rewrites the converted lines, sets `processed_at`).
-- Project and Area pages: a **Meetings** section (newest first; each row shows date, title and "N actions to process"
-  while unconverted `[ ]`/`@` lines remain) with **+ Meeting**, which creates one prefilled with
-  title "{item title} meeting", now as `held_at`, and a template body:
-  `## Agenda`, `## Notes`, `## Decisions`, `## Actions` (with an example `[ ] ` line), `## Questions`.
-- Meeting page `/meetings/:id`: title, date/time, item link, attendees; Markdown **Edit / Preview** toggle; autosave
-  (debounced ~1 s and on blur, with a visible "Saved" state; never lose typing on navigation); a side panel listing the
-  parsed lines live; **Process actions** button opening a dialog to tick lines, set due date/priority, then create.
-- `/meetings` page + sidebar entry "Meetings": list with search, grouped by week.
-- Task drawer: "From meeting: {title}, {date}" linking to the meeting.
-- Command palette search includes meetings.
+- **Data**: `meetings` (`item_id` CASCADE, `title` ≤200, `held_at` UTC, `attendees` ≤500, `body` ≤50 000, `processed_at`) and
+  `tasks.meeting_id` (ON DELETE SET NULL). Export/import carry both (`meetings` is optional in files, so older exports
+  still import; merge inserts meetings before tasks and remaps `meeting_id`). Replace import wipes `meetings`.
+- **Line syntax** (`services/meeting_parser.py`, one function for the preview and the process endpoint; indentation and a
+  `-`/`*`/`+` list marker are ignored; fenced code blocks and lines without text are ignored):
+  `[ ] text` my action, `@Who: text` someone else's action (Waiting-for task), `? text` question, `! text` decision.
+  Processed lines become `[→] text` / `@→Who: text` and are only counted.
+- **API** (`api/meetings.py`): `GET/POST /api/items/{id}/meetings`, `GET /api/meetings?q=` (title, attendees, notes),
+  `GET/PUT/DELETE /api/meetings/{id}`, `POST /api/meetings/{id}/restore` (Undo), `GET /api/meetings/{id}/actions`,
+  `POST /api/meetings/{id}/process`. Process re-parses the saved notes and refuses (409, nothing created) if a chosen line
+  moved or changed; it is all-or-nothing, respects the 100-task limit, and puts a title longer than 200 chars in the
+  description. Tasks carry `meeting_id`, `meeting_title`, `meeting_held_at`.
+- **Undo** of a deleted meeting (`undo_entries` kind `meeting`, 24 h) re-creates it and re-links its tasks that still exist.
+  Unlike tasks it cannot fall back to the Inbox: if the Project/Area is gone (404) or archived (403) the restore is refused.
+- **Search**: `/api/search` also returns `type: "meeting"` rows; the command palette has a Meetings group.
+- **UI**: `MeetingsSection` on Project/Area pages (+ Meeting creates "{item} meeting" with the template and opens it),
+  `/meetings/:id` (Edit/Preview, autosave ~1 s + on blur + on leaving, "Saved / Unsaved changes / Couldn't save" status,
+  side panel with the parsed lines, Process dialog with due date and priority per line), `/meetings` (search, grouped by
+  week, Monday start), sidebar entry, task drawer link. `hooks/useAutosave.ts` is generic (debounce, merged patches, flush,
+  retry, `beforeunload` warning).
+- **Chosen by me, not by the owner**: an item that has meetings **cannot be converted to a Resource** (400, "delete them
+  first"), because meetings can't live on a Resource and silently deleting notes is worse. Meetings of an archived item are
+  read-only (also not deletable), like its tasks.
+- Not done in A: moving a meeting to another item, a meeting count on the Projects list, natural-language dates in lines.
 
 ### Part B — continuity and review
 
@@ -188,13 +177,10 @@ No natural-language dates in this round: due dates are set in the process dialog
 - Weekly Review: show meetings of the past week that still have actions to process, with a link to process them.
 - Keep the parsed decisions (`! `) and created tasks easy to query; the future weekly report will use them.
 
-### Tests and verification
+### Tests and verification (part B)
 
-Backend: parser cases (each prefix, inside lists, already converted lines, ordinary text), process creates tasks with
-`meeting_id`/`waiting_for` and rewrites lines, re-processing creates nothing new, 100-task limit, archived item
-read-only, cascade on item delete, `SET NULL` on meeting delete, export/import round trip, migration 008 pinned test.
-Frontend: section on Project/Area, autosave, preview renders Markdown but not raw HTML, process dialog, drawer link.
-Browser check on a DB copy, as in the recipe above.
+Backend: the carry-over block (previous meeting's open `?` lines and links to its still-open tasks), weekly review lists
+only meetings of the past week with actions left. Frontend: the review step. Browser check on a DB copy, as in the recipe above.
 
 ## Other ideas the owner liked (backlog, not prioritised yet)
 

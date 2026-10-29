@@ -24,7 +24,7 @@ function task(id: number, title: string, extra: Partial<Task> = {}): Task {
     id, item_id: null, title, description: '', notes: '', due_date: null, priority: 'medium',
     is_complete: false, sort_order: 0, created_at: '', updated_at: '', subtask_count: 0,
     completed_subtask_count: 0, tags: [], focus_date: null, waiting_for: null, waiting_since: null,
-    defer_until: null, is_someday: true, item_title: null, item_type: null, ...extra,
+    defer_until: null, is_someday: true, meeting_id: null, meeting_title: null, meeting_held_at: null, item_title: null, item_type: null, ...extra,
   }
 }
 

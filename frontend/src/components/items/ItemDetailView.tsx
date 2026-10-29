@@ -31,6 +31,7 @@ import { ResourceLinksSection } from '@/components/items/ResourceLinksSection'
 import { LinkedResourcesSection } from '@/components/items/LinkedResourcesSection'
 import { ProjectAreaField } from '@/components/items/ProjectAreaField'
 import { AreaProjectsSection } from '@/components/items/AreaProjectsSection'
+import { MeetingsSection } from '@/components/meetings/MeetingsSection'
 import { TaskDrawer } from '@/components/tasks/TaskDrawer'
 
 interface ItemDetailViewProps {
@@ -327,6 +328,11 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
       {/* Tasks section — not shown for Resources (R3.7) */}
       {item.type !== 'resource' && (
         <TasksSection item={item} archived={archived} />
+      )}
+
+      {/* Meeting notes — Projects and Areas only */}
+      {item.type !== 'resource' && (
+        <MeetingsSection itemId={item.id} itemTitle={item.title} isArchived={archived} />
       )}
 
       {/* 2.15: Archive prompt after completing project (R1.6) */}

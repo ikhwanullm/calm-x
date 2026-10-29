@@ -52,6 +52,12 @@ class Item(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    meetings: Mapped[list[Meeting]] = relationship(
+        "Meeting",
+        back_populates="item",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
     # ResourceLink: this item AS the resource (points to linked items)
     resource_links_as_resource: Mapped[list[ResourceLink]] = relationship(
         "ResourceLink",
@@ -118,9 +124,14 @@ class Task(Base):
     defer_until: Mapped[Date | None] = mapped_column(Date, nullable=True)
     # Parked idea, kept out of Today (0/1)
     is_someday: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    # Meeting this task was created from (None = not from a meeting)
+    meeting_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("meetings.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Relationships
     item: Mapped[Item | None] = relationship("Item", back_populates="tasks")
+    meeting: Mapped[Meeting | None] = relationship("Meeting", foreign_keys="Task.meeting_id")
     subtasks: Mapped[list[Subtask]] = relationship(
         "Subtask",
         back_populates="task",
@@ -244,3 +255,23 @@ class ResourceLink(Base):
         foreign_keys=[linked_item_id],
         back_populates="resource_links_as_linked",
     )
+
+
+class Meeting(Base):
+    """Meeting notes (Markdown) of one Project or Area."""
+
+    __tablename__ = "meetings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    item_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    held_at: Mapped[UTCDateTime] = mapped_column(UTCDateTime, nullable=False)
+    attendees: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    body: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    processed_at: Mapped[UTCDateTime | None] = mapped_column(UTCDateTime, nullable=True)
+    created_at: Mapped[UTCDateTime] = mapped_column(UTCDateTime, nullable=False)
+    updated_at: Mapped[UTCDateTime] = mapped_column(UTCDateTime, nullable=False)
+
+    item: Mapped[Item] = relationship("Item", back_populates="meetings")

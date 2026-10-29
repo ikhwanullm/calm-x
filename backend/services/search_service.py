@@ -4,7 +4,7 @@ from __future__ import annotations
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from backend.models.item import Item, Task
+from backend.models.item import Item, Meeting, Task
 
 MAX_RESULTS = 100
 
@@ -15,7 +15,7 @@ def _escape(q: str) -> str:
 
 
 def search(session: Session, query: str) -> list[dict]:
-    """Search Items and Tasks by title/description.
+    r"""Search Items, Tasks and Meetings (title/description; meetings also attendees and notes).
 
     Returns up to 100 results. Escaped LIKE for %, _, \.
     Empty query returns empty list (not all data).
@@ -77,6 +77,31 @@ def search(session: Session, query: str) -> list[dict]:
                 "item_type": parent.type if parent else None,
                 "is_archived": is_archived,
                 "item_id": task.item_id,
+            })
+
+    # --- Search Meetings (title, attendees, notes) ---
+    remaining = MAX_RESULTS - len(results)
+    if remaining > 0:
+        meetings = session.execute(
+            select(Meeting).where(
+                or_(
+                    Meeting.title.ilike(pattern, escape="\\"),
+                    Meeting.attendees.ilike(pattern, escape="\\"),
+                    Meeting.body.ilike(pattern, escape="\\"),
+                )
+            ).order_by(Meeting.held_at.desc()).limit(remaining)
+        ).scalars().all()
+
+        for meeting in meetings:
+            parent = session.get(Item, meeting.item_id)
+            is_archived = parent.archived_at is not None
+            results.append({
+                "type": "meeting",
+                "id": meeting.id,
+                "title": f"{meeting.title} (Archived)" if is_archived else meeting.title,
+                "item_type": parent.type,
+                "is_archived": is_archived,
+                "item_id": meeting.item_id,
             })
 
     return results[:MAX_RESULTS]

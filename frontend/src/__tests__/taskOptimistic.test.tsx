@@ -36,7 +36,7 @@ const makeTask = (overrides: Partial<Task> = {}): Task => ({
   subtask_count: 0,
   completed_subtask_count: 0,
   tags: [],
-  focus_date: null, waiting_for: null, waiting_since: null, defer_until: null, is_someday: false, item_title: null, item_type: null,
+  focus_date: null, waiting_for: null, waiting_since: null, defer_until: null, is_someday: false, meeting_id: null, meeting_title: null, meeting_held_at: null, item_title: null, item_type: null,
   ...overrides,
 })
 

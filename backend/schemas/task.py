@@ -154,6 +154,9 @@ class TaskResponse(BaseModel):
     is_someday: bool = False
     item_title: Optional[str] = None
     item_type: Optional[str] = None
+    meeting_id: Optional[int] = None
+    meeting_title: Optional[str] = None
+    meeting_held_at: Optional[datetime] = None
 
 
 class TodayResponse(BaseModel):

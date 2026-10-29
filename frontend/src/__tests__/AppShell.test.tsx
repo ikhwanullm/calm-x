@@ -49,6 +49,8 @@ describe("AppShell", () => {
     renderShell()
     expect(screen.getByRole("link", { name: "Dashboard" })).toBeTruthy()
     expect(screen.getByRole("link", { name: "Inbox" })).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Someday" })).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Meetings" })).toBeTruthy()
     expect(screen.getByRole("link", { name: "Projects" })).toBeTruthy()
     expect(screen.getByRole("link", { name: "Areas" })).toBeTruthy()
     expect(screen.getByRole("link", { name: "Resources" })).toBeTruthy()

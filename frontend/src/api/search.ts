@@ -1,7 +1,7 @@
 import { apiClient } from "./client"
 
 export interface SearchResult {
-  type: "item" | "task"
+  type: "item" | "task" | "meeting"
   id: number
   title: string
   item_type: string | null

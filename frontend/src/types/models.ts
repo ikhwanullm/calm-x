@@ -143,6 +143,9 @@ export interface Task {
   waiting_since: string | null   // ISO datetime (UTC)
   defer_until: string | null     // YYYY-MM-DD local date the task starts
   is_someday: boolean            // parked idea
+  meeting_id: number | null      // meeting the task was created from
+  meeting_title: string | null
+  meeting_held_at: string | null // ISO datetime (UTC)
   item_title: string | null
   item_type: ItemType | null
 }
@@ -298,4 +301,74 @@ export interface CreateProjectFromTemplatePayload {
 
 export interface TemplateTaskReorderPayload {
   task_ids: number[]
+}
+
+// ---------------------------------------------------------------------------
+// Meetings
+// ---------------------------------------------------------------------------
+
+/** A meeting without its notes, for lists. */
+export interface MeetingSummary {
+  id: number
+  item_id: number
+  item_title: string
+  item_type: ItemType
+  item_archived: boolean
+  title: string
+  held_at: string                // ISO datetime (UTC)
+  attendees: string
+  processed_at: string | null
+  updated_at: string
+  open_action_count: number      // `[ ]` and `@Who:` lines not yet turned into tasks
+}
+
+export interface Meeting extends MeetingSummary {
+  body: string                   // Markdown
+  created_at: string
+}
+
+export interface MeetingCreatePayload {
+  title: string
+  held_at: string
+  attendees?: string
+  body?: string
+}
+
+export interface MeetingUpdatePayload {
+  title?: string
+  held_at?: string
+  attendees?: string
+  body?: string
+}
+
+export interface MeetingActionLine {
+  line: number                   // 0-based line in the notes
+  kind: 'mine' | 'waiting'
+  text: string
+  who: string | null
+}
+
+export interface MeetingTextLine {
+  line: number
+  text: string
+}
+
+/** What the server finds in the notes right now. */
+export interface MeetingActions {
+  actions: MeetingActionLine[]
+  questions: MeetingTextLine[]
+  decisions: MeetingTextLine[]
+  converted: number
+}
+
+export interface ProcessActionPayload {
+  line: number
+  text: string
+  due_date?: string | null
+  priority?: TaskPriority
+}
+
+export interface ProcessResult {
+  created: Task[]
+  meeting: Meeting
 }

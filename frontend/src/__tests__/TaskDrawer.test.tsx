@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import { TaskDrawer } from '../components/tasks/TaskDrawer'
 import { useTask } from '../hooks/useTasks'
@@ -23,7 +24,7 @@ const baseTask: Task = {
   subtask_count: 2,
   completed_subtask_count: 1,
   tags: [],
-  focus_date: null, waiting_for: null, waiting_since: null, defer_until: null, is_someday: false, item_title: null, item_type: null,
+  focus_date: null, waiting_for: null, waiting_since: null, defer_until: null, is_someday: false, meeting_id: null, meeting_title: null, meeting_held_at: null, item_title: null, item_type: null,
 }
 
 const subtasks: Subtask[] = [
@@ -188,6 +189,21 @@ describe('TaskDrawer', () => {
     await user.click(screen.getByRole('button', { name: /remove from today/i }))
     expect(mockMutate).toHaveBeenCalledWith({ focus_date: null })
     vi.mocked(useTask).mockReturnValue({ data: baseTask, isLoading: false } as unknown as ReturnType<typeof useTask>)
+  })
+
+  it('links a task that came from a meeting back to it', () => {
+    vi.mocked(useTask).mockReturnValue({
+      data: { ...baseTask, meeting_id: 7, meeting_title: 'Kickoff', meeting_held_at: '2026-10-28T03:00:00Z' }, isLoading: false,
+    } as unknown as ReturnType<typeof useTask>)
+    render(<MemoryRouter><TaskDrawer taskId={1} onClose={vi.fn()} /></MemoryRouter>)
+    const link = screen.getByRole('link', { name: /From meeting: Kickoff, / })
+    expect(link.getAttribute('href')).toBe('/meetings/7')
+    vi.mocked(useTask).mockReturnValue({ data: baseTask, isLoading: false } as unknown as ReturnType<typeof useTask>)
+  })
+
+  it('shows no meeting link for an ordinary task', () => {
+    renderDrawer(1)
+    expect(screen.queryByText(/From meeting/)).toBeNull()
   })
 
   it('sets and clears "Defer until"', async () => {

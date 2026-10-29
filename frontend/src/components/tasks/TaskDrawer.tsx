@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { X, Plus, Trash2, Sun, CloudMoon } from 'lucide-react'
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet'
 import { ProgressBar, RelativeDate, ConfirmDialog } from '@/components/common'
@@ -370,6 +371,19 @@ export function TaskDrawer({ taskId, onClose, onDeleted }: TaskDrawerProps) {
                   </button>
                 )}
               </div>
+
+              {/* Meeting this task came from */}
+              {task?.meeting_id != null && task.meeting_title && task.meeting_held_at && (
+                <div className="flex items-center gap-3">
+                  <span className="w-20 text-sm text-muted shrink-0">Meeting</span>
+                  <Link
+                    to={`/meetings/${task.meeting_id}`}
+                    className="text-sm text-accent-text hover:underline min-w-0 truncate"
+                  >
+                    From meeting: {task.meeting_title}, {formatAbsoluteDate(isoToLocalDateStr(task.meeting_held_at))}
+                  </Link>
+                </div>
+              )}
 
               {/* Waiting for */}
               {task && (

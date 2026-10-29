@@ -34,6 +34,7 @@ const NAV_ITEMS = [
   { label: "Today", route: "/today" },
   { label: "Inbox", route: "/inbox" },
   { label: "Someday", route: "/someday" },
+  { label: "Meetings", route: "/meetings" },
   { label: "All tasks", route: "/tasks" },
   { label: "Projects", route: "/projects" },
   { label: "Areas", route: "/areas" },
@@ -84,6 +85,8 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture, onNewProjec
         // Navigate to item detail with task open
         navigate(`/tasks?task=${taskId}`)
       }
+    } else if (value.startsWith("meeting:")) {
+      navigate(`/meetings/${value.slice("meeting:".length)}`)
     }
   }
 
@@ -92,6 +95,7 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture, onNewProjec
   const areaResults = results.filter((r) => r.type === "item" && r.item_type === "area")
   const resourceResults = results.filter((r) => r.type === "item" && r.item_type === "resource")
   const taskResults = results.filter((r) => r.type === "task")
+  const meetingResults = results.filter((r) => r.type === "meeting")
 
   const itemClassName = cn(
     "flex items-center justify-between gap-2 px-2 py-1.5 rounded-control text-sm cursor-pointer",
@@ -232,6 +236,22 @@ export function CommandPalette({ open, onOpenChange, onQuickCapture, onNewProjec
                   <Command.Item
                     key={`task-${r.id}`}
                     value={`task:${r.id}:${r.item_id ?? "null"}`}
+                    onSelect={handleSelect}
+                    className={itemClassName}
+                  >
+                    <span className={cn("text-text", r.is_archived && "text-muted")}>{r.title}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* Grouped results: Meetings */}
+            {meetingResults.length > 0 && (
+              <Command.Group heading="Meetings" className="px-2">
+                {meetingResults.map((r) => (
+                  <Command.Item
+                    key={`meeting-${r.id}`}
+                    value={`meeting:${r.id}`}
                     onSelect={handleSelect}
                     className={itemClassName}
                   >

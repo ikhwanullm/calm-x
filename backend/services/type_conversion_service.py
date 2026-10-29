@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.exceptions import (
@@ -13,7 +13,7 @@ from backend.exceptions import (
     NotFoundError,
     ValidationError,
 )
-from backend.models.item import Item, ResourceLink, Task
+from backend.models.item import Item, Meeting, ResourceLink, Task
 from backend.models.utils import now_utc
 from backend.schemas.link import TypeConversionPayload, TypeConversionPreview
 from backend.schemas.item import item_to_response
@@ -140,4 +140,14 @@ def _get_and_validate(session: Session, item_id: int, target_type: str) -> Item:
         raise ConflictError(
             f"Item {item_id} is already type {target_type!r}."
         )
+    if target_type == "resource":
+        meeting_count = session.execute(
+            select(func.count()).select_from(Meeting).where(Meeting.item_id == item_id)
+        ).scalar_one()
+        if meeting_count:
+            raise ValidationError(
+                f"This item has {meeting_count} meeting{'s' if meeting_count != 1 else ''}, and Resources "
+                "cannot have meetings. Delete them first, or keep this as a Project or Area.",
+                detail=f"item_id={item_id}",
+            )
     return item
