@@ -213,6 +213,68 @@ stay below it. Only meetings have a time; everything else is date-only, so it is
   warn, overdue danger, deadlines a bordered chip with a flag icon, starts muted.
 - Not done: dragging with the keyboard, showing overdue tasks of earlier weeks in the strip.
 
+## Next up: richer Projects and All tasks lists (designed with the owner, 2026-10-29)
+
+The owner finds the list pages static: no sorting, few filters, little information per card. Start with **Projects**
+and **All tasks** (Areas and Resources follow later with the same pattern). Two commits: Projects, then All tasks.
+
+### Decisions already made
+
+- Both pages get a **card view and a compact list view** with a toggle; the choice is remembered per page
+  (`localStorage`, wrapped in try/catch, falling back to cards).
+- **Default sort for Projects: nearest deadline first** (projects without a deadline last, then by title).
+- The card contents below are approved as they are.
+- Sort, filters and search live in the URL query string (shareable, survive refresh); the view toggle does not.
+
+### Shared toolbar (one component for both pages, reusable later for Areas/Resources)
+
+Search box (filters as you type, debounced), Sort select, filter chips (toggle chips and dropdown chips), view toggle
+(grid / list icons with `aria-label`s and `aria-pressed`), and a "Clear filters" link when anything is active.
+Empty result: "No projects match these filters" with Clear filters.
+
+### Projects page
+
+- **Card**: title; deadline badge (existing StatusBadge; "No deadline" muted); line 2 = Area name · "updated {relative}"
+  (or, if no activity for 30+ days, "no activity for N days" in warning colour); progress bar with `done/total`;
+  **Next:** the next open task (earliest due date, else first by sort order) with its relative due date; footer chips:
+  `N overdue` (danger), `N waiting`, next/last meeting ("Meeting today 09:00" / "Meeting Tue"), `N resources`.
+  A project with no open tasks shows "No open tasks. Add a next step or archive it." instead of Next.
+- **Compact list**: one row per project with columns Title, Area, Progress (bar + done/total), Next task, Deadline,
+  Overdue, Last activity. Clicking a row opens the project.
+- **Sort**: Deadline (soonest, default), Progress (lowest first), Most overdue, Last activity (most recent), Name.
+- **Filters**: status chips Active (default on) / Completed; Area (dropdown, incl. "No area"); Deadline (dropdown:
+  any, overdue, this week, next 30 days, no deadline); "Has overdue"; "Stale 30+ days". Keep the existing `?area=`.
+
+### All tasks page
+
+- Keep the existing FilterPanel filters (tags, priority, due range, category) inside the new toolbar, and add:
+  text search (title, description, notes), status (Open default / Completed / All), and state chips
+  Waiting, Deferred, Someday, From a meeting (each: show only those; Someday and deferred-not-started are hidden
+  unless their chip is on, matching the Today rules).
+- **Sort**: Due date (default; no due date last), Priority, Project, Created, Updated.
+- **Group by**: Project, Due (Overdue / This week / Later / No due date), Priority, None (default). Group headers show
+  counts and can collapse.
+- **Compact list**: one row per task: checkbox, title, Project/Area, due (relative, coloured as usual), priority chip,
+  tags, state chips. Card view = today's TaskRow style.
+
+### Backend
+
+- Projects list needs per-project aggregates the API doesn't send yet: `open_task_count`, `overdue_task_count`
+  (needs the client's `today`), `waiting_task_count`, `next_task` (`{id, title, due_date}`), `next_meeting_at` /
+  `last_meeting_at`, `linked_resource_count`, `last_activity_at` (latest of the item's and its tasks'/meetings'
+  `updated_at`). Add them to the project response when `?today=` is passed, computed with **one grouped query per
+  aggregate for the whole list**, not per project.
+- Tasks list: extend `GET /api/tasks` (scope=all) with `q`, `status`, `waiting`, `deferred`, `someday`, `from_meeting`,
+  `sort`, `order`; grouping can stay client-side. Validate params (400 on unknown sort/status).
+- Escape LIKE wildcards in `q` like SearchService does.
+
+### Tests
+
+Backend: each new aggregate (incl. overdue relative to `today`, next task choice, last activity), each sort with ties,
+each filter and combinations, params validation, no N+1 (assert query count stays flat as projects grow, e.g. with an
+SQLAlchemy event counter). Frontend: toolbar state in the URL, view toggle remembered, card and list render the
+fields, sort/group/filter behaviour, empty state with Clear filters. Browser check on a DB copy.
+
 ## Other ideas the owner liked (backlog, not prioritised yet)
 
 Recurring tasks; weekly status report generated at the end of Weekly Review; one "next action" per project;
