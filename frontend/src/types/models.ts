@@ -322,6 +322,14 @@ export interface MeetingSummary {
   open_action_count: number      // `[ ]` and `@Who:` lines not yet turned into tasks
 }
 
+export interface MeetingCarryOver {
+  meeting_id: number
+  title: string
+  held_at: string
+  questions: string[]
+  open_tasks: { id: number; title: string; waiting_for: string | null }[]
+}
+
 export interface Meeting extends MeetingSummary {
   body: string                   // Markdown
   created_at: string

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  actionsLabel, defaultMeetingTitle, groupByWeek, joinLocalDateTime, MEETING_TEMPLATE, splitLocalDateTime,
+  actionsLabel, buildMeetingBody, defaultMeetingTitle, groupByWeek, joinLocalDateTime, MEETING_TEMPLATE, splitLocalDateTime,
 } from '../utils/meeting'
 import type { MeetingSummary } from '../types/models'
 
@@ -49,5 +49,26 @@ describe('meeting utils', () => {
   it('pluralises the action label', () => {
     expect(actionsLabel(1)).toBe('1 action to process')
     expect(actionsLabel(3)).toBe('3 actions to process')
+  })
+
+  it('a new meeting body is the plain template when there is nothing to carry over', () => {
+    expect(buildMeetingBody(null)).toBe(MEETING_TEMPLATE)
+    const empty = { meeting_id: 1, title: 'A', held_at: '2026-10-28T03:00:00Z', questions: [], open_tasks: [] }
+    expect(buildMeetingBody(empty)).toBe(MEETING_TEMPLATE)
+  })
+
+  it('carries questions as ? lines and open tasks as plain bullets above the template', () => {
+    const body = buildMeetingBody({
+      meeting_id: 7, title: 'Kickoff', held_at: '2026-10-28T03:00:00Z',
+      questions: ['Who owns it?', 'Budget?'],
+      open_tasks: [{ id: 1, title: '? tricky title', waiting_for: null }, { id: 2, title: 'send logs', waiting_for: 'Budi' }],
+    })
+    expect(body.startsWith('## From last meeting\n')).toBe(true)
+    expect(body).toContain('[Kickoff](/meetings/7)')
+    expect(body).toContain('\n? Who owns it?\n? Budget?\n')
+    // task titles are prefixed so a title like "? ..." or "[ ] ..." is never read as a meeting line
+    expect(body).toContain('\n- Task: ? tricky title\n')
+    expect(body).toContain('\n- Task: send logs (waiting for Budi)\n')
+    expect(body.endsWith(MEETING_TEMPLATE)).toBe(true)
   })
 })

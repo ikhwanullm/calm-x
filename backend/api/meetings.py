@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from backend.api.deps import get_db_session
 from backend.schemas.meeting import (
     ActionsResponse,
+    CarryOverResponse,
     MeetingCreate,
     MeetingResponse,
     MeetingSummary,
@@ -34,6 +35,12 @@ def list_all_meetings(
 @router.get("/items/{item_id}/meetings", response_model=list[MeetingSummary])
 def list_item_meetings(item_id: int, session: SessionDep):
     return meeting_service.list_meetings(session, item_id=item_id)
+
+
+@router.get("/items/{item_id}/meetings/carry-over", response_model=Optional[CarryOverResponse])
+def get_carry_over(item_id: int, session: SessionDep):
+    """Open questions and open tasks of the item's newest meeting (null when it has none)."""
+    return meeting_service.get_carry_over(session, item_id)
 
 
 @router.post("/items/{item_id}/meetings", response_model=MeetingResponse, status_code=201)

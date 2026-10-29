@@ -36,6 +36,7 @@ const mockCompleteReview = vi.fn().mockResolvedValue({ id: 1, completed_at: '202
 vi.mock('../hooks/useReview', () => ({
   useReviewStatus: () => ({ data: mockStatus }),
   useReviewInbox: () => ({ data: mockInboxTasks, isLoading: false }),
+  useReviewMeetings: () => ({ data: [], isLoading: false }),
   useReviewProjects: () => ({ data: mockProjects, isLoading: false }),
   useReviewAreas: () => ({ data: mockAreas, isLoading: false }),
   useReviewResources: () => ({ data: mockResources, isLoading: false }),
@@ -44,6 +45,7 @@ vi.mock('../hooks/useReview', () => ({
     all: ['weekly-review'],
     status: (t: string) => ['weekly-review', 'status', t],
     inbox: () => ['weekly-review', 'inbox'],
+    meetings: (t: string) => ['weekly-review', 'meetings', t],
     projects: (t: string) => ['weekly-review', 'projects', t],
     areas: (t: string) => ['weekly-review', 'areas', t],
     resources: (t: string) => ['weekly-review', 'resources', t],
@@ -90,9 +92,10 @@ describe('WeeklyReviewPage', () => {
     expect(screen.getByText(/Changes save as you go/i)).toBeTruthy()
   })
 
-  it('shows 5-step nav', () => {
+  it('shows 6-step nav', () => {
     render(<WeeklyReviewPage />, { wrapper })
     expect(screen.getByText('Inbox')).toBeTruthy()
+    expect(screen.getByText('Meetings')).toBeTruthy()
     expect(screen.getByText('Projects')).toBeTruthy()
     expect(screen.getByText('Areas')).toBeTruthy()
     expect(screen.getByText('Resources')).toBeTruthy()
@@ -119,19 +122,21 @@ describe('WeeklyReviewPage', () => {
   it('Next button navigates to Projects step', async () => {
     const user = userEvent.setup()
     render(<WeeklyReviewPage />, { wrapper })
-    // Footer has a button with text "Projects →"
-    const btns = screen.getAllByRole('button')
-    const nextBtn = btns.find(b => /Projects/.test(b.textContent ?? '') && /→/.test(b.textContent ?? ''))
-    expect(nextBtn).toBeTruthy()
-    await user.click(nextBtn!)
+    // Footer has a button with text "Meetings →", then "Projects →"
+    for (const next of ['Meetings', 'Projects']) {
+      const btns = screen.getAllByRole('button')
+      const nextBtn = btns.find(b => b.textContent?.includes(next) && /→/.test(b.textContent ?? ''))
+      expect(nextBtn).toBeTruthy()
+      await user.click(nextBtn!)
+    }
     await waitFor(() => expect(screen.getByText('Review active projects')).toBeTruthy())
   })
 
-  it('navigates through all 5 steps to Summary', async () => {
+  it('navigates through all 6 steps to Summary', async () => {
     const user = userEvent.setup()
     render(<WeeklyReviewPage />, { wrapper })
     // Navigate through each step by clicking the footer Next button
-    const stepNames = ['Projects', 'Areas', 'Resources', 'Summary']
+    const stepNames = ['Meetings', 'Projects', 'Areas', 'Resources', 'Summary']
     for (const stepName of stepNames) {
       const btns = screen.getAllByRole('button')
       const nextBtn = btns.find(b =>
@@ -151,7 +156,7 @@ describe('WeeklyReviewPage', () => {
     const user = userEvent.setup()
     render(<WeeklyReviewPage />, { wrapper })
     // Navigate to Summary by clicking through all steps
-    const nextSteps = ['Projects', 'Areas', 'Resources', 'Summary']
+    const nextSteps = ['Meetings', 'Projects', 'Areas', 'Resources', 'Summary']
     for (const step of nextSteps) {
       const btns = screen.getAllByRole('button')
       const nextBtn = btns.find(b => b.textContent?.includes(step) && b.textContent?.includes('→'))

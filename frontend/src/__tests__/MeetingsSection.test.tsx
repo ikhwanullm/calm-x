@@ -7,7 +7,7 @@ import type { Meeting, MeetingSummary } from '../types/models'
 
 vi.mock('../lib/toast', () => ({ notify: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }))
 vi.mock('../api/meetings', () => ({
-  meetingsApi: { listForItem: vi.fn(), create: vi.fn() },
+  meetingsApi: { listForItem: vi.fn(), create: vi.fn(), carryOver: vi.fn() },
 }))
 
 import { meetingsApi } from '../api/meetings'
@@ -63,6 +63,7 @@ describe('MeetingsSection', () => {
   it('+ Meeting creates one with the item title, the current time and the template, then opens it', async () => {
     const user = userEvent.setup()
     vi.mocked(meetingsApi.listForItem).mockResolvedValue([])
+    vi.mocked(meetingsApi.carryOver).mockResolvedValue(null)
     vi.mocked(meetingsApi.create).mockResolvedValue({ ...row(9, 'Migrate CML meeting'), body: MEETING_TEMPLATE, created_at: '' } as Meeting)
     renderSection()
     const before = Date.now()
@@ -74,6 +75,47 @@ describe('MeetingsSection', () => {
     expect(payload.body).toBe(MEETING_TEMPLATE)
     expect(new Date(payload.held_at).getTime()).toBeGreaterThanOrEqual(before - 1000)
     expect(await screen.findByText('Meeting page')).toBeTruthy()
+  })
+
+  it('+ Meeting after an earlier meeting starts with a "From last meeting" block', async () => {
+    const user = userEvent.setup()
+    vi.mocked(meetingsApi.listForItem).mockResolvedValue([row(1, 'Kickoff')])
+    vi.mocked(meetingsApi.carryOver).mockResolvedValue({
+      meeting_id: 1, title: 'Kickoff', held_at: '2026-10-28T03:00:00Z',
+      questions: ['Who owns it?'], open_tasks: [{ id: 5, title: 'send logs', waiting_for: 'Budi' }],
+    })
+    vi.mocked(meetingsApi.create).mockResolvedValue({ ...row(9, 'Migrate CML meeting'), body: '', created_at: '' } as Meeting)
+    renderSection()
+    await user.click(await screen.findByRole('button', { name: /Meeting/ }))
+    await waitFor(() => expect(meetingsApi.create).toHaveBeenCalled())
+    expect(meetingsApi.carryOver).toHaveBeenCalledWith(3)
+    const body = vi.mocked(meetingsApi.create).mock.calls[0][1].body ?? ''
+    expect(body).toContain('## From last meeting')
+    expect(body).toContain('? Who owns it?')
+    expect(body).toContain('- Task: send logs (waiting for Budi)')
+    expect(body.endsWith(MEETING_TEMPLATE)).toBe(true)
+  })
+
+  it('+ Meeting still works with the plain template when the carry-over lookup fails', async () => {
+    const user = userEvent.setup()
+    vi.mocked(meetingsApi.listForItem).mockResolvedValue([row(1, 'Kickoff')])
+    vi.mocked(meetingsApi.carryOver).mockRejectedValue(new Error('offline'))
+    vi.mocked(meetingsApi.create).mockResolvedValue({ ...row(9, 'Migrate CML meeting'), body: '', created_at: '' } as Meeting)
+    renderSection()
+    await user.click(await screen.findByRole('button', { name: /Meeting/ }))
+    await waitFor(() => expect(meetingsApi.create).toHaveBeenCalled())
+    expect(vi.mocked(meetingsApi.create).mock.calls[0][1].body).toBe(MEETING_TEMPLATE)
+  })
+
+  it('the first meeting of an item (nothing to carry over) gets the plain template', async () => {
+    const user = userEvent.setup()
+    vi.mocked(meetingsApi.listForItem).mockResolvedValue([])
+    vi.mocked(meetingsApi.carryOver).mockResolvedValue(null)
+    vi.mocked(meetingsApi.create).mockResolvedValue({ ...row(9, 'Migrate CML meeting'), body: '', created_at: '' } as Meeting)
+    renderSection()
+    await user.click(await screen.findByRole('button', { name: /Meeting/ }))
+    await waitFor(() => expect(meetingsApi.create).toHaveBeenCalled())
+    expect(vi.mocked(meetingsApi.create).mock.calls[0][1].body).toBe(MEETING_TEMPLATE)
   })
 
   it('has no + Meeting for an archived item, but still lists its meetings', async () => {

@@ -4,18 +4,18 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the safety round (`5a0c4d5`) is pushed. Meeting notes part A is committed locally; push only when the owner asks.
+- Everything up to meeting notes part A (`f4cdc76`) is pushed to `origin/main`; part B is committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
-- Schema head: **migration 008**. The owner's real DB was at 007 when last checked (2026-10-29); it upgrades to 008
-  automatically the next time the app starts.
-- Tests at the last commit: backend 549 passed, frontend 805 passed (65 files), `tsc -b` clean.
+- Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
+- Tests at the last commit: backend 559 passed, frontend 817 passed (66 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
-| (newest) | Meeting notes, part A: `meetings` table + `tasks.meeting_id` (migration 008), Markdown notes with autosave, action lines turned into tasks, `/meetings` page, Meetings section on Project/Area pages, "From meeting" link in the task drawer, Undo for deleted meetings |
+| (newest) | Meeting notes, part B: "From last meeting" block on + Meeting, Weekly Review "Meetings" step |
+| `f4cdc76` | Meeting notes, part A: `meetings` table + `tasks.meeting_id` (migration 008), Markdown notes with autosave, action lines turned into tasks, `/meetings` page, Meetings section on Project/Area pages, "From meeting" link in the task drawer, Undo for deleted meetings |
 | `5a0c4d5` | Safety round: duplicate-test guard, daily backups while running + `pre-delete` backup, Needs attention follows the Today rules |
 | `7b110e1` | Defer + Someday: `tasks.defer_until` / `tasks.is_someday` (migration 007), "Defer until" and "Move to Someday" in the drawer, "Starts {date}" / "Someday" chips, `/someday` page + sidebar entry, `GET /api/tasks/someday`, "Someday [M]" in the Weekly Review Inbox step |
 | `9cb3772` | Undo for deleted tasks/subtasks: server-side snapshots in `undo_entries` (24 h), `POST /api/tasks/{id}/restore`, `POST /api/subtasks/{id}/restore`, 8 s Undo toast |
@@ -133,7 +133,7 @@ Three small fixes from the read-only end-to-end review, one commit each.
 ## Meeting notes (designed with the owner, 2026-10-29)
 
 The owner has 3–5 meetings a week, almost always about one project. Notes are for the owner only (nothing is shared or
-sent). **Part A is built; part B is next.**
+sent). **Parts A and B are built.**
 
 ### Decisions already made
 
@@ -170,17 +170,21 @@ sent). **Part A is built; part B is next.**
   read-only (also not deletable), like its tasks.
 - Not done in A: moving a meeting to another item, a meeting count on the Projects list, natural-language dates in lines.
 
-### Part B — continuity and review
+### Part B: how it works (done)
 
-- **+ Meeting** on an item that already has meetings adds a "From last meeting" block to the new body: the previous
-  meeting's unconverted `? ` questions, and links to tasks created from it that are still open.
-- Weekly Review: show meetings of the past week that still have actions to process, with a link to process them.
-- Keep the parsed decisions (`! `) and created tasks easy to query; the future weekly report will use them.
-
-### Tests and verification (part B)
-
-Backend: the carry-over block (previous meeting's open `?` lines and links to its still-open tasks), weekly review lists
-only meetings of the past week with actions left. Frontend: the review step. Browser check on a DB copy, as in the recipe above.
+- **Carry-over**: `GET /api/items/{id}/meetings/carry-over` returns the item's newest meeting (by `held_at`) with its `?` lines and
+  the tasks made from it that are still open (`null` when the item has no meetings). `+ Meeting` always asks for it (the
+  meetings list may still be loading), and `buildMeetingBody` in `utils/meeting.ts` puts a "From last meeting" block above the
+  template: a link to that meeting, its questions as `?` lines (so they stay questions in the new notes), and open tasks as
+  plain `- Task: …` bullets. Tasks have no URL of their own, hence no links; the `Task:` prefix keeps a title like `? x` or
+  `[ ] x` from being read as a meeting line. If the lookup fails the plain template is used.
+- **Weekly Review**: new step "Meetings" after Inbox (`MeetingsStep`, `GET /api/weekly-review/meetings?today=&tz_offset=`):
+  meetings of the last 7 days (today included, client timezone) that still have actions to process, items not archived,
+  newest first. "Process" opens the meeting in a new tab so the review keeps its place; the list refetches when the tab
+  regains focus. Processing happens on the meeting page, not inside the review.
+- Decisions (`! `) and created tasks stay queryable for the future weekly report: `GET /api/meetings/{id}/actions` has the
+  decisions, and `tasks.meeting_id` links tasks to meetings.
+- Not done: processing from inside the review step; counting meetings in the review summary.
 
 ## Other ideas the owner liked (backlog, not prioritised yet)
 

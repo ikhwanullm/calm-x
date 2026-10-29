@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db_session
 from backend.exceptions import ValidationError
+from backend.schemas.meeting import MeetingSummary
 from backend.schemas.weekly_review import (
     ReviewAreaItem,
     ReviewProjectItem,
@@ -19,7 +20,7 @@ from backend.schemas.weekly_review import (
     WeeklyReviewHistoryResponse,
     WeeklyReviewResponse,
 )
-from backend.services import review_service
+from backend.services import meeting_service, review_service
 
 router = APIRouter(prefix="/weekly-review", tags=["weekly-review"])
 SessionDep = Annotated[Session, Depends(get_db_session)]
@@ -83,6 +84,17 @@ def get_review_resources(
     """Return active resources sorted by least recently updated."""
     client_today = _parse_today(today)
     return review_service.get_resources_for_review(session, client_today, tz_offset)
+
+
+@router.get("/meetings", response_model=List[MeetingSummary])
+def get_review_meetings(
+    session: SessionDep,
+    today: str = Query(..., description="Client local date YYYY-MM-DD"),
+    tz_offset: Optional[str] = Query(default=None, description="Client tz offset e.g. +07:00"),
+) -> list[MeetingSummary]:
+    """Meetings of the past 7 days that still have actions to process."""
+    client_today = _parse_today(today)
+    return meeting_service.get_review_meetings(session, client_today, review_service._parse_tz_offset(tz_offset))
 
 
 @router.post("/complete", response_model=WeeklyReviewResponse, status_code=201)

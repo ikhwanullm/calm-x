@@ -16,6 +16,7 @@ export const meetingKeys = {
   list: (q: string) => [...meetingKeys.all, 'list', q] as const,
   forItem: (itemId: number) => [...meetingKeys.all, 'item', itemId] as const,
   detail: (id: number) => [...meetingKeys.all, 'detail', id] as const,
+  carryOver: (itemId: number) => [...meetingKeys.all, 'carry-over', itemId] as const,
   actions: (id: number) => [...meetingKeys.all, 'actions', id] as const,
 }
 

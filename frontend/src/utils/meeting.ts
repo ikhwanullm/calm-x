@@ -1,5 +1,5 @@
 import { format, startOfWeek } from 'date-fns'
-import type { MeetingSummary } from '../types/models'
+import type { MeetingCarryOver, MeetingSummary } from '../types/models'
 
 /** Body of a new meeting (`[ ]`, `@Who:`, `?` and `!` lines are picked up by the server). */
 export const MEETING_TEMPLATE = [
@@ -15,6 +15,28 @@ export const MEETING_TEMPLATE = [
   '## Questions',
   '',
 ].join('\n')
+
+/**
+ * Body of a new meeting that follows another one: a "From last meeting" block (the previous meeting's
+ * `?` questions as `?` lines, and its still-open tasks as plain bullets) above the template.
+ * Without anything to carry over it is just the template.
+ */
+export function buildMeetingBody(carry: MeetingCarryOver | null): string {
+  if (!carry || (carry.questions.length === 0 && carry.open_tasks.length === 0)) return MEETING_TEMPLATE
+  const lines = ['## From last meeting', '', `[${carry.title}](/meetings/${carry.meeting_id}) · ${formatMeetingTime(carry.held_at)}`, '']
+  if (carry.questions.length > 0) {
+    lines.push('Still unanswered:', '', ...carry.questions.map((q) => `? ${q}`), '')
+  }
+  if (carry.open_tasks.length > 0) {
+    lines.push(
+      'Tasks still open:',
+      '',
+      ...carry.open_tasks.map((t) => `- Task: ${t.title}${t.waiting_for ? ` (waiting for ${t.waiting_for})` : ''}`),
+      ''
+    )
+  }
+  return `${lines.join('\n')}\n${MEETING_TEMPLATE}`
+}
 
 /** Title of a new meeting: "{item title} meeting", within the 200-char limit. */
 export function defaultMeetingTitle(itemTitle: string): string {

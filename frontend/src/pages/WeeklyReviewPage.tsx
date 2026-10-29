@@ -9,6 +9,7 @@ import { CommandPalette } from '@/components/search/CommandPalette'
 import { ShortcutHelp } from '@/components/search/ShortcutHelp'
 import { useReviewStatus, useCompleteReview } from '@/hooks/useReview'
 import { InboxStep } from '@/components/review/InboxStep'
+import { MeetingsStep } from '@/components/review/MeetingsStep'
 import { ProjectsStep } from '@/components/review/ProjectsStep'
 import { AreasStep } from '@/components/review/AreasStep'
 import { ResourcesStep } from '@/components/review/ResourcesStep'
@@ -19,10 +20,11 @@ import { ReviewComplete } from '@/components/review/ReviewComplete'
 // Types
 // ---------------------------------------------------------------------------
 
-export type ReviewStepId = 'inbox' | 'projects' | 'areas' | 'resources' | 'summary'
+export type ReviewStepId = 'inbox' | 'meetings' | 'projects' | 'areas' | 'resources' | 'summary'
 
 export const REVIEW_STEPS: { id: ReviewStepId; label: string }[] = [
   { id: 'inbox', label: 'Inbox' },
+  { id: 'meetings', label: 'Meetings' },
   { id: 'projects', label: 'Projects' },
   { id: 'areas', label: 'Areas' },
   { id: 'resources', label: 'Resources' },
@@ -205,6 +207,7 @@ export default function WeeklyReviewPage() {
                 onDeleted={() => {}}
               />
             )}
+            {currentStep.id === 'meetings' && <MeetingsStep />}
             {currentStep.id === 'projects' && (
               <ProjectsStep
                 onCompleted={() => incrementCount('completed')}

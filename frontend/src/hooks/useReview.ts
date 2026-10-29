@@ -16,6 +16,7 @@ export const reviewKeys = {
   projects: (today: string) => [...reviewKeys.all, 'projects', today] as const,
   areas: (today: string) => [...reviewKeys.all, 'areas', today] as const,
   resources: (today: string) => [...reviewKeys.all, 'resources', today] as const,
+  meetings: (today: string) => [...reviewKeys.all, 'meetings', today] as const,
 }
 
 // ---------------------------------------------------------------------------
@@ -64,6 +65,17 @@ export function useReviewResources() {
   return useQuery({
     queryKey: reviewKeys.resources(today),
     queryFn: () => reviewApi.getResources(today, tzOffset),
+    staleTime: 0,
+  })
+}
+
+/** Meetings of the past week that still have actions to process. */
+export function useReviewMeetings() {
+  const today = getLocalToday()
+  const tzOffset = getLocalTzOffset()
+  return useQuery({
+    queryKey: reviewKeys.meetings(today),
+    queryFn: () => reviewApi.getMeetings(today, tzOffset),
     staleTime: 0,
   })
 }

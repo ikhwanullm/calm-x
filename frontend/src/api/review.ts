@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import type { MeetingSummary } from '../types/models'
 
 export interface ReviewStatus {
   last_review_date: string | null
@@ -76,6 +77,11 @@ export const reviewApi = {
 
   getResources: (today: string, tzOffset?: string) =>
     apiClient.get<ReviewResourceItem[]>('/weekly-review/resources', {
+      params: { today, ...(tzOffset ? { tz_offset: tzOffset } : {}) }
+    }).then(r => r.data),
+
+  getMeetings: (today: string, tzOffset?: string) =>
+    apiClient.get<MeetingSummary[]>('/weekly-review/meetings', {
       params: { today, ...(tzOffset ? { tz_offset: tzOffset } : {}) }
     }).then(r => r.data),
 

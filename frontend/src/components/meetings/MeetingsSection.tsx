@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useCreateMeeting, useItemMeetings } from '@/hooks/useMeetings'
+import { meetingsApi } from '@/api/meetings'
 import { Button } from '@/components/common'
-import { actionsLabel, defaultMeetingTitle, formatMeetingTime, MEETING_TEMPLATE } from '@/utils/meeting'
+import { actionsLabel, buildMeetingBody, defaultMeetingTitle, formatMeetingTime } from '@/utils/meeting'
 
 interface MeetingsSectionProps {
   itemId: number
@@ -16,9 +17,12 @@ export function MeetingsSection({ itemId, itemTitle, isArchived }: MeetingsSecti
   const { data: meetings = [] } = useItemMeetings(itemId)
   const createMeeting = useCreateMeeting(itemId)
 
-  function handleNew() {
+  async function handleNew() {
+    // Bring over the previous meeting's open questions and tasks. Always ask the server (the list above may
+    // still be loading); if the lookup fails, start from the plain template.
+    const carry = await meetingsApi.carryOver(itemId).catch(() => null)
     createMeeting.mutate(
-      { title: defaultMeetingTitle(itemTitle), held_at: new Date().toISOString(), body: MEETING_TEMPLATE },
+      { title: defaultMeetingTitle(itemTitle), held_at: new Date().toISOString(), body: buildMeetingBody(carry) },
       { onSuccess: (meeting) => navigate(`/meetings/${meeting.id}`) }
     )
   }

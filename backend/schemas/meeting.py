@@ -102,3 +102,19 @@ class ProcessPayload(BaseModel):
 class ProcessResponse(BaseModel):
     created: List[TaskResponse]
     meeting: MeetingResponse
+
+
+class CarryOverTask(BaseModel):
+    id: int
+    title: str
+    waiting_for: Optional[str] = None
+
+
+class CarryOverResponse(BaseModel):
+    """What to bring into a new meeting of the same item from the previous one."""
+
+    meeting_id: int
+    title: str
+    held_at: datetime
+    questions: List[str]
+    open_tasks: List[CarryOverTask]

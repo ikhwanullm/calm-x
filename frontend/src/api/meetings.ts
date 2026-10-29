@@ -2,6 +2,7 @@ import { apiClient } from './client'
 import type {
   Meeting,
   MeetingActions,
+  MeetingCarryOver,
   MeetingCreatePayload,
   MeetingSummary,
   MeetingUpdatePayload,
@@ -15,6 +16,9 @@ export const meetingsApi = {
 
   listForItem: (itemId: number) =>
     apiClient.get<MeetingSummary[]>(`/items/${itemId}/meetings`).then(r => r.data),
+
+  carryOver: (itemId: number) =>
+    apiClient.get<MeetingCarryOver | null>(`/items/${itemId}/meetings/carry-over`).then(r => r.data),
 
   get: (id: number) =>
     apiClient.get<Meeting>(`/meetings/${id}`).then(r => r.data),

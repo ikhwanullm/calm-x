@@ -1,7 +1,7 @@
 """Meeting notes: CRUD, action-line preview and turning action lines into tasks."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy import or_, select, update
@@ -13,6 +13,8 @@ from backend.models.utils import now_utc
 from backend.schemas.meeting import (
     ActionLine,
     ActionsResponse,
+    CarryOverResponse,
+    CarryOverTask,
     MeetingCreate,
     MeetingResponse,
     MeetingSummary,
@@ -232,3 +234,50 @@ def process_meeting(session: Session, meeting_id: int, payload: ProcessPayload) 
         created=[task_service.get_task(session, tid) for tid in created_ids],
         meeting=to_response(session, meeting),
     )
+
+
+# ── Continuity and review ────────────────────────────────────────────────────
+
+def get_carry_over(session: Session, item_id: int) -> CarryOverResponse | None:
+    """The item's newest meeting: its `?` lines and the tasks made from it that are still open.
+
+    None when the item has no meetings yet.
+    """
+    if session.get(Item, item_id) is None:
+        raise NotFoundError(f"Item {item_id} not found")
+    previous = session.execute(
+        select(Meeting).where(Meeting.item_id == item_id).order_by(Meeting.held_at.desc(), Meeting.id.desc()).limit(1)
+    ).scalar_one_or_none()
+    if previous is None:
+        return None
+    open_tasks = session.execute(
+        select(Task).where(Task.meeting_id == previous.id, Task.is_complete == 0).order_by(Task.created_at, Task.id)
+    ).scalars().all()
+    return CarryOverResponse(
+        meeting_id=previous.id, title=previous.title, held_at=_utc(previous.held_at),
+        questions=[q.text for q in parse_meeting(previous.body).questions],
+        open_tasks=[CarryOverTask(id=t.id, title=t.title, waiting_for=t.waiting_for) for t in open_tasks],
+    )
+
+
+def get_review_meetings(
+    session: Session, client_today: date, local_tz: timezone | None = None
+) -> list[MeetingSummary]:
+    """Meetings held in the last 7 days (today included) that still have actions to process.
+
+    Meetings of archived items are left out. Newest first.
+    """
+    tz = local_tz or timezone.utc
+    start = datetime.combine(client_today - timedelta(days=6), time.min, tzinfo=tz)
+    end = datetime.combine(client_today + timedelta(days=1), time.min, tzinfo=tz)
+    stmt = (
+        select(Meeting).join(Item, Item.id == Meeting.item_id)
+        .where(
+            Item.archived_at.is_(None),
+            Meeting.held_at >= _naive_utc(start),
+            Meeting.held_at < _naive_utc(end),
+        )
+        .order_by(Meeting.held_at.desc(), Meeting.id.desc())
+    )
+    summaries = [to_summary(session, m) for m in session.execute(stmt).scalars().all()]
+    return [s for s in summaries if s.open_action_count > 0]
