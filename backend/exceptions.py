@@ -39,6 +39,10 @@ class ImportFailedError(CalmXException):
     """Raised when an import operation fails after partial processing (500)."""
 
 
+class BackupFailedError(CalmXException):
+    """Raised when a safety backup could not be made, so the action it protects is refused (500)."""
+
+
 # HTTP status codes per design.md error contract
 EXCEPTION_STATUS_MAP: dict[type[CalmXException], int] = {
     ValidationError: 400,
@@ -48,6 +52,7 @@ EXCEPTION_STATUS_MAP: dict[type[CalmXException], int] = {
     NotFoundError: 404,
     ConflictError: 409,
     ImportFailedError: 500,
+    BackupFailedError: 500,
 }
 
 

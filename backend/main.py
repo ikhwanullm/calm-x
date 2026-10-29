@@ -219,6 +219,10 @@ def main() -> None:
     except Exception as exc:
         logger.warning("Startup backup check raised unexpectedly: %s", exc)
 
+    # Keep making a daily backup while the app stays running (daemon thread, never crashes the server)
+    from backend.services.backup_service import start_periodic_backups
+    start_periodic_backups(config.absolute_db_path, config.absolute_backup_dir)
+
     app = create_app(config)
 
     uvicorn.run(

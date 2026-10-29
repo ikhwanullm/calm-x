@@ -7,8 +7,9 @@ from typing import Annotated, Literal, Optional, Union
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from backend.api.deps import get_db_session
-from backend.exceptions import ValidationError
+from backend.api.deps import get_app_config, get_db_session
+from backend.exceptions import BackupFailedError, ValidationError
+from backend.models.item import Item
 from backend.schemas.item import (
     AreaCreate,
     AreaResponse,
@@ -20,11 +21,12 @@ from backend.schemas.item import (
     ResourceResponse,
     item_to_response,
 )
-from backend.services import item_service
+from backend.services import backup_service, item_service
 
 router = APIRouter(prefix="/items", tags=["items"])
 
 SessionDep = Annotated[Session, Depends(get_db_session)]
+ConfigDep = Annotated[object, Depends(get_app_config)]
 
 # Union response type returned by all read/write endpoints
 AnyItemResponse = Union[ProjectResponse, AreaResponse, ResourceResponse]
@@ -137,8 +139,18 @@ def update_item(item_id: int, data: ItemUpdate, session: SessionDep):
 
 
 @router.delete("/{item_id}", status_code=204)
-def delete_item(item_id: int, session: SessionDep):
-    """Delete an item and all its tasks. Always allowed, even if archived."""
+def delete_item(item_id: int, session: SessionDep, config: ConfigDep):
+    """Delete an item and all its tasks. Always allowed, even if archived.
+
+    A safety backup is taken first; if it fails the item is NOT deleted.
+    """
+    if session.get(Item, item_id) is not None:
+        try:
+            backup_service.backup_before_delete(session, config.absolute_backup_dir)
+        except Exception as exc:
+            raise BackupFailedError(
+                "Could not make a safety backup, so nothing was deleted.", detail=str(exc)
+            ) from exc
     item_service.delete_item(session, item_id)
     session.commit()
 

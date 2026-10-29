@@ -4,6 +4,7 @@ import pytest
 from backend.exceptions import (
     EXCEPTION_STATUS_MAP,
     ArchivedItemError,
+    BackupFailedError,
     CalmXException,
     ConflictError,
     ImportFailedError,
@@ -36,6 +37,7 @@ def test_all_subclasses_inherit_calmx():
         NotFoundError,
         ConflictError,
         ImportFailedError,
+        BackupFailedError,
     ]:
         exc = cls("test")
         assert isinstance(exc, CalmXException)
@@ -50,6 +52,7 @@ def test_status_map_covers_all_subclasses():
         NotFoundError,
         ConflictError,
         ImportFailedError,
+        BackupFailedError,
     }
     assert subclasses == set(EXCEPTION_STATUS_MAP.keys())
 
@@ -62,6 +65,7 @@ def test_status_codes():
     assert EXCEPTION_STATUS_MAP[ArchivedItemError] == 403
     assert EXCEPTION_STATUS_MAP[ConflictError] == 409
     assert EXCEPTION_STATUS_MAP[ImportFailedError] == 500
+    assert EXCEPTION_STATUS_MAP[BackupFailedError] == 500
 
 
 def test_get_exception_type_name():
