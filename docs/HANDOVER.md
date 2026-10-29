@@ -187,6 +187,62 @@ sent). **Parts A and B are built.**
   decisions, and `tasks.meeting_id` links tasks to meetings.
 - Not done: processing from inside the review step; counting meetings in the review summary.
 
+## Next up: Week view on the Today page (designed with the owner, 2026-10-29)
+
+The owner finds `/today` too thin and wants to see the whole week at a glance. Only meetings have a time; everything
+else is date-only, so this is a **7-column week strip**, not an hourly calendar. The existing Today lists stay below it.
+
+### Decisions already made
+
+- **Add to Today stays as it is** (`focus_date` = today only). No "plan for another day".
+- **Dragging a task to another day changes its `due_date`** (not a planning date).
+- **No completed counts** per day: completed tasks are simply not shown; no `completed_at` column.
+- **Weekends are shown, dimmed** (`surface-1` background, muted day label). Week starts on **Monday**.
+
+### Layout
+
+- Header: "Today", the local date, the week range, and ‹ / This week / › buttons. The week is in the URL
+  (`/today?week=YYYY-MM-DD`, the Monday) so it survives refresh; no param = the current week.
+- Strip: 7 columns, today outlined with the accent border. Each day lists, in this order:
+  1. **Meetings** (violet tint, `HH:mm title`) → link to `/meetings/:id`.
+  2. **Open tasks due that day** (warning tint today/future, danger tint if the day is past = overdue).
+  3. **Planned** tasks (`focus_date` set, open) → shown in **today's column only**.
+  4. **Project deadlines** (orange tint, flag icon) → link to the project.
+  5. **Starts**: tasks whose `defer_until` is that day (muted, play icon).
+  Max ~4 entries per day, then "+N more" (clicking the day shows them all below).
+- Below the strip: the **selected day's list** (default: today). For today, keep the current Today sections
+  (Overdue, Due today, Planned for today, Waiting for) and add a "Meetings" section on top. For any other day, show that
+  day's meetings, tasks due, deadlines and starts. Clicking a day selects it (`?day=YYYY-MM-DD`).
+- Narrow screens (< 768 px): the strip becomes a vertical agenda (one block per day).
+
+### Rules (same as the Today rules)
+
+Exclude completed tasks, Someday tasks, and everything belonging to archived items. Waiting-for tasks with a due date
+appear with their "Waiting · {who}" chip. Meetings of archived items are excluded. Use the client's local dates
+(`?start=` Monday, `?tz_offset=` for bucketing `held_at`, like the Weekly Review endpoints).
+
+### Drag to reschedule
+
+- Tasks (due / planned / starts entries) can be dragged to another day of the visible week → `PUT /api/tasks/{id}`
+  with `due_date` = that day, optimistic update + rollback. Show "Due date moved to Fri 30 Oct" with **Undo** (restores
+  the old due date). Not allowed onto past days (drop target disabled); not for meetings or project deadlines.
+- If the backend rejects the date (e.g. `due_date < defer_until`), roll back and show the error message.
+- Keyboard alternative (accessibility): in the task drawer the due date field already does this; no extra UI needed.
+
+### API
+
+`GET /api/calendar/week?start=YYYY-MM-DD&today=YYYY-MM-DD&tz_offset=+07:00` → seven days, each
+`{date, meetings: [MeetingSummary], due: [Task], planned: [Task], deadlines: [{project id, title}], starts: [Task]}`.
+One query per kind for the whole range (not per day). Reuse `_task_to_response` so chips (waiting, someday, meeting
+link) stay identical to the rest of the app.
+
+### Tests
+
+Backend: bucketing by local date across the UTC day boundary (a 06:30 WIB meeting = previous UTC day), exclusions
+(completed, someday, archived), planned only on today, week param validation. Frontend: strip renders each kind in
+order, "+N more", weekend dimming, week navigation in the URL, day selection, drag changes `due_date` with Undo,
+no drop on past days. Browser check on a DB copy.
+
 ## Other ideas the owner liked (backlog, not prioritised yet)
 
 Recurring tasks; weekly status report generated at the end of Weekly Review; one "next action" per project;
