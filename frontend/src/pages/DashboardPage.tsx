@@ -210,6 +210,11 @@ function NeedsAttentionRow({
             <span className="text-xs text-muted mr-1.5">Task</span>
           )}
           <Link to={href} className="hover:text-accent-text">{item.title}</Link>
+          {item.waiting_for && (
+            <span className="ml-2 inline-flex items-center h-5 px-1.5 rounded-pill bg-surface-2 text-xs font-normal text-muted">
+              Waiting · {item.waiting_for}
+            </span>
+          )}
         </p>
       </div>
       {status && (

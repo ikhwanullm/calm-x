@@ -4,12 +4,11 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- `origin/main` is at `9cb3772`; local `main` has the docs commit and the Defer + Someday commit on top (not pushed).
+- Defer + Someday (`7b110e1`) is pushed. The safety-round commits after it are local until the owner asks for a push.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
-- Schema head: **migration 007**. The owner's real DB was at 006 when last checked (2026-10-29); it upgrades to 007
-  automatically the next time the app starts.
-- Tests at the last commit: backend 480 passed, frontend 731 passed (59 files), `tsc -b` clean.
+- Schema head: **migration 007**. The owner's real DB is already at 007 (checked read-only on 2026-10-29).
+- Tests at the last commit: backend 504 passed, frontend 732 passed (59 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
@@ -108,50 +107,25 @@ Migrations: after starting on the copy, compare row counts of every table before
 - Export/import and undo snapshots carry both fields; old undo snapshots without them restore as not deferred/not someday.
 - Not done: no "show deferred" filter, and Someday tasks are not excluded from search or tag filters.
 
-## Next up: safety round (agreed with the owner, 2026-10-29)
+## Safety round (done 2026-10-29)
 
-From a read-only end-to-end review. Three small fixes; do them as three separate commits, in this order.
+Three small fixes from the read-only end-to-end review, one commit each.
 
-### 1. Remove shadowed duplicate backend tests
-
-Ten test functions are defined twice in the same module, so Python keeps only the second and the first never runs
-(both copies are identical, so no coverage is lost; the reported total is just 10 too high):
-
-- `test_api_filter.py`: `test_scope_all_excludes_archived_item_tasks`, `test_scope_all_returns_inbox_and_item_tasks`,
-  `test_tags_invalid_string_returns_400`, `test_tags_valid_integers_accepted`
-- `test_api_links.py`: `test_convert_active_project_to_area_and_back_stays_active`,
-  `test_convert_completed_project_to_area_and_back_preserves_status`, `test_convert_invalid_deadline_returns_400`,
-  `test_convert_valid_deadline_accepted`
-- `test_api_dashboard.py`: `test_dashboard_reference_link_count_for_resources`
-- `test_api_items.py`: `test_progress_reflects_task_counts`
-
-Delete the second copy of each. Then add a guard test (e.g. `backend/tests/test_no_duplicate_tests.py`) that parses
-every `backend/tests/test_*.py` with `ast` and fails if a module defines the same top-level `test_*` name twice.
-Expected: backend count drops by 10, everything still passes.
-
-### 2. Backups while the app keeps running, and before permanent deletes
-
-Today `check_startup_backup` (`backend/main.py`, `services/backup_service.py`) only runs at startup, so an app left
-running for days makes no new backups. Retention keeps the 7 newest files.
-
-- Make a daily backup while the app runs: a background task (FastAPI lifespan / thread with a timer) that calls the
-  same "backup if the newest is older than 24 h" check, e.g. every hour. Failures are logged, never crash the server.
-- Make a backup before **permanent delete of an item** (`DELETE /api/items/{id}`), using trigger `pre-delete`, like
-  replace import already does with `pre-import-replace`. If that backup fails, refuse the delete (500 with the error
-  contract) rather than deleting without a safety copy.
-- Retention: pre-delete backups must not push out the daily ones. Either keep 7 daily + the 5 newest pre-delete/
-  pre-import files separately (filter by trigger in the filename), or raise the limit; pick the first if simple.
-  Never delete files that don't match the backup name pattern.
-- Tests: timer logic with an injected clock (no real waiting), pre-delete backup created in the tmp backup dir,
-  delete refused when backup fails, retention keeps both kinds. Use `tmp_path` configs only.
-
-### 3. Dashboard "Needs attention" must follow the Today rules
-
-`dashboard_service._get_upcoming_deadlines` lists every open task with a due date. Align it with `/api/tasks/today`:
-exclude `is_someday` tasks and tasks whose `defer_until` is after the client's `today`. **Decision needed from the
-owner**: Waiting-for tasks — exclude them (like Today) or keep them with a "Waiting" label because an overdue wait
-usually needs a follow-up? Default if not decided: keep them, labelled "Waiting · {who}".
-Show the same chips the task rows use. Tests: someday and deferred tasks absent, waiting task handled as decided.
+- **Duplicate tests**: ten test functions were defined twice in one module (the first copy never ran). The second copies
+  are removed and `tests/test_no_duplicate_tests.py` fails if a module defines the same top-level `test_*` name twice.
+  (The pytest total did not change: shadowed copies were never collected.)
+- **Backups** (`services/backup_service.py`): `main()` starts a daemon thread (`start_periodic_backups`) that runs the
+  "newest regular backup older than 24 h" check every hour. `DELETE /api/items/{id}` takes a `pre-delete` backup first, of the
+  database the session is connected to; if that fails the item is not deleted (500, `BackupFailedError`); unknown ids make no
+  backup. Safety copies (`pre-delete`, `pre-import-replace`) carry their kind in the file name
+  (`calmx_backup_<ts>[_N]_<kind>.db`), keep the 5 newest, and are retained apart from the 7 newest regular backups; they don't
+  count for the daily check. `create_backup` now refuses a missing database file (sqlite would have created and backed up an empty one).
+  `backend/tests/conftest.py` sets `CALM_X_BACKUP_DIR` to a temp dir for every test, because many tests build `Config(port=8080)`
+  with default paths and would otherwise write into the real `data/backups`.
+- **Dashboard "Needs attention"** follows the Today rules: Someday tasks and tasks deferred past today are left out.
+  **Waiting-for tasks stay in**, labelled "Waiting · {who}" (the default from the plan). The owner has not decided this; to
+  exclude them instead, add `Task.waiting_for.is_(None)` to the query in `dashboard_service._get_upcoming_deadlines`
+  and drop the label in `NeedsAttentionRow`.
 
 ## Other ideas the owner liked (backlog, not prioritised yet)
 

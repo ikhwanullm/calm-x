@@ -5,6 +5,7 @@ export interface DeadlineItem {
   deadline: string   // YYYY-MM-DD
   is_overdue: boolean
   item_id: number | null
+  waiting_for?: string | null   // tasks waiting on someone
 }
 
 export interface ProjectSummary {

@@ -204,9 +204,16 @@ def _get_upcoming_deadlines(
                 is_overdue=dl < client_today,
             ))
 
-    # Incomplete tasks with due_date within cutoff
+    # Incomplete tasks with due_date within cutoff. Same rules as /api/tasks/today:
+    # Someday tasks and tasks deferred past today stay out. Waiting-for tasks stay in
+    # (an overdue wait usually needs a follow-up) and carry waiting_for for a label.
     for t in session.execute(
-        select(Task).where(Task.is_complete == 0, Task.due_date.isnot(None))
+        select(Task).where(
+            Task.is_complete == 0,
+            Task.due_date.isnot(None),
+            Task.is_someday == 0,
+            (Task.defer_until.is_(None)) | (Task.defer_until <= client_today),
+        )
     ).scalars().all():
         if t.item_id is not None:
             parent = session.get(Item, t.item_id)
@@ -223,6 +230,7 @@ def _get_upcoming_deadlines(
                 deadline=str(t.due_date),
                 is_overdue=dl < client_today,
                 item_id=t.item_id,
+                waiting_for=t.waiting_for,
             ))
 
     overdue = sorted([i for i in items if i.is_overdue], key=lambda x: x.deadline)

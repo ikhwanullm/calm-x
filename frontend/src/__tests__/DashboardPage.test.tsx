@@ -80,6 +80,23 @@ describe("DashboardPage", () => {
     expect(screen.getByText("Late project")).toBeTruthy()
   })
 
+  it("labels a waiting task in needs attention with who it waits on", async () => {
+    const { useDashboard } = await import("../hooks/useDashboard")
+    vi.mocked(useDashboard).mockReturnValueOnce({
+      data: {
+        ...mockDashboard,
+        upcoming_deadlines: [
+          { id: 3, type: "task", title: "Firewall rule", deadline: "2020-01-01", is_overdue: true, item_id: null, waiting_for: "Security team" },
+          { id: 4, type: "task", title: "Plain task", deadline: "2020-01-01", is_overdue: true, item_id: null, waiting_for: null },
+        ],
+      },
+      isLoading: false,
+    } as any)
+    render(<DashboardPage />, { wrapper })
+    expect(screen.getByText("Waiting · Security team")).toBeTruthy()
+    expect(screen.getAllByText(/^Waiting ·/)).toHaveLength(1)
+  })
+
   it("shows Start weekly review button", () => {
     render(<DashboardPage />, { wrapper })
     expect(screen.getByRole("link", { name: /weekly review/i })).toBeTruthy()

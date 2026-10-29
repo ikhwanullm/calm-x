@@ -221,3 +221,55 @@ def test_dashboard_reference_link_count_for_resources(engine):
     assert data.reference_link_count == 2
 
 
+# ---------- Needs attention follows the Today rules ----------
+
+def _needs_attention(engine):
+    with Session(engine) as s:
+        return {d.title: d for d in get_dashboard_data(s, TODAY).upcoming_deadlines}
+
+
+def test_someday_task_is_not_in_needs_attention(engine):
+    with Session(engine) as s:
+        t = _task(s, "Parked", due=str(TODAY - timedelta(days=3)))
+        t.is_someday = 1
+        _task(s, "Normal", due=str(TODAY - timedelta(days=3)))
+        s.commit()
+    assert set(_needs_attention(engine)) == {"Normal"}
+
+
+def test_task_deferred_past_today_is_not_in_needs_attention_until_its_date(engine):
+    with Session(engine) as s:
+        t = _task(s, "Starts later", due=str(TODAY + timedelta(days=2)))
+        t.defer_until = TODAY + timedelta(days=1)
+        s.commit()
+    assert _needs_attention(engine) == {}
+    with Session(engine) as s:
+        on_start_day = get_dashboard_data(s, TODAY + timedelta(days=1)).upcoming_deadlines
+    assert [d.title for d in on_start_day] == ["Starts later"]
+
+
+def test_task_whose_defer_date_has_passed_is_in_needs_attention(engine):
+    with Session(engine) as s:
+        t = _task(s, "Started", due=str(TODAY - timedelta(days=1)))
+        t.defer_until = TODAY - timedelta(days=5)
+        s.commit()
+    assert set(_needs_attention(engine)) == {"Started"}
+
+
+def test_waiting_task_stays_in_needs_attention_with_who_it_waits_on(engine):
+    with Session(engine) as s:
+        t = _task(s, "Firewall rule", due=str(TODAY - timedelta(days=2)))
+        t.waiting_for = "Security team"
+        _task(s, "Plain", due=str(TODAY - timedelta(days=1)))
+        s.commit()
+    found = _needs_attention(engine)
+    assert found["Firewall rule"].waiting_for == "Security team"
+    assert found["Plain"].waiting_for is None
+
+
+def test_dashboard_api_returns_waiting_for_on_deadline_items(client):
+    r = client.post("/api/tasks", json={"title": "Wait", "due_date": str(TODAY)}, headers=HEADERS)
+    tid = r.json()["id"]
+    client.put(f"/api/tasks/{tid}", json={"waiting_for": "Vendor"}, headers=HEADERS)
+    items = client.get(f"/api/dashboard?today={TODAY_STR}").json()["upcoming_deadlines"]
+    assert [(i["title"], i["waiting_for"]) for i in items] == [("Wait", "Vendor")]

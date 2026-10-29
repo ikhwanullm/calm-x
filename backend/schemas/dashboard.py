@@ -11,6 +11,7 @@ class DeadlineItemSchema(BaseModel):
     deadline: str      # YYYY-MM-DD
     is_overdue: bool
     item_id: Optional[int] = None   # set for tasks
+    waiting_for: Optional[str] = None   # set for tasks that are waiting on someone
 
 
 class ProjectSummarySchema(BaseModel):
