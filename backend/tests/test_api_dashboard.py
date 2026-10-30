@@ -1,6 +1,7 @@
-"""API and service tests for GET /api/dashboard (task 4.15 regression)."""
+"""Dashboard: what needs attention (things to process, long waits, projects at risk) plus counts."""
+from datetime import date, datetime, timedelta, timezone
+
 import pytest
-from datetime import date, timedelta
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -9,13 +10,14 @@ from backend.api.deps import get_db_session
 from backend.config import Config
 from backend.database import Base
 from backend.main import create_app
-from backend.models.item import Item, Task
+from backend.models.item import Item, Meeting, Task
 from backend.models.utils import now_utc
+from backend.models.weekly_review import WeeklyReview
 from backend.services.dashboard_service import get_dashboard_data
 
 HEADERS = {"X-Calm-X": "1"}
-TODAY = date.today()
-TODAY_STR = str(TODAY)
+TODAY = date(2026, 10, 29)
+TODAY_STR = TODAY.isoformat()
 
 
 @pytest.fixture
@@ -27,249 +29,268 @@ def engine(tmp_path):
 
 @pytest.fixture
 def client(tmp_path):
-    cfg = Config(port=8080)
-    app = create_app(cfg)
+    app = create_app(Config(port=8080))
     e = create_engine(f"sqlite:///{tmp_path / 'api.db'}")
     Base.metadata.create_all(e)
     f = sessionmaker(bind=e)
+
     def override():
         s = f()
-        try: yield s; s.commit()
-        except Exception: s.rollback(); raise
-        finally: s.close()
+        try:
+            yield s
+            s.commit()
+        except Exception:
+            s.rollback()
+            raise
+        finally:
+            s.close()
+
     app.dependency_overrides[get_db_session] = override
     return TestClient(app, base_url="http://localhost:8080", raise_server_exceptions=False)
 
 
-def _project(s, title, deadline=None, status="active", archived=False):
+def _item(s, kind="project", title="P", deadline=None, status="active", archived=False, updated=None):
     now = now_utc()
     item = Item(
-        type="project", title=title, description="", notes="",
-        project_status=status,
+        type=kind, title=title, description="", notes="",
+        project_status=status if kind == "project" else None,
         project_deadline=date.fromisoformat(deadline) if deadline else None,
         archived_at=now if archived else None,
-        created_at=now, updated_at=now,
+        created_at=updated or now, updated_at=updated or now,
     )
-    s.add(item); s.flush(); return item
+    s.add(item)
+    s.flush()
+    return item
 
 
-def _task(s, title, item_id=None, due=None, done=0):
+def _task(s, title, item_id=None, due=None, done=0, waiting_for=None, waiting_days=None, someday=0, updated=None):
     now = now_utc()
     t = Task(
-        item_id=item_id, title=title, description="", notes="",
-        priority="medium", is_complete=done, sort_order=0,
-        due_date=date.fromisoformat(due) if due else None,
-        created_at=now, updated_at=now,
+        item_id=item_id, title=title, description="", notes="", priority="medium", is_complete=done,
+        is_someday=someday, sort_order=0, due_date=date.fromisoformat(due) if due else None,
+        waiting_for=waiting_for,
+        waiting_since=(datetime.combine(TODAY, datetime.min.time(), tzinfo=timezone.utc) - timedelta(days=waiting_days))
+        if waiting_days is not None else None,
+        created_at=updated or now, updated_at=updated or now,
     )
-    s.add(t); s.flush(); return t
+    s.add(t)
+    s.flush()
+    return t
 
 
-# ---------- API smoke tests ----------
+def _dash(engine, **kwargs):
+    with Session(engine) as s:
+        return get_dashboard_data(s, TODAY, **kwargs)
 
-def test_dashboard_ok(client):
+
+def _recent():
+    return now_utc() - timedelta(days=1)
+
+
+# ---------- API ----------
+
+def test_dashboard_ok_and_has_the_new_sections(client):
     r = client.get(f"/api/dashboard?today={TODAY_STR}", headers=HEADERS)
     assert r.status_code == 200
     b = r.json()
-    assert "inbox_count" in b and "upcoming_deadlines" in b
+    assert set(b) == {
+        "inbox_count", "last_review_date", "days_since_review", "meetings_to_process", "stale_waiting",
+        "stale_waiting_total", "attention_projects", "counts",
+    }
+    assert b["counts"] == {"active_projects": 0, "areas": 0, "resources": 0, "archived": 0, "someday": 0}
+
 
 def test_dashboard_bad_date(client):
+    assert client.get("/api/dashboard?today=bad", headers=HEADERS).status_code == 400
     r = client.get("/api/dashboard?today=bad", headers=HEADERS)
-    assert r.status_code == 400
+    assert "error" in r.json() and "type" in r.json()
+
 
 def test_dashboard_missing_today(client):
-    r = client.get("/api/dashboard", headers=HEADERS)
-    assert r.status_code in (400, 422)
+    assert client.get("/api/dashboard", headers=HEADERS).status_code in (400, 422)
 
-# ---------- Service-level regression tests (4.15) ----------
 
-def test_overdue_project_in_needs_attention(engine):
-    """Regression 4.15: overdue project appears in upcoming_deadlines."""
-    yesterday = str(TODAY - timedelta(days=1))
+# ---------- Inbox, review, counts ----------
+
+def test_inbox_count_only_open_tasks_without_an_item_and_not_someday(engine):
     with Session(engine) as s:
-        _project(s, "Late P", deadline=yesterday)
+        _task(s, "open")
+        _task(s, "done", done=1)
+        _task(s, "parked", someday=1)
+        p = _item(s)
+        _task(s, "in project", item_id=p.id)
         s.commit()
-    with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert len(data.upcoming_deadlines) == 1
-    assert data.upcoming_deadlines[0].is_overdue is True
-    assert data.upcoming_deadlines[0].type == "project"
+    assert _dash(engine).inbox_count == 1
 
-def test_approaching_task_in_needs_attention(engine):
-    """Task due tomorrow (within default threshold=3) appears."""
-    tomorrow = str(TODAY + timedelta(days=1))
+
+def test_days_since_review_and_none_before_the_first_review(engine):
+    assert _dash(engine).days_since_review is None and _dash(engine).last_review_date is None
     with Session(engine) as s:
-        _task(s, "Soon task", due=tomorrow)
+        s.add(WeeklyReview(completed_at=datetime(2026, 10, 22, 10, tzinfo=timezone.utc), notes=""))
         s.commit()
-    with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert any(d.type == "task" and not d.is_overdue for d in data.upcoming_deadlines)
+    d = _dash(engine)
+    assert d.last_review_date == "2026-10-22" and d.days_since_review == 7
 
-def test_completed_task_excluded(engine):
-    """Completed tasks do not appear in upcoming_deadlines."""
-    yesterday = str(TODAY - timedelta(days=1))
+
+def test_counts_leave_out_archived_and_completed_and_count_someday(engine):
     with Session(engine) as s:
-        _task(s, "Done", due=yesterday, done=1)
+        _item(s, title="active")
+        _item(s, title="done", status="completed")
+        _item(s, title="old", archived=True)
+        _item(s, kind="area")
+        _item(s, kind="resource")
+        _item(s, kind="resource", archived=True)
+        p = _item(s, title="host")
+        _task(s, "parked", item_id=p.id, someday=1)
+        _task(s, "parked in inbox", someday=1)
+        _task(s, "parked and done", someday=1, done=1)
+        _item(s, title="gone", archived=True)
+        s.flush()
         s.commit()
-    with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert len(data.upcoming_deadlines) == 0
+    c = _dash(engine).counts
+    assert (c.active_projects, c.areas, c.resources, c.archived, c.someday) == (2, 1, 1, 3, 2)
 
-def test_archived_project_excluded_from_deadlines(engine):
-    """Archived projects do not appear in upcoming_deadlines."""
-    yesterday = str(TODAY - timedelta(days=1))
+
+# ---------- Meetings to process ----------
+
+def test_meetings_to_process_are_this_weeks_with_actions_left(engine):
     with Session(engine) as s:
-        _project(s, "Archived P", deadline=yesterday, archived=True)
+        p = _item(s, title="Migrate")
+        for title, days_ago, body in (("Recent", 2, "- [ ] a\n@Budi: b\n"), ("Notes only", 1, "just notes\n"), ("Old", 9, "- [ ] c\n")):
+            held = datetime.combine(TODAY, datetime.min.time(), tzinfo=timezone.utc) - timedelta(days=days_ago) + timedelta(hours=3)
+            s.add(Meeting(item_id=p.id, title=title, held_at=held, attendees="", body=body, created_at=held, updated_at=held))
         s.commit()
-    with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert len(data.upcoming_deadlines) == 0
+    got = _dash(engine).meetings_to_process
+    assert [(m.title, m.open_action_count, m.item_title, m.item_type) for m in got] == [("Recent", 2, "Migrate", "project")]
 
-def test_on_track_project_not_in_needs_attention(engine):
-    """Project due far in the future is NOT in upcoming_deadlines."""
-    far_future = str(TODAY + timedelta(days=30))
+
+# ---------- Stale waiting ----------
+
+def test_waiting_tasks_are_listed_from_seven_days_longest_first(engine):
     with Session(engine) as s:
-        _project(s, "Far P", deadline=far_future)
+        p = _item(s, kind="area", title="Work")
+        _task(s, "six days", item_id=p.id, waiting_for="A", waiting_days=6)
+        _task(s, "seven days", item_id=p.id, waiting_for="B", waiting_days=7)
+        _task(s, "twenty days", waiting_for="C", waiting_days=20)
         s.commit()
-    with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert len(data.upcoming_deadlines) == 0
+    d = _dash(engine)
+    assert [(w.title, w.waiting_for, w.waiting_days) for w in d.stale_waiting] == [("twenty days", "C", 20), ("seven days", "B", 7)]
+    assert d.stale_waiting_total == 2
+    inbox, area = d.stale_waiting
+    assert inbox.item_id is None and inbox.item_type is None
+    assert area.item_title == "Work" and area.item_type == "area"
 
-def test_overdue_sorted_before_approaching(engine):
-    """Overdue items come before approaching items."""
-    yesterday = str(TODAY - timedelta(days=1))
-    tomorrow = str(TODAY + timedelta(days=1))
+
+def test_waiting_list_skips_done_someday_archived_completed_project_and_unknown_start(engine):
     with Session(engine) as s:
-        _project(s, "Approaching P", deadline=tomorrow)
-        _project(s, "Overdue P", deadline=yesterday)
+        _task(s, "done", waiting_for="A", waiting_days=30, done=1)
+        _task(s, "parked", waiting_for="A", waiting_days=30, someday=1)
+        _task(s, "no start date", waiting_for="A")
+        archived = _item(s, title="archived", archived=True)
+        _task(s, "in archived", item_id=archived.id, waiting_for="A", waiting_days=30)
+        finished = _item(s, title="finished", status="completed")
+        _task(s, "in finished", item_id=finished.id, waiting_for="A", waiting_days=30)
         s.commit()
-    with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert len(data.upcoming_deadlines) == 2
-    assert data.upcoming_deadlines[0].is_overdue is True
-    assert data.upcoming_deadlines[1].is_overdue is False
+    assert _dash(engine).stale_waiting == []
 
-def test_inbox_count_only_open_tasks(engine):
-    """inbox_count counts only open inbox tasks."""
+
+def test_waiting_list_is_capped_but_reports_the_total(engine):
     with Session(engine) as s:
-        _task(s, "Open inbox")
-        _task(s, "Done inbox", done=1)
+        for n in range(14):
+            _task(s, f"w{n}", waiting_for="A", waiting_days=8 + n)
         s.commit()
+    d = _dash(engine)
+    assert len(d.stale_waiting) == 10 and d.stale_waiting_total == 14
+    assert d.stale_waiting[0].waiting_days == 21
+
+
+def test_waiting_days_follow_the_client_timezone(engine):
     with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert data.inbox_count == 1
-
-def test_overall_progress_empty_when_no_eligible_projects(engine):
-    """overall_progress is None when no eligible projects."""
-    with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert data.overall_progress is None
-
-
-def test_dashboard_bad_date_returns_error_contract(client):
-    """Fix 6: invalid today returns {error, type} not {detail: ...}."""
-    r = client.get("/api/dashboard?today=not-a-date", headers=HEADERS)
-    assert r.status_code == 400
-    body = r.json()
-    assert "error" in body, f"Missing 'error' key in {body}"
-    assert "type" in body, f"Missing 'type' key in {body}"
-    assert "detail" not in body, f"Should not use FastAPI detail format"
-
-
-def test_dashboard_progress_1_of_8_is_13(engine):
-    """Fix 4: calculate_progress(1,8)=13 not 12 (round-half-up formula)."""
-    from backend.services.progress_service import calculate_progress
-    assert calculate_progress(1, 8) == 13
-
-    TODAY_LOCAL = date.today()
-    with Session(engine) as s:
-        now = now_utc()
-        proj = Item(type="project", title="P", description="", notes="",
-                    project_status="active", archived_at=None, created_at=now, updated_at=now)
-        s.add(proj); s.flush()
-        for i in range(8):
-            t = Task(item_id=proj.id, title=f"T{i}", description="", notes="",
-                     priority="medium", is_complete=1 if i == 0 else 0,
-                     sort_order=i, created_at=now, updated_at=now)
-            s.add(t)
+        # 18:00 UTC on 22 Oct is already 23 Oct in +07:00: 6 days before 29 Oct there, 7 days in UTC
+        _task(s, "edge", waiting_for="A")
+        t = s.query(Task).one()
+        t.waiting_since = datetime(2026, 10, 22, 18, 0, tzinfo=timezone.utc)
         s.commit()
+    assert _dash(engine).stale_waiting[0].waiting_days == 7
+    assert _dash(engine, local_tz=timezone(timedelta(hours=7))).stale_waiting == []
 
+
+# ---------- Projects needing attention ----------
+
+def _reasons(engine):
+    return {p.title: p.reasons for p in _dash(engine).attention_projects}
+
+
+def test_a_healthy_project_is_not_listed(engine):
     with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert data.active_projects[0].progress_percentage == 13
-    assert data.overall_progress == 13
-
-
-def test_dashboard_reference_link_count_for_resources(engine):
-    """Fix 3: reference_link_count counts reference links on non-archived resources."""
-    from backend.services.reference_link_service import add_reference_link
-    from backend.schemas.link import ReferenceLinkCreate
-
-    with Session(engine) as s:
-        now = now_utc()
-        resource = Item(type="resource", title="R", description="", notes="",
-                        created_at=now, updated_at=now)
-        s.add(resource); s.flush()
-        resource_id = resource.id
+        p = _item(s, title="fine", deadline="2027-03-01", updated=_recent())
+        _task(s, "next", item_id=p.id, due="2026-11-20", updated=_recent())
         s.commit()
-        with Session(engine) as s2:
-            add_reference_link(s2, resource_id, ReferenceLinkCreate(url="https://a.com"))
-            add_reference_link(s2, resource_id, ReferenceLinkCreate(url="https://b.com"))
-            s2.commit()
+    assert _dash(engine).attention_projects == []
 
+
+def test_overdue_tasks_deadline_passed_and_no_open_tasks(engine):
     with Session(engine) as s:
-        data = get_dashboard_data(s, TODAY)
-    assert data.reference_link_count == 2
-
-
-# ---------- Needs attention follows the Today rules ----------
-
-def _needs_attention(engine):
-    with Session(engine) as s:
-        return {d.title: d for d in get_dashboard_data(s, TODAY).upcoming_deadlines}
-
-
-def test_someday_task_is_not_in_needs_attention(engine):
-    with Session(engine) as s:
-        t = _task(s, "Parked", due=str(TODAY - timedelta(days=3)))
-        t.is_someday = 1
-        _task(s, "Normal", due=str(TODAY - timedelta(days=3)))
+        late = _item(s, title="late", deadline="2026-10-01", updated=_recent())
+        _task(s, "overdue", item_id=late.id, due="2026-10-20", updated=_recent())
+        _item(s, title="empty", updated=_recent())
         s.commit()
-    assert set(_needs_attention(engine)) == {"Normal"}
+    got = _reasons(engine)
+    assert got["late"] == ["overdue_tasks", "deadline_passed"]
+    assert got["empty"] == ["no_open_tasks"]
 
 
-def test_task_deferred_past_today_is_not_in_needs_attention_until_its_date(engine):
+def test_deadline_soon_only_when_progress_is_low(engine):
     with Session(engine) as s:
-        t = _task(s, "Starts later", due=str(TODAY + timedelta(days=2)))
-        t.defer_until = TODAY + timedelta(days=1)
+        behind = _item(s, title="behind", deadline="2026-11-05", updated=_recent())
+        _task(s, "t1", item_id=behind.id, updated=_recent())
+        _task(s, "t2", item_id=behind.id, updated=_recent())
+        ahead = _item(s, title="ahead", deadline="2026-11-05", updated=_recent())
+        _task(s, "d1", item_id=ahead.id, done=1, updated=_recent())
+        _task(s, "d2", item_id=ahead.id, done=1, updated=_recent())
+        _task(s, "open", item_id=ahead.id, updated=_recent())
+        far = _item(s, title="far", deadline="2026-12-31", updated=_recent())
+        _task(s, "f1", item_id=far.id, updated=_recent())
         s.commit()
-    assert _needs_attention(engine) == {}
-    with Session(engine) as s:
-        on_start_day = get_dashboard_data(s, TODAY + timedelta(days=1)).upcoming_deadlines
-    assert [d.title for d in on_start_day] == ["Starts later"]
+    got = _reasons(engine)
+    assert got == {"behind": ["deadline_soon"]}
 
 
-def test_task_whose_defer_date_has_passed_is_in_needs_attention(engine):
+def test_stale_means_no_activity_for_thirty_days_including_tasks_and_meetings(engine):
+    old = datetime(2026, 9, 1, tzinfo=timezone.utc)
     with Session(engine) as s:
-        t = _task(s, "Started", due=str(TODAY - timedelta(days=1)))
-        t.defer_until = TODAY - timedelta(days=5)
+        quiet = _item(s, title="quiet", updated=old)
+        _task(s, "t", item_id=quiet.id, updated=old)
+        touched = _item(s, title="touched", updated=old)
+        _task(s, "recent task", item_id=touched.id, updated=_recent())
         s.commit()
-    assert set(_needs_attention(engine)) == {"Started"}
+    assert _reasons(engine) == {"quiet": ["stale"]}
+    assert [p.days_inactive for p in _dash(engine).attention_projects] == [58]
 
 
-def test_waiting_task_stays_in_needs_attention_with_who_it_waits_on(engine):
+def test_archived_and_completed_projects_are_ignored(engine):
     with Session(engine) as s:
-        t = _task(s, "Firewall rule", due=str(TODAY - timedelta(days=2)))
-        t.waiting_for = "Security team"
-        _task(s, "Plain", due=str(TODAY - timedelta(days=1)))
+        _item(s, title="archived", archived=True)
+        _item(s, title="completed", status="completed")
         s.commit()
-    found = _needs_attention(engine)
-    assert found["Firewall rule"].waiting_for == "Security team"
-    assert found["Plain"].waiting_for is None
+    assert _dash(engine).attention_projects == []
 
 
-def test_dashboard_api_returns_waiting_for_on_deadline_items(client):
-    r = client.post("/api/tasks", json={"title": "Wait", "due_date": str(TODAY)}, headers=HEADERS)
-    tid = r.json()["id"]
-    client.put(f"/api/tasks/{tid}", json={"waiting_for": "Vendor"}, headers=HEADERS)
-    items = client.get(f"/api/dashboard?today={TODAY_STR}").json()["upcoming_deadlines"]
-    assert [(i["title"], i["waiting_for"]) for i in items] == [("Wait", "Vendor")]
+def test_most_problems_first_then_overdue_then_title(engine):
+    with Session(engine) as s:
+        two = _item(s, title="zzz two problems", deadline="2026-10-01", updated=_recent())
+        _task(s, "late", item_id=two.id, due="2026-10-02", updated=_recent())
+        _item(s, title="bbb empty", updated=_recent())
+        _item(s, title="aaa empty", updated=_recent())
+        s.commit()
+    assert [p.title for p in _dash(engine).attention_projects] == ["zzz two problems", "aaa empty", "bbb empty"]
+
+
+def test_an_attention_project_carries_numbers_for_the_row(engine):
+    with Session(engine) as s:
+        p = _item(s, title="row", deadline="2026-10-01", updated=_recent())
+        _task(s, "late", item_id=p.id, due="2026-10-05", updated=_recent())
+        _task(s, "done", item_id=p.id, done=1, updated=_recent())
+        s.commit()
+    row = _dash(engine).attention_projects[0]
+    assert (row.overdue_task_count, row.open_task_count, row.progress_percentage, row.project_deadline) == (1, 1, 50, "2026-10-01")

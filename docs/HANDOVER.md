@@ -4,16 +4,17 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the Project/Area detail page rework (`2ba0b34`) is pushed to `origin/main`.
+- Everything up to the Project/Area detail page rework (`2ba0b34`) is pushed to `origin/main`. The Dashboard rework is committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
-- Tests at the last commit: backend 605 passed, frontend 949 passed (75 files), `tsc -b` clean.
+- Tests at the last commit: backend 599 passed, frontend 959 passed (75 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
+| (newest) | Dashboard reworked into an exceptions page (to process, waiting too long, projects needing attention); Today shows how long a task has waited; fixes broken task links on the Dashboard |
 | `2ba0b34` | Project/Area detail page: summary strip, tasks and meetings moved up, quick add, working drag-reorder, wider layout (`GET /api/items/{id}?today=` adds `stats`) |
 | `83509d2` | Areas and Resources lists: search, sort, filters, card/compact-list toggle, per-item stats (`GET /api/items?type=area|resource&today=`); `ItemListView` removed |
 | `81f688b` | All tasks: search, status, state chips, sort, group by, card/compact-list toggle (`GET /api/tasks` gains `q`, `status`, `waiting`, `someday`, `deferred`, `from_meeting`, `today`, `sort`, `order`) |
@@ -293,6 +294,27 @@ The owner found the list pages static. **Projects, All tasks, Areas and Resource
 - The delete confirmation now says "and meeting notes" for Projects and Areas.
 - Test gotcha: detail-page tests that mock `../hooks/useTasks` must include `useReorderTasks` (added to `ItemDetailView.test.tsx` and `ProjectDeadline.test.tsx`).
 - Not done: the Area page still shows its own tasks and its projects separately (no combined task list), and `AreaProjectsSection` was not reviewed.
+
+## Dashboard vs Today (reworked 2026-10-30, chosen by me after the owner found the Dashboard not useful)
+
+Split of roles: **Today = what to do now** (due, planned, waiting, meetings of the day, the week strip). **Dashboard = what is
+getting unhealthy**, only exceptions, and it is empty when all is fine. Nothing about due dates is shown on the Dashboard any more.
+
+- **Removed**: the "Needs attention" list (it repeated Today's overdue/due-today/waiting plus the week strip), the Active projects
+  list with progress bars (the Projects page does that better), Overall progress (an average of per-project percentages: meaningless),
+  and the Projects/Areas/Resources/Archives summary cards. Fixed with it: task rows linked to `/${item_id}`, a route that does not exist.
+- **API** (`GET /api/dashboard?today=&tz_offset=`, `services/dashboard_service.py`) now returns: `inbox_count`; `last_review_date`
+  and `days_since_review`; `meetings_to_process` (the Weekly Review meetings rule: last 7 days, actions left, archived items out);
+  `stale_waiting` (open waiting-for tasks waiting 7+ days, longest first, capped at 10, plus `stale_waiting_total`; tasks without
+  `waiting_since` are skipped); `attention_projects`; `counts` (active projects, areas, resources, archived, Someday).
+- **Projects needing attention** are active projects with any of: `overdue_tasks`, `deadline_passed`, `deadline_soon` (deadline within
+  14 days and progress under 50 %), `stale` (no activity for 30 days, counting tasks and meetings), `no_open_tasks`. Most reasons first,
+  then most overdue, then title. The thresholds are constants at the top of the service.
+- **UI** (`pages/DashboardPage.tsx`): "To process" (Inbox, Meetings with the list of meetings, Weekly review with how long ago and a
+  highlighted button when a week or more has passed or there never was one), "Waiting too long", "Projects needing attention"
+  (first 8, then a link), an "all clear" empty state, and one line of shortcut counts.
+- **Today**: a waiting task's chip now shows the age, "Waiting · Budi · 9 days" (from `waiting_since`).
+- Not done: tasks completed this week (no `completed_at` column), an Areas health section.
 
 ## Other ideas the owner liked (backlog, not prioritised yet)
 

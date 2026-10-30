@@ -1,39 +1,62 @@
-"""Pydantic schemas for Dashboard API responses."""
+"""Pydantic schemas for Dashboard API responses.
+
+The Dashboard shows what needs attention (things to process, long waits, projects at risk);
+what to do today lives on the Today page.
+"""
 from __future__ import annotations
+
+from datetime import datetime
 from typing import List, Optional
+
 from pydantic import BaseModel
 
 
-class DeadlineItemSchema(BaseModel):
-    id: int
-    type: str          # "project" | "task"
-    title: str
-    deadline: str      # YYYY-MM-DD
-    is_overdue: bool
-    item_id: Optional[int] = None   # set for tasks
-    waiting_for: Optional[str] = None   # set for tasks that are waiting on someone
-
-
-class ProjectSummarySchema(BaseModel):
+class MeetingToProcess(BaseModel):
     id: int
     title: str
-    task_count: int
-    completed_task_count: int
-    progress_percentage: int    # integer, (200m+n)//(2n) formula
+    held_at: datetime
+    item_id: int
+    item_title: str
+    item_type: str
+    open_action_count: int
+
+
+class StaleWaiting(BaseModel):
+    id: int
+    title: str
+    waiting_for: str
+    waiting_days: int
+    item_id: Optional[int] = None
+    item_title: Optional[str] = None
+    item_type: Optional[str] = None     # "project" | "area" | None for the Inbox
+
+
+class AttentionProject(BaseModel):
+    id: int
+    title: str
+    # overdue_tasks | deadline_passed | deadline_soon | stale | no_open_tasks
+    reasons: List[str]
+    overdue_task_count: int
+    open_task_count: int
+    progress_percentage: int
     project_deadline: Optional[str] = None
+    days_inactive: int
+
+
+class DashboardCounts(BaseModel):
+    active_projects: int
+    areas: int
+    resources: int
+    archived: int
+    someday: int
 
 
 class DashboardSchema(BaseModel):
     inbox_count: int
-    active_projects_count: int
-    active_task_count: int
-    areas_count: int
-    area_task_count: int
-    resources_count: int
-    reference_link_count: int       # Phase 5: always 0 until ReferenceLink model exists
-    archives_count: int
-    overall_progress: Optional[int]     # None when no eligible projects
-    nearest_deadline_project: Optional[str]  # YYYY-MM-DD or None
-    upcoming_deadlines: List[DeadlineItemSchema]
-    active_projects: List[ProjectSummarySchema]
-    last_review_date: Optional[str]     # Phase 10
+    last_review_date: Optional[str]          # YYYY-MM-DD or None
+    days_since_review: Optional[int]
+    meetings_to_process: List[MeetingToProcess]
+    stale_waiting: List[StaleWaiting]        # longest waits first, capped
+    stale_waiting_total: int
+    attention_projects: List[AttentionProject]
+    counts: DashboardCounts

@@ -52,6 +52,18 @@ describe('TaskRow', () => {
     expect(screen.getByText('Waiting · Vendor')).toBeTruthy()
   })
 
+  it('shows how long a task has been waiting', () => {
+    const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000 - 3_600_000).toISOString()
+    const first = renderRow({ task: { ...baseTask, waiting_for: 'Vendor', waiting_since: daysAgo(9) } })
+    expect(screen.getByText('Waiting · Vendor · 9 days')).toBeTruthy()
+    first.unmount()
+    const second = renderRow({ task: { ...baseTask, waiting_for: 'Vendor', waiting_since: daysAgo(1) } })
+    expect(screen.getByText('Waiting · Vendor · 1 day')).toBeTruthy()
+    second.unmount()
+    renderRow({ task: { ...baseTask, waiting_for: 'Vendor', waiting_since: new Date().toISOString() } })
+    expect(screen.getByText('Waiting · Vendor')).toBeTruthy()
+  })
+
   it('shows a "Starts" chip and dims a task deferred past today', () => {
     const { container } = renderRow({ task: { ...baseTask, defer_until: '2099-01-05' } })
     expect(screen.getByText(/^Starts /)).toBeTruthy()

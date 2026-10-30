@@ -1,34 +1,51 @@
-export interface DeadlineItem {
+export interface MeetingToProcess {
   id: number
-  type: "project" | "task"
   title: string
-  deadline: string   // YYYY-MM-DD
-  is_overdue: boolean
-  item_id: number | null
-  waiting_for?: string | null   // tasks waiting on someone
+  held_at: string            // ISO datetime (UTC)
+  item_id: number
+  item_title: string
+  item_type: string
+  open_action_count: number
 }
 
-export interface ProjectSummary {
+export interface StaleWaiting {
   id: number
   title: string
-  task_count: number
-  completed_task_count: number
+  waiting_for: string
+  waiting_days: number
+  item_id: number | null
+  item_title: string | null
+  item_type: string | null   // "project" | "area" | null (Inbox)
+}
+
+export type AttentionReason = "overdue_tasks" | "deadline_passed" | "deadline_soon" | "stale" | "no_open_tasks"
+
+export interface AttentionProject {
+  id: number
+  title: string
+  reasons: AttentionReason[]
+  overdue_task_count: number
+  open_task_count: number
   progress_percentage: number
   project_deadline: string | null
+  days_inactive: number
+}
+
+export interface DashboardCounts {
+  active_projects: number
+  areas: number
+  resources: number
+  archived: number
+  someday: number
 }
 
 export interface DashboardData {
   inbox_count: number
-  active_projects_count: number
-  active_task_count: number
-  areas_count: number
-  area_task_count: number
-  resources_count: number
-  reference_link_count: number
-  archives_count: number
-  overall_progress: number | null
-  nearest_deadline_project: string | null
-  upcoming_deadlines: DeadlineItem[]
-  active_projects: ProjectSummary[]
   last_review_date: string | null
+  days_since_review: number | null
+  meetings_to_process: MeetingToProcess[]
+  stale_waiting: StaleWaiting[]
+  stale_waiting_total: number
+  attention_projects: AttentionProject[]
+  counts: DashboardCounts
 }

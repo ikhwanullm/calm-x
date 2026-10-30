@@ -3,7 +3,7 @@ import type { Task } from '@/types/models'
 import { PriorityChip, TagChip, StatusBadge } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
 import { useDeadlineThreshold } from '@/hooks/useSettings'
-import { formatAbsoluteDate, getLocalToday } from '@/utils/date'
+import { daysSinceIso, formatAbsoluteDate, getLocalToday } from '@/utils/date'
 import { cn } from '@/lib/utils'
 
 export interface TaskRowProps {
@@ -36,6 +36,8 @@ export function TaskRow({
   const today = getLocalToday()
   const isDeferred = !!task.defer_until && task.defer_until > today && !task.is_complete
   const isParked = task.is_someday && !task.is_complete
+  // How long it has been waiting, so a stale wait is easy to spot on Today
+  const waitingDays = task.waiting_for && task.waiting_since ? daysSinceIso(task.waiting_since, today) : null
   const deferLabel = isDeferred && task.defer_until ? `Starts ${formatAbsoluteDate(task.defer_until)}` : null
   const threshold = useDeadlineThreshold()
   const deadlineStatus = showDeadlineStatus && task.due_date && !task.is_complete
@@ -106,7 +108,7 @@ export function TaskRow({
             )}
             {task.waiting_for && (
               <span className="inline-flex items-center h-5 px-1.5 rounded-pill bg-surface-2 text-xs text-muted">
-                Waiting · {task.waiting_for}
+                Waiting · {task.waiting_for}{waitingDays !== null && waitingDays >= 1 && ` · ${waitingDays} ${waitingDays === 1 ? 'day' : 'days'}`}
               </span>
             )}
             {task.priority !== 'medium' && (

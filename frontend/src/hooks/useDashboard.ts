@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { dashboardApi } from "../api/dashboard"
-import { getLocalToday } from "../utils/date"
+import { getLocalToday, getLocalTzOffset } from "../utils/date"
 
 export const dashboardKeys = {
   all: ["dashboard"] as const,
@@ -11,7 +11,7 @@ export function useDashboard() {
   const today = getLocalToday()
   return useQuery({
     queryKey: dashboardKeys.forToday(today),
-    queryFn: () => dashboardApi.get(today),
+    queryFn: () => dashboardApi.get(today, getLocalTzOffset()),
     staleTime: 60 * 1000,
   })
 }

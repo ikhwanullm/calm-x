@@ -1,249 +1,164 @@
-"""Dashboard service: aggregated stats for the Dashboard page."""
+"""Dashboard service: what needs attention, as opposed to Today's "what to do now"."""
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.models.item import Item, ReferenceLink, Task
+from backend.models.item import Item, Task
 from backend.schemas.dashboard import (
+    AttentionProject,
+    DashboardCounts,
     DashboardSchema,
-    DeadlineItemSchema,
-    ProjectSummarySchema,
+    MeetingToProcess,
+    StaleWaiting,
 )
-from backend.services.preference_service import get_threshold
+from backend.services import meeting_service, project_stats_service
 from backend.services.progress_service import calculate_progress
 
+STALE_WAITING_DAYS = 7        # a wait this long or longer is listed
+MAX_STALE_WAITING = 10
+STALE_PROJECT_DAYS = 30       # no activity for this long
+DEADLINE_SOON_DAYS = 14       # deadline within this many days ...
+LOW_PROGRESS = 50             # ... and progress below this percentage
 
-def get_dashboard_data(session: Session, client_today: date) -> DashboardSchema:
-    """Compute all dashboard stats using the client's local date."""
-    threshold = get_threshold(session)
 
-    # --- Inbox count (open tasks with no item) ---
-    inbox_count: int = session.execute(
-        select(func.count()).where(
-            Task.item_id.is_(None), Task.is_complete == 0, Task.is_someday == 0
-        )
-    ).scalar_one()
-
-    # --- Active projects ---
-    active_items: list[Item] = list(session.execute(
-        select(Item).where(
-            Item.type == "project",
-            Item.archived_at.is_(None),
-            Item.project_status == "active",
-        )
-    ).scalars().all())
-    active_projects_count = len(active_items)
-
-    # --- Active task count (open tasks in active projects) ---
-    active_task_count: int = session.execute(
-        select(func.count())
-        .select_from(Task)
-        .join(Item, Task.item_id == Item.id)
-        .where(
-            Item.type == "project",
-            Item.archived_at.is_(None),
-            Item.project_status == "active",
-            Task.is_complete == 0,
-        )
-    ).scalar_one()
-
-    # --- Areas ---
-    areas_count: int = session.execute(
-        select(func.count()).where(Item.type == "area", Item.archived_at.is_(None))
-    ).scalar_one()
-
-    area_task_count: int = session.execute(
-        select(func.count())
-        .select_from(Task)
-        .join(Item, Task.item_id == Item.id)
-        .where(Item.type == "area", Item.archived_at.is_(None), Task.is_complete == 0)
-    ).scalar_one()
-
-    # --- Resources ---
-    resources_count: int = session.execute(
-        select(func.count()).where(Item.type == "resource", Item.archived_at.is_(None))
-    ).scalar_one()
-    # Count reference links on non-archived Resources
-    reference_link_count: int = session.execute(
-        select(func.count())
-        .select_from(ReferenceLink)
-        .join(Item, ReferenceLink.item_id == Item.id)
-        .where(Item.type == "resource", Item.archived_at.is_(None))
-    ).scalar_one()
-
-    # --- Archives ---
-    archives_count: int = session.execute(
-        select(func.count()).where(Item.archived_at.isnot(None))
-    ).scalar_one()
-
-    # --- Overall progress + active projects (batch GROUP BY) ---
-    active_projects_summary, overall_progress = _get_active_projects_and_progress(
-        session, active_items
-    )
-
-    # --- Nearest deadline among active projects ---
-    nearest_deadline_project = _nearest_deadline(active_items)
-
-    # --- Upcoming deadlines (overdue + approaching) ---
-    upcoming_deadlines = _get_upcoming_deadlines(session, client_today, threshold)
-
+def get_dashboard_data(
+    session: Session, client_today: date, local_tz: Optional[timezone] = None
+) -> DashboardSchema:
+    """Compute the dashboard with the client's local date (and timezone for meetings and waits)."""
+    last_review = _get_last_review_date(session)
+    stale_waiting = _get_stale_waiting(session, client_today, local_tz)
     return DashboardSchema(
-        inbox_count=inbox_count,
-        active_projects_count=active_projects_count,
-        active_task_count=active_task_count,
-        areas_count=areas_count,
-        area_task_count=area_task_count,
-        resources_count=resources_count,
-        reference_link_count=reference_link_count,
-        archives_count=archives_count,
-        overall_progress=overall_progress,
-        upcoming_deadlines=upcoming_deadlines,
-        active_projects=active_projects_summary,
-        nearest_deadline_project=nearest_deadline_project,
-        last_review_date=_get_last_review_date(session),
+        inbox_count=session.execute(
+            select(func.count()).where(Task.item_id.is_(None), Task.is_complete == 0, Task.is_someday == 0)
+        ).scalar_one(),
+        last_review_date=last_review,
+        days_since_review=(client_today - date.fromisoformat(last_review)).days if last_review else None,
+        meetings_to_process=[
+            MeetingToProcess(
+                id=m.id, title=m.title, held_at=m.held_at, item_id=m.item_id, item_title=m.item_title,
+                item_type=m.item_type, open_action_count=m.open_action_count,
+            )
+            for m in meeting_service.get_review_meetings(session, client_today, local_tz)
+        ],
+        stale_waiting=stale_waiting[:MAX_STALE_WAITING],
+        stale_waiting_total=len(stale_waiting),
+        attention_projects=_get_attention_projects(session, client_today),
+        counts=_get_counts(session),
     )
 
 
-def _get_active_projects_and_progress(
-    session: Session,
-    active_items: list[Item],
-) -> tuple[list[ProjectSummarySchema], Optional[int]]:
-    """Compute project summaries + overall_progress in 2 GROUP BY queries."""
-    if not active_items:
-        return [], None
+def _get_counts(session: Session) -> DashboardCounts:
+    def count_items(item_type: str) -> int:
+        return session.execute(
+            select(func.count()).where(Item.type == item_type, Item.archived_at.is_(None))
+        ).scalar_one()
 
-    item_ids = [item.id for item in active_items]
-
-    # Batch: total tasks per item
-    total_map: dict[int, int] = dict(
-        session.execute(
-            select(Task.item_id, func.count().label("n"))
-            .where(Task.item_id.in_(item_ids))
-            .group_by(Task.item_id)
-        ).all()
-    )
-    # Batch: completed tasks per item
-    done_map: dict[int, int] = dict(
-        session.execute(
-            select(Task.item_id, func.count().label("n"))
-            .where(Task.item_id.in_(item_ids), Task.is_complete == 1)
-            .group_by(Task.item_id)
-        ).all()
-    )
-
-    summaries: list[ProjectSummarySchema] = []
-    eligible_progresses: list[int] = []
-
-    for item in active_items:
-        total = total_map.get(item.id, 0)
-        done = done_map.get(item.id, 0)
-        progress = calculate_progress(done, total)
-        summaries.append(ProjectSummarySchema(
-            id=item.id,
-            title=item.title,
-            task_count=total,
-            completed_task_count=done,
-            progress_percentage=progress,
-            project_deadline=str(item.project_deadline) if item.project_deadline else None,
-        ))
-        if total > 0:
-            eligible_progresses.append(progress)
-
-    # Overall progress: average of eligible projects, rounded half-up
-    overall: Optional[int] = None
-    if eligible_progresses:
-        avg = sum(eligible_progresses) / len(eligible_progresses)
-        # Round-half-up
-        overall = int(avg + 0.5)
-
-    return summaries, overall
-
-
-def _nearest_deadline(active_items: list[Item]) -> Optional[str]:
-    """Return nearest upcoming project_deadline as YYYY-MM-DD or None."""
-    dates = [
-        str(item.project_deadline)
-        for item in active_items
-        if item.project_deadline is not None
-    ]
-    return min(dates) if dates else None
-
-
-def _get_upcoming_deadlines(
-    session: Session,
-    client_today: date,
-    threshold: int,
-) -> list[DeadlineItemSchema]:
-    """Return overdue + approaching items sorted by urgency."""
-    from datetime import timedelta
-
-    cutoff = client_today + timedelta(days=threshold)
-    items: list[DeadlineItemSchema] = []
-
-    # Active non-archived projects with deadline within cutoff
-    projects = session.execute(
-        select(Item).where(
-            Item.type == "project",
-            Item.archived_at.is_(None),
-            Item.project_status == "active",
-            Item.project_deadline.isnot(None),
+    active_projects: int = session.execute(
+        select(func.count()).where(
+            Item.type == "project", Item.archived_at.is_(None), Item.project_status == "active"
         )
-    ).scalars().all()
+    ).scalar_one()
+    someday: int = session.execute(
+        select(func.count())
+        .select_from(Task)
+        .outerjoin(Item, Task.item_id == Item.id)
+        .where(Task.is_someday == 1, Task.is_complete == 0, (Task.item_id.is_(None)) | (Item.archived_at.is_(None)))
+    ).scalar_one()
+    return DashboardCounts(
+        active_projects=active_projects,
+        areas=count_items("area"),
+        resources=count_items("resource"),
+        archived=session.execute(select(func.count()).where(Item.archived_at.isnot(None))).scalar_one(),
+        someday=someday,
+    )
+
+
+def _get_stale_waiting(
+    session: Session, client_today: date, local_tz: Optional[timezone]
+) -> list[StaleWaiting]:
+    """Open waiting-for tasks that have been waiting at least STALE_WAITING_DAYS, longest first."""
+    rows = session.execute(
+        select(Task, Item)
+        .outerjoin(Item, Task.item_id == Item.id)
+        .where(
+            Task.is_complete == 0, Task.is_someday == 0,
+            Task.waiting_for.isnot(None), Task.waiting_since.isnot(None),
+            (Task.item_id.is_(None)) | (Item.archived_at.is_(None)),
+        )
+    ).all()
+    tz = local_tz or timezone.utc
+    found: list[StaleWaiting] = []
+    for task, item in rows:
+        if item is not None and item.type == "project" and item.project_status == "completed":
+            continue
+        since = task.waiting_since
+        if since.tzinfo is None:
+            since = since.replace(tzinfo=timezone.utc)
+        days = (client_today - since.astimezone(tz).date()).days
+        if days >= STALE_WAITING_DAYS:
+            found.append(StaleWaiting(
+                id=task.id, title=task.title, waiting_for=task.waiting_for, waiting_days=days,
+                item_id=task.item_id, item_title=item.title if item else None, item_type=item.type if item else None,
+            ))
+    return sorted(found, key=lambda w: (-w.waiting_days, w.id))
+
+
+def _get_attention_projects(session: Session, client_today: date) -> list[AttentionProject]:
+    """Active projects with something wrong: overdue tasks, a passed or close deadline with little done,
+    no activity for 30 days, or nothing left to do. Most problems first."""
+    projects = list(session.execute(
+        select(Item).where(Item.type == "project", Item.archived_at.is_(None), Item.project_status == "active")
+    ).scalars().all())
+    if not projects:
+        return []
+    ids = [p.id for p in projects]
+    stats = project_stats_service.get_project_stats(session, projects, client_today)
+    totals = dict(session.execute(
+        select(Task.item_id, func.count()).where(Task.item_id.in_(ids)).group_by(Task.item_id)
+    ).all())
+    done = dict(session.execute(
+        select(Task.item_id, func.count()).where(Task.item_id.in_(ids), Task.is_complete == 1).group_by(Task.item_id)
+    ).all())
+
+    soon_cutoff = client_today + timedelta(days=DEADLINE_SOON_DAYS)
+    found: list[AttentionProject] = []
     for p in projects:
-        dl = date.fromisoformat(str(p.project_deadline))
-        if dl <= cutoff:
-            items.append(DeadlineItemSchema(
-                id=p.id,
-                type="project",
-                title=p.title,
-                deadline=str(p.project_deadline),
-                is_overdue=dl < client_today,
+        s = stats[p.id]
+        progress = calculate_progress(done.get(p.id, 0), totals.get(p.id, 0))
+        days_inactive = (client_today - _utc_date(s.last_activity_at)).days
+        reasons: list[str] = []
+        if s.overdue_task_count > 0:
+            reasons.append("overdue_tasks")
+        if p.project_deadline is not None:
+            if p.project_deadline < client_today:
+                reasons.append("deadline_passed")
+            elif p.project_deadline <= soon_cutoff and progress < LOW_PROGRESS:
+                reasons.append("deadline_soon")
+        if days_inactive >= STALE_PROJECT_DAYS:
+            reasons.append("stale")
+        if s.open_task_count == 0:
+            reasons.append("no_open_tasks")
+        if reasons:
+            found.append(AttentionProject(
+                id=p.id, title=p.title, reasons=reasons, overdue_task_count=s.overdue_task_count,
+                open_task_count=s.open_task_count, progress_percentage=progress,
+                project_deadline=str(p.project_deadline) if p.project_deadline else None,
+                days_inactive=days_inactive,
             ))
+    return sorted(found, key=lambda a: (-len(a.reasons), -a.overdue_task_count, a.title.lower(), a.id))
 
-    # Incomplete tasks with due_date within cutoff. Same rules as /api/tasks/today:
-    # Someday tasks and tasks deferred past today stay out. Waiting-for tasks stay in
-    # (an overdue wait usually needs a follow-up) and carry waiting_for for a label.
-    for t in session.execute(
-        select(Task).where(
-            Task.is_complete == 0,
-            Task.due_date.isnot(None),
-            Task.is_someday == 0,
-            (Task.defer_until.is_(None)) | (Task.defer_until <= client_today),
-        )
-    ).scalars().all():
-        if t.item_id is not None:
-            parent = session.get(Item, t.item_id)
-            if parent is None or parent.archived_at is not None:
-                continue
-            if parent.type == "project" and parent.project_status == "completed":
-                continue
-        dl = date.fromisoformat(str(t.due_date))
-        if dl <= cutoff:
-            items.append(DeadlineItemSchema(
-                id=t.id,
-                type="task",
-                title=t.title,
-                deadline=str(t.due_date),
-                is_overdue=dl < client_today,
-                item_id=t.item_id,
-                waiting_for=t.waiting_for,
-            ))
 
-    overdue = sorted([i for i in items if i.is_overdue], key=lambda x: x.deadline)
-    approaching = sorted([i for i in items if not i.is_overdue], key=lambda x: x.deadline)
-    return overdue + approaching
+def _utc_date(moment: datetime) -> date:
+    """The calendar date of an activity moment (UTC) — close enough for "days without activity"."""
+    return moment.astimezone(timezone.utc).date()
+
 
 def _get_last_review_date(session: Session) -> Optional[str]:
     """Return the most recent review date as YYYY-MM-DD, or None."""
     from backend.models.weekly_review import WeeklyReview
-    from sqlalchemy import func as sqlfunc
-    latest = session.execute(
-        select(sqlfunc.max(WeeklyReview.completed_at))
-    ).scalar_one_or_none()
-    if latest is None:
-        return None
-    return latest.date().isoformat()
+    latest = session.execute(select(func.max(WeeklyReview.completed_at))).scalar_one_or_none()
+    return latest.date().isoformat() if latest is not None else None
