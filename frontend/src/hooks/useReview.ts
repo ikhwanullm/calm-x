@@ -17,6 +17,7 @@ export const reviewKeys = {
   areas: (today: string) => [...reviewKeys.all, 'areas', today] as const,
   resources: (today: string) => [...reviewKeys.all, 'resources', today] as const,
   meetings: (today: string) => [...reviewKeys.all, 'meetings', today] as const,
+  waiting: (today: string) => [...reviewKeys.all, 'waiting', today] as const,
 }
 
 // ---------------------------------------------------------------------------
@@ -65,6 +66,17 @@ export function useReviewResources() {
   return useQuery({
     queryKey: reviewKeys.resources(today),
     queryFn: () => reviewApi.getResources(today, tzOffset),
+    staleTime: 0,
+  })
+}
+
+/** Every open waiting-for task, longest wait first. */
+export function useReviewWaiting() {
+  const today = getLocalToday()
+  const tzOffset = getLocalTzOffset()
+  return useQuery({
+    queryKey: reviewKeys.waiting(today),
+    queryFn: () => reviewApi.getWaiting(today, tzOffset),
     staleTime: 0,
   })
 }

@@ -1,5 +1,6 @@
 import { apiClient } from './client'
 import type { MeetingSummary } from '../types/models'
+import type { StaleWaiting } from '../types/dashboard'
 
 export interface ReviewStatus {
   last_review_date: string | null
@@ -82,6 +83,11 @@ export const reviewApi = {
 
   getMeetings: (today: string, tzOffset?: string) =>
     apiClient.get<MeetingSummary[]>('/weekly-review/meetings', {
+      params: { today, ...(tzOffset ? { tz_offset: tzOffset } : {}) }
+    }).then(r => r.data),
+
+  getWaiting: (today: string, tzOffset?: string) =>
+    apiClient.get<StaleWaiting[]>('/weekly-review/waiting', {
       params: { today, ...(tzOffset ? { tz_offset: tzOffset } : {}) }
     }).then(r => r.data),
 

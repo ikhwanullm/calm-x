@@ -10,6 +10,8 @@ import { ShortcutHelp } from '@/components/search/ShortcutHelp'
 import { useReviewStatus, useCompleteReview } from '@/hooks/useReview'
 import { InboxStep } from '@/components/review/InboxStep'
 import { MeetingsStep } from '@/components/review/MeetingsStep'
+import { WaitingStep } from '@/components/review/WaitingStep'
+import { SomedayStep } from '@/components/review/SomedayStep'
 import { ProjectsStep } from '@/components/review/ProjectsStep'
 import { AreasStep } from '@/components/review/AreasStep'
 import { ResourcesStep } from '@/components/review/ResourcesStep'
@@ -20,14 +22,16 @@ import { ReviewComplete } from '@/components/review/ReviewComplete'
 // Types
 // ---------------------------------------------------------------------------
 
-export type ReviewStepId = 'inbox' | 'meetings' | 'projects' | 'areas' | 'resources' | 'summary'
+export type ReviewStepId = 'inbox' | 'meetings' | 'waiting' | 'projects' | 'areas' | 'resources' | 'someday' | 'summary'
 
 export const REVIEW_STEPS: { id: ReviewStepId; label: string }[] = [
   { id: 'inbox', label: 'Inbox' },
   { id: 'meetings', label: 'Meetings' },
+  { id: 'waiting', label: 'Waiting for' },
   { id: 'projects', label: 'Projects' },
   { id: 'areas', label: 'Areas' },
   { id: 'resources', label: 'Resources' },
+  { id: 'someday', label: 'Someday' },
   { id: 'summary', label: 'Summary' },
 ]
 
@@ -36,6 +40,9 @@ export interface ActionCounts {
   completed: number
   updatedDueDates: number
   archived: number
+  followedUp: number      // waiting tasks followed up, received or released
+  startedIdeas: number    // Someday ideas started
+  droppedIdeas: number    // Someday ideas dropped
 }
 
 // ---------------------------------------------------------------------------
@@ -52,6 +59,9 @@ export default function WeeklyReviewPage() {
     completed: 0,
     updatedDueDates: 0,
     archived: 0,
+    followedUp: 0,
+    startedIdeas: 0,
+    droppedIdeas: 0,
   })
   const [notes, setNotes] = useState('')
   const [isCompleted, setIsCompleted] = useState(false)
@@ -145,7 +155,7 @@ export default function WeeklyReviewPage() {
 
       {/* Step nav */}
       <nav aria-label="Review steps" className="px-8 py-5 bg-surface border-b border-border shrink-0">
-        <ol className="flex flex-wrap items-center gap-2 mx-auto max-w-[820px]" style={{ padding: 0, listStyle: 'none', margin: '0 auto' }}>
+        <ol className="flex flex-wrap items-center gap-2 mx-auto max-w-[1160px]" style={{ padding: 0, listStyle: 'none', margin: '0 auto' }}>
           {REVIEW_STEPS.map((step, idx) => {
             const isDone = idx < currentStepIdx
             const isCurrent = idx === currentStepIdx
@@ -208,6 +218,7 @@ export default function WeeklyReviewPage() {
               />
             )}
             {currentStep.id === 'meetings' && <MeetingsStep />}
+            {currentStep.id === 'waiting' && <WaitingStep onHandled={() => incrementCount('followedUp')} />}
             {currentStep.id === 'projects' && (
               <ProjectsStep
                 onCompleted={() => incrementCount('completed')}
@@ -223,6 +234,12 @@ export default function WeeklyReviewPage() {
             {currentStep.id === 'resources' && (
               <ResourcesStep
                 onArchived={() => incrementCount('archived')}
+              />
+            )}
+            {currentStep.id === 'someday' && (
+              <SomedayStep
+                onActivated={() => incrementCount('startedIdeas')}
+                onDropped={() => incrementCount('droppedIdeas')}
               />
             )}
             {currentStep.id === 'summary' && (

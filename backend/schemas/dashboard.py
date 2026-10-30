@@ -26,6 +26,7 @@ class StaleWaiting(BaseModel):
     title: str
     waiting_for: str
     waiting_days: int
+    due_date: Optional[str] = None
     item_id: Optional[int] = None
     item_title: Optional[str] = None
     item_type: Optional[str] = None     # "project" | "area" | None for the Inbox

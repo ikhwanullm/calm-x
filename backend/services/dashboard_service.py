@@ -30,7 +30,7 @@ def get_dashboard_data(
 ) -> DashboardSchema:
     """Compute the dashboard with the client's local date (and timezone for meetings and waits)."""
     last_review = _get_last_review_date(session)
-    stale_waiting = _get_stale_waiting(session, client_today, local_tz)
+    stale_waiting = get_waiting_tasks(session, client_today, local_tz, min_days=STALE_WAITING_DAYS)
     return DashboardSchema(
         inbox_count=session.execute(
             select(func.count()).where(Task.item_id.is_(None), Task.is_complete == 0, Task.is_someday == 0)
@@ -77,10 +77,13 @@ def _get_counts(session: Session) -> DashboardCounts:
     )
 
 
-def _get_stale_waiting(
-    session: Session, client_today: date, local_tz: Optional[timezone]
+def get_waiting_tasks(
+    session: Session, client_today: date, local_tz: Optional[timezone] = None, min_days: int = 0
 ) -> list[StaleWaiting]:
-    """Open waiting-for tasks that have been waiting at least STALE_WAITING_DAYS, longest first."""
+    """Open waiting-for tasks that have waited at least `min_days`, longest first.
+
+    The wait counts from `waiting_since`: when the wait began or the last follow-up. Someday tasks,
+    tasks of archived items or completed projects, and tasks without a start are left out."""
     rows = session.execute(
         select(Task, Item)
         .outerjoin(Item, Task.item_id == Item.id)
@@ -98,10 +101,11 @@ def _get_stale_waiting(
         since = task.waiting_since
         if since.tzinfo is None:
             since = since.replace(tzinfo=timezone.utc)
-        days = (client_today - since.astimezone(tz).date()).days
-        if days >= STALE_WAITING_DAYS:
+        days = max(0, (client_today - since.astimezone(tz).date()).days)  # never negative (clock or timezone skew)
+        if days >= min_days:
             found.append(StaleWaiting(
                 id=task.id, title=task.title, waiting_for=task.waiting_for, waiting_days=days,
+                due_date=str(task.due_date) if task.due_date else None,
                 item_id=task.item_id, item_title=item.title if item else None, item_type=item.type if item else None,
             ))
     return sorted(found, key=lambda w: (-w.waiting_days, w.id))

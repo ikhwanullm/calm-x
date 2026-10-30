@@ -13,6 +13,7 @@ export interface StaleWaiting {
   title: string
   waiting_for: string
   waiting_days: number
+  due_date: string | null
   item_id: number | null
   item_title: string | null
   item_type: string | null   // "project" | "area" | null (Inbox)

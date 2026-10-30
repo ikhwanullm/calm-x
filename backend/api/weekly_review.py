@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db_session
 from backend.exceptions import ValidationError
+from backend.schemas.dashboard import StaleWaiting
 from backend.schemas.meeting import MeetingSummary
 from backend.schemas.weekly_review import (
     ReviewAreaItem,
@@ -20,7 +21,7 @@ from backend.schemas.weekly_review import (
     WeeklyReviewHistoryResponse,
     WeeklyReviewResponse,
 )
-from backend.services import meeting_service, review_service
+from backend.services import dashboard_service, meeting_service, review_service
 
 router = APIRouter(prefix="/weekly-review", tags=["weekly-review"])
 SessionDep = Annotated[Session, Depends(get_db_session)]
@@ -95,6 +96,17 @@ def get_review_meetings(
     """Meetings of the past 7 days that still have actions to process."""
     client_today = _parse_today(today)
     return meeting_service.get_review_meetings(session, client_today, review_service._parse_tz_offset(tz_offset))
+
+
+@router.get("/waiting", response_model=List[StaleWaiting])
+def get_review_waiting(
+    session: SessionDep,
+    today: str = Query(..., description="Client local date YYYY-MM-DD"),
+    tz_offset: Optional[str] = Query(default=None, description="Client tz offset e.g. +07:00"),
+) -> list[StaleWaiting]:
+    """Every open waiting-for task, longest wait first, for the Waiting for step."""
+    client_today = _parse_today(today)
+    return dashboard_service.get_waiting_tasks(session, client_today, review_service._parse_tz_offset(tz_offset))
 
 
 @router.post("/complete", response_model=WeeklyReviewResponse, status_code=201)

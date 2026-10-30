@@ -51,6 +51,9 @@ export const tasksApi = {
   update: (id: number, payload: TaskUpdatePayload) =>
     apiClient.put<Task>(`/tasks/${id}`, payload).then(r => r.data),
 
+  followUp: (id: number) =>
+    apiClient.post<Task>(`/tasks/${id}/follow-up`).then(r => r.data),
+
   delete: (id: number) =>
     apiClient.delete(`/tasks/${id}`),
 

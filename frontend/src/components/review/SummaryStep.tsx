@@ -14,6 +14,9 @@ export function SummaryStep({ actionCounts, notes, onNotesChange }: SummaryStepP
     { value: actionCounts.completed, label: 'Tasks completed' },
     { value: actionCounts.updatedDueDates, label: 'Due dates updated' },
     { value: actionCounts.archived, label: 'Items archived' },
+    { value: actionCounts.followedUp, label: 'Waiting tasks followed up or closed' },
+    { value: actionCounts.startedIdeas, label: 'Someday ideas started' },
+    { value: actionCounts.droppedIdeas, label: 'Someday ideas dropped' },
   ]
 
   return (

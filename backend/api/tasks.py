@@ -166,6 +166,14 @@ def restore_task(task_id: int, session: SessionDep):
     return task
 
 
+@router.post("/tasks/{task_id}/follow-up", response_model=TaskResponse)
+def follow_up_task(task_id: int, session: SessionDep):
+    """Mark that you followed up on a waiting task today (the wait is counted from now)."""
+    task = task_service.follow_up(session, task_id)
+    session.commit()
+    return task
+
+
 @router.post("/tasks/{task_id}/move", response_model=TaskResponse)
 def move_task(task_id: int, payload: TaskMovePayload, session: SessionDep):
     task = task_service.move_task(session, task_id, payload.item_id)

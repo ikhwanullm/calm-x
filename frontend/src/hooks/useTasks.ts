@@ -137,6 +137,32 @@ export function useDeleteTask() {
   })
 }
 
+function refreshAfterTaskChange(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: taskKeys.all })
+  qc.invalidateQueries({ queryKey: itemKeys.all })
+  qc.invalidateQueries({ queryKey: dashboardKeys.all })
+}
+
+/** Update any task by id (the review steps patch many different tasks from one component). */
+export function usePatchTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: TaskUpdatePayload }) => tasksApi.update(id, payload),
+    onSuccess: () => refreshAfterTaskChange(qc),
+    onError: (err: Error) => notify.error("Couldn't save the task. Try again.", err.message),
+  })
+}
+
+/** "I followed up": the wait is counted from today. */
+export function useFollowUpTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => tasksApi.followUp(id),
+    onSuccess: () => refreshAfterTaskChange(qc),
+    onError: (err: Error) => notify.error("Couldn't record the follow-up. Try again.", err.message),
+  })
+}
+
 /** Drag-and-drop order of the open tasks of one item: updates the list at once and puts it back if the server refuses. */
 export function useReorderTasks(itemId: number) {
   const qc = useQueryClient()

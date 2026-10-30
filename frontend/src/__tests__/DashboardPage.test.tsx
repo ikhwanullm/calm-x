@@ -120,9 +120,9 @@ describe("DashboardPage", () => {
 
   describe("waiting too long", () => {
     const waits = [
-      { id: 5, title: "UAT sign-off", waiting_for: "Budi", waiting_days: 12, item_id: 3, item_title: "Migrate CML", item_type: "project" },
-      { id: 6, title: "Room booking", waiting_for: "Sari", waiting_days: 8, item_id: 4, item_title: "Work", item_type: "area" },
-      { id: 7, title: "Loose end", waiting_for: "Rudi", waiting_days: 7, item_id: null, item_title: null, item_type: null },
+      { id: 5, title: "UAT sign-off", waiting_for: "Budi", waiting_days: 12, due_date: null, item_id: 3, item_title: "Migrate CML", item_type: "project" },
+      { id: 6, title: "Room booking", waiting_for: "Sari", waiting_days: 8, due_date: null, item_id: 4, item_title: "Work", item_type: "area" },
+      { id: 7, title: "Loose end", waiting_for: "Rudi", waiting_days: 7, due_date: null, item_id: null, item_title: null, item_type: null },
     ]
 
     it("shows who and how long, linking to the task in its project or area (Inbox for loose ones)", () => {

@@ -181,6 +181,21 @@ def create_task(session: Session, data: TaskCreate) -> TaskResponse:
     return _task_to_response(session, task)
 
 
+def follow_up(session: Session, task_id: int) -> TaskResponse:
+    """Record a follow-up on a waiting task: the wait counts from now on (`waiting_since` becomes now)."""
+    task = session.get(Task, task_id)
+    if task is None:
+        raise NotFoundError(f"Task {task_id} not found")
+    guard_task_item_not_archived(session.get(Item, task.item_id) if task.item_id else None)
+    if task.waiting_for is None:
+        raise ValidationError("Only a task that is waiting for someone can be followed up.", detail=f"task_id={task_id}")
+    now = now_utc()
+    task.waiting_since = now
+    task.updated_at = now
+    session.flush()
+    return _task_to_response(session, task)
+
+
 def update_task(session: Session, task_id: int, data: TaskUpdate) -> TaskResponse:
     """Partially update a task. Raises ArchivedItemError if parent item is archived."""
     task = session.get(Task, task_id)

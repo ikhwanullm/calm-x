@@ -4,16 +4,17 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the Dashboard rework (`634ee2c`) is pushed to `origin/main`.
+- Everything up to the Dashboard rework (`634ee2c`) is pushed to `origin/main`. The Weekly Review steps for Waiting for and Someday are committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
-- Tests at the last commit: backend 599 passed, frontend 959 passed (75 files), `tsc -b` clean.
+- Tests at the last commit: backend 605 passed, frontend 982 passed (77 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
+| (newest) | Weekly Review: new "Waiting for" and "Someday" steps (8 steps now), `POST /api/tasks/{id}/follow-up`, `GET /api/weekly-review/waiting` |
 | `634ee2c` | Dashboard reworked into an exceptions page (to process, waiting too long, projects needing attention); Today shows how long a task has waited; fixes broken task links on the Dashboard |
 | `2ba0b34` | Project/Area detail page: summary strip, tasks and meetings moved up, quick add, working drag-reorder, wider layout (`GET /api/items/{id}?today=` adds `stats`) |
 | `83509d2` | Areas and Resources lists: search, sort, filters, card/compact-list toggle, per-item stats (`GET /api/items?type=area|resource&today=`); `ItemListView` removed |
@@ -315,6 +316,23 @@ getting unhealthy**, only exceptions, and it is empty when all is fine. Nothing 
   (first 8, then a link), an "all clear" empty state, and one line of shortcut counts.
 - **Today**: a waiting task's chip now shows the age, "Waiting · Budi · 9 days" (from `waiting_since`).
 - Not done: tasks completed this week (no `completed_at` column), an Areas health section.
+
+## Weekly Review: Waiting for and Someday steps (built 2026-10-30, chosen by me; the review stays one continuous session)
+
+Order is now Inbox, Meetings, **Waiting for**, Projects, Areas, Resources, **Someday**, Summary.
+
+- **Waiting for** (`components/review/WaitingStep.tsx`, `GET /api/weekly-review/waiting?today=&tz_offset=`): every open waiting-for task
+  (not Someday, not in an archived item or completed project, with a `waiting_since`), longest wait first, with who, where, due date and
+  the days waited. Per task: **Followed up** (`POST /api/tasks/{id}/follow-up` sets `waiting_since` to now, so `waiting_since` means
+  "start of the wait or last follow-up" and the Dashboard's "waiting too long" restarts too), **Received, done** (completes it) or
+  **Not waiting anymore** (clears `waiting_for`). After an action the row stays, dimmed, with the outcome; the list is not refetched mid-step.
+- **Someday** (`components/review/SomedayStep.tsx`, uses `GET /api/tasks/someday`): parked ideas oldest first with where they live and how
+  long they have been parked. **Start it** (`is_someday` off), **Keep parked** (nothing changes) or **Drop** (deletes, with the usual Undo toast).
+- **Summary** has three new counters: waiting tasks followed up or closed, Someday ideas started, dropped.
+- Shared pieces: `ReviewTaskRow.tsx`; hooks `useReviewWaiting`, `useFollowUpTask`, `usePatchTask` (any task by id).
+  `dashboard_service.get_waiting_tasks(..., min_days)` serves both the Dashboard (7+ days) and the review (all); waiting days are never negative.
+- The step bar is wider (`max-w-[1160px]`) so eight labels fit on one line.
+- Not done: reviewing the old steps (Inbox, Projects, Areas, Resources) with the new project/area numbers; saving progress to continue a review later.
 
 ## Other ideas the owner liked (backlog, not prioritised yet)
 
