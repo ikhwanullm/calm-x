@@ -8,7 +8,7 @@ import {
 import { useItems } from "@/hooks/useItems"
 import { TaskDrawer } from "@/components/tasks/TaskDrawer"
 import { TaskRow } from "@/components/tasks/TaskRow"
-import { ConfirmDialog, EmptyState } from "@/components/common"
+import { ConfirmDialog, EmptyState, ItemPicker } from "@/components/common"
 import { BulkBar, InlineEdit, RowMenu } from "@/components/inbox/TriageControls"
 import type { EditKind } from "@/components/inbox/TriageControls"
 import { useTriage } from "@/hooks/useTriage"
@@ -16,7 +16,6 @@ import { getLocalToday } from "@/utils/date"
 import { CaptureBox } from "@/components/capture/CaptureBox"
 import { notify } from "@/lib/toast"
 import type { Task, Item, TaskPriority, TaskUpdatePayload } from "@/types/models"
-import { cn } from "@/lib/utils"
 
 export default function InboxPage() {
   const { data: tasks = [], isLoading } = useInboxTasks()
@@ -298,39 +297,24 @@ export default function InboxPage() {
 function RowMoveSelect({ task, destinations }: { task: Task; destinations: Item[] }) {
   const moveTask = useMoveTask()
 
-  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const value = e.target.value
-    if (!value) return
-    const itemId = Number(value)
-    moveTask.mutate(
-      { id: task.id, payload: { item_id: itemId } },
-      {
-        onSuccess: () => notify.success("Task moved"),
-        onError: (err: Error) => notify.error("Could not move task.", err.message),
-      }
-    )
-    e.target.value = ""
-  }
-
   if (destinations.length === 0) return null
 
   return (
-    <select
-      defaultValue=""
-      onChange={handleChange}
-      aria-label={`Move "${task.title}" to project or area`}
-      className={cn(
-        "shrink-0 h-7 px-2 text-xs rounded-control border border-border bg-surface text-muted",
-        "focus:outline-2 focus:outline-offset-2 focus:outline-accent",
-        "hover:text-text hover:border-accent transition-colors"
-      )}
-    >
-      <option value="" disabled>Move to…</option>
-      {destinations.map((item) => (
-        <option key={item.id} value={String(item.id)}>
-          {item.title}
-        </option>
-      ))}
-    </select>
+    <ItemPicker
+      items={destinations}
+      onSelect={(itemId) =>
+        moveTask.mutate(
+          { id: task.id, payload: { item_id: itemId } },
+          {
+            onSuccess: () => notify.success("Task moved"),
+            onError: (err: Error) => notify.error("Could not move task.", err.message),
+          }
+        )
+      }
+      placeholder="Move to…"
+      ariaLabel={`Move "${task.title}" to project or area`}
+      variant="row"
+      align="right"
+    />
   )
 }

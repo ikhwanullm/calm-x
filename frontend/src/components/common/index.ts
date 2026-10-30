@@ -26,3 +26,6 @@ export type { TagChipProps } from './TagChip'
 
 export { Skeleton, SkeletonGroup } from './Skeleton'
 export type { SkeletonProps, SkeletonGroupProps } from './Skeleton'
+
+export { ItemPicker } from './ItemPicker'
+export type { ItemPickerProps } from './ItemPicker'

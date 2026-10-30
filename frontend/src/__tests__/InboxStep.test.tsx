@@ -267,14 +267,16 @@ describe('InboxStep — safety', () => {
     await waitFor(() => screen.getByText('Task B'))
   })
 
-  it('does not offer a completed project as a destination', () => {
+  it('does not offer a completed project as a destination', async () => {
+    const user = userEvent.setup()
     itemsData.projects = [
       { id: 10, title: 'My Project', type: 'project', project_status: 'active' },
       { id: 11, title: 'Finished Project', type: 'project', project_status: 'completed' },
     ]
     renderStep([TASK_A])
-    const select = screen.getByLabelText('Select project to move task to')
-    expect(within(select).getByRole('option', { name: 'My Project' })).toBeTruthy()
-    expect(within(select).queryByRole('option', { name: 'Finished Project' })).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Select project to move task to' }))
+    const list = await screen.findByRole('listbox')
+    expect(within(list).getByRole('option', { name: /My Project/ })).toBeTruthy()
+    expect(within(list).queryByRole('option', { name: /Finished Project/ })).toBeNull()
   })
 })

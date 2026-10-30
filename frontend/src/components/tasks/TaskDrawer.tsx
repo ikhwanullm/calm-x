@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { X, Plus, Trash2, Sun, CloudMoon } from 'lucide-react'
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet'
-import { ProgressBar, RelativeDate, ConfirmDialog } from '@/components/common'
+import { ProgressBar, RelativeDate, ConfirmDialog, ItemPicker } from '@/components/common'
 import { Button } from '@/components/common'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import {
@@ -579,36 +579,23 @@ function MoveToSelect({ taskId, currentItemId }: { taskId: number; currentItemId
   const { data: items = [] } = useItems({ include_archived: false })
   const moveTask = useMoveTask()
 
-  // Filter to projects and areas only
-  const destinations = items.filter(i => i.type === 'project' || i.type === 'area')
-
-  function handleMove(e: React.ChangeEvent<HTMLSelectElement>) {
-    const value = e.target.value
-    const itemId = value === 'inbox' ? null : Number(value)
-    if (itemId === currentItemId) return
-    moveTask.mutate({ id: taskId, payload: { item_id: itemId } })
-    e.target.value = value  // reset display after mutation
-  }
-
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="move-to-select" className="text-sm text-muted whitespace-nowrap">
-        Move to…
-      </label>
-      <select
-        id="move-to-select"
-        defaultValue={currentItemId === null ? 'inbox' : String(currentItemId)}
-        onChange={handleMove}
-        aria-label="Move task to"
-        className="flex-1 h-8 px-2 rounded-control border border-border bg-surface text-sm text-text focus:outline-2 focus:outline-offset-2 focus:outline-accent"
-      >
-        <option value="inbox">Inbox</option>
-        {destinations.map(item => (
-          <option key={item.id} value={String(item.id)}>
-            {item.type === 'project' ? '📁' : '📂'} {item.title}
-          </option>
-        ))}
-      </select>
+      <span className="text-sm text-muted whitespace-nowrap">Move to…</span>
+      <div className="flex-1 min-w-0">
+        <ItemPicker
+          items={items}
+          value={currentItemId}
+          allowInbox
+          onSelect={(itemId) => {
+            if (itemId !== currentItemId) moveTask.mutate({ id: taskId, payload: { item_id: itemId } })
+          }}
+          placeholder="Choose…"
+          ariaLabel="Move task to"
+          variant="field"
+          className="[&>button]:h-8 [&>button]:bg-surface"
+        />
+      </div>
     </div>
   )
 }

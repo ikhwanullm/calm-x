@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { cn } from '@/lib/utils'
-import { ConfirmDialog } from '@/components/common'
+import { ConfirmDialog, ItemPicker } from '@/components/common'
 import { useReviewInbox, reviewKeys } from '@/hooks/useReview'
 import { useItems } from '@/hooks/useItems'
 import { useMoveTask, useCompleteTask, useDeleteTask, taskKeys } from '@/hooks/useTasks'
@@ -256,27 +255,22 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
           <div className="grid grid-cols-2 gap-3">
             {/* Move to project */}
             <div className="flex flex-col gap-2 p-3.5 border border-border rounded-xl">
-              <label className="flex flex-col gap-1.5 text-sm font-semibold text-text">
+              <div className="flex flex-col gap-1.5 text-sm font-semibold text-text">
                 Project
-                <select
-                  value={selectedProjectId}
-                  onChange={e => { setSelectedProjectId(e.target.value ? Number(e.target.value) : ''); setMoveError(null) }}
-                  className={cn(
-                    'h-11 px-2.5 border border-border rounded-control bg-bg text-text text-sm',
-                    'focus:outline-2 focus:outline-accent',
-                    moveError === 'project' && 'border-danger-fg'
-                  )}
-                  aria-label="Select project to move task to"
-                >
-                  <option value="">{projects.length === 0 ? 'No projects yet' : 'Select project…'}</option>
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>{p.title}</option>
-                  ))}
-                </select>
+                <ItemPicker
+                  items={projects}
+                  value={selectedProjectId === '' ? undefined : selectedProjectId}
+                  onSelect={id => { setSelectedProjectId(id ?? ''); setMoveError(null) }}
+                  placeholder={projects.length === 0 ? 'No projects yet' : 'Select project…'}
+                  ariaLabel="Select project to move task to"
+                  disabled={projects.length === 0}
+                  variant="field"
+                  className={moveError === 'project' ? '[&>button]:border-danger-fg' : undefined}
+                />
                 {moveError === 'project' && (
                   <span className="text-xs text-danger-fg">Select a project first</span>
                 )}
-              </label>
+              </div>
               <button
                 type="button"
                 onClick={handleMoveToProject}
@@ -290,27 +284,22 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
 
             {/* Move to area */}
             <div className="flex flex-col gap-2 p-3.5 border border-border rounded-xl">
-              <label className="flex flex-col gap-1.5 text-sm font-semibold text-text">
+              <div className="flex flex-col gap-1.5 text-sm font-semibold text-text">
                 Area
-                <select
-                  value={selectedAreaId}
-                  onChange={e => { setSelectedAreaId(e.target.value ? Number(e.target.value) : ''); setMoveError(null) }}
-                  className={cn(
-                    'h-11 px-2.5 border border-border rounded-control bg-bg text-text text-sm',
-                    'focus:outline-2 focus:outline-accent',
-                    moveError === 'area' && 'border-danger-fg'
-                  )}
-                  aria-label="Select area to move task to"
-                >
-                  <option value="">{areas.length === 0 ? 'No areas yet' : 'Select area…'}</option>
-                  {areas.map(a => (
-                    <option key={a.id} value={a.id}>{a.title}</option>
-                  ))}
-                </select>
+                <ItemPicker
+                  items={areas}
+                  value={selectedAreaId === '' ? undefined : selectedAreaId}
+                  onSelect={id => { setSelectedAreaId(id ?? ''); setMoveError(null) }}
+                  placeholder={areas.length === 0 ? 'No areas yet' : 'Select area…'}
+                  ariaLabel="Select area to move task to"
+                  disabled={areas.length === 0}
+                  variant="field"
+                  className={moveError === 'area' ? '[&>button]:border-danger-fg' : undefined}
+                />
                 {moveError === 'area' && (
                   <span className="text-xs text-danger-fg">Select an area first</span>
                 )}
-              </label>
+              </div>
               <button
                 type="button"
                 onClick={handleMoveToArea}

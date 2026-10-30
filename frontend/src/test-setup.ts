@@ -14,3 +14,16 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: () => false,
   }),
 })
+
+// cmdk (the searchable pickers) needs ResizeObserver and scrollIntoView, which jsdom does not implement
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+if (typeof window.ResizeObserver === 'undefined') {
+  window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
+}
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
+}

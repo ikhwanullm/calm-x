@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import { useLinkedItems, useLinkResource, useUnlinkResource } from "@/hooks/useLinks"
 import { useItems } from "@/hooks/useItems"
 import { notify } from "@/lib/toast"
-import { cn } from "@/lib/utils"
+import { ItemPicker } from "@/components/common"
 
 interface ResourceLinksSectionProps {
   resourceId: number
@@ -21,14 +21,12 @@ export function ResourceLinksSection({ resourceId, isArchived }: ResourceLinksSe
     (i) => (i.type === "project" || i.type === "area") && !linkedIds.has(i.id)
   )
 
-  function handleLink(e: React.ChangeEvent<HTMLSelectElement>) {
-    const val = e.target.value
-    if (!val) return
-    linkResource.mutate(Number(val), {
+  function handleLink(itemId: number | null) {
+    if (itemId === null) return
+    linkResource.mutate(itemId, {
       onSuccess: () => notify.success("Item linked"),
       onError: (err: Error) => notify.error("Could not link item.", err.message),
     })
-    e.target.value = ""
   }
 
   return (
@@ -72,22 +70,14 @@ export function ResourceLinksSection({ resourceId, isArchived }: ResourceLinksSe
       )}
 
       {!isArchived && destinations.length > 0 && (
-        <select
-          defaultValue=""
-          onChange={handleLink}
-          aria-label="Link to project or area"
-          className={cn(
-            "w-full h-8 px-2 text-sm rounded-control border border-border bg-surface text-muted",
-            "focus:outline-2 focus:outline-offset-2 focus:outline-accent"
-          )}
-        >
-          <option value="" disabled>Link to…</option>
-          {destinations.map((item) => (
-            <option key={item.id} value={String(item.id)}>
-              {item.title} ({item.type})
-            </option>
-          ))}
-        </select>
+        <ItemPicker
+          items={destinations}
+          onSelect={handleLink}
+          placeholder="Link to…"
+          ariaLabel="Link to project or area"
+          variant="field"
+          className="[&>button]:h-8 [&>button]:bg-surface [&>button]:text-muted"
+        />
       )}
     </div>
   )

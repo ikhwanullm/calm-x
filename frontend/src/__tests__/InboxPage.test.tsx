@@ -137,9 +137,9 @@ describe("InboxPage", () => {
     // Bulk action bar should appear
     await waitFor(() => expect(screen.getByText("2 tasks selected")).toBeTruthy())
 
-    // Select the destination in bulk move select
-    const bulkSelect = screen.getByLabelText("Move selected tasks to")
-    await user.selectOptions(bulkSelect, "10")
+    // Open the destination picker and choose "Work"
+    await user.click(screen.getByRole("button", { name: "Move selected tasks to" }))
+    await user.click(await screen.findByRole("option", { name: /Work/ }))
 
     // move API should have been called twice
     await waitFor(() =>

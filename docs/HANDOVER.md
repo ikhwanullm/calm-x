@@ -4,16 +4,17 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the smart capture and Inbox triage work (`319ed78`) is pushed to `origin/main`.
+- Everything up to the smart capture and Inbox triage work (`319ed78`) is pushed to `origin/main`. The searchable project/area picker is committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
-- Tests at the last commit: backend 606 passed, frontend 1055 passed (81 files), `tsc -b` clean.
+- Tests at the last commit: backend 606 passed, frontend 1076 passed (83 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
+| (newest) | Searchable project/area picker (`ItemPicker`) replaces long dropdowns |
 | `319ed78` | Smart capture (due date, priority, tags, project from the text; several lines at once) and Inbox row/bulk triage actions |
 | `5ce1e21`, `52f7ef4` | Weekly Review: new "Waiting for" and "Someday" steps (8 steps now), `POST /api/tasks/{id}/follow-up`, `GET /api/weekly-review/waiting` |
 | `634ee2c` | Dashboard reworked into an exceptions page (to process, waiting too long, projects needing attention); Today shows how long a task has waited; fixes broken task links on the Dashboard |
@@ -358,6 +359,20 @@ Order is now Inbox, Meetings, **Waiting for**, Projects, Areas, Resources, **Som
   **Bulk bar** for the selection: Move to…, Priority…, Today, Due date…, Waiting for…, Add tag… (adds to each task's own tags), Someday,
   Delete (one Undo restores all). `hooks/useTriage.ts` tries every task, then reports how many worked and the first reason for any that did not.
 - Not done: a "process one by one" mode on the Inbox page, showing how old each Inbox task is, a description field at capture time.
+
+## Searchable project/area picker (built 2026-10-30; the owner pointed out a native dropdown does not scale to 100+ projects)
+
+`components/common/ItemPicker.tsx` (cmdk, no new dependency): a button that opens a list with a search box. Typing narrows it by the
+project's title or its area's name (a title that starts with the text comes first), arrows and Enter choose, Escape or a click outside closes,
+and the last five destinations used are listed first under "Recent" (`localStorage` key `calmx.recentDestinations`, works without storage).
+It opens upwards when there is more room above and lines up with the right edge when it would run off the screen. `allowInbox` adds an
+"Inbox" entry that selects `null`.
+
+- Used for: the Inbox row "Move to…" and the bulk bar's "Move to…", the task drawer's "Move to…", the Inbox step of the Weekly Review (project and
+  area), and "Link to…" on a Resource page.
+- Still native selects with a few items: the area of a project, the Projects page area filter, the new item dialog. If a list there ever grows, use `ItemPicker`.
+- `test-setup.ts` now stubs `ResizeObserver` and `scrollIntoView` (cmdk needs them under jsdom).
+- Not done: `LinkedResourcesSection` ("link a resource") still uses a native select over resources; do the same when the number of resources grows.
 
 ## Other ideas the owner liked (backlog, not prioritised yet)
 

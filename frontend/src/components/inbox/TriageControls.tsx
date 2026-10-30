@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ItemPicker } from '@/components/common/ItemPicker'
 import type { Item, Task, TaskPriority } from '@/types/models'
 
 export type EditKind = 'due' | 'waiting' | 'tag'
@@ -111,15 +112,13 @@ export function BulkBar({
           {count} {count === 1 ? 'task' : 'tasks'} selected
         </span>
         {destinations.length > 0 && (
-          <select
-            defaultValue=""
-            onChange={(e) => { if (e.target.value) { onMove(Number(e.target.value)); e.target.value = '' } }}
-            aria-label="Move selected tasks to"
-            className={cn(FIELD, 'border-accent')}
-          >
-            <option value="" disabled>Move to…</option>
-            {destinations.map((item) => <option key={item.id} value={String(item.id)}>{item.title}</option>)}
-          </select>
+          <ItemPicker
+            items={destinations}
+            onSelect={(id) => { if (id !== null) onMove(id) }}
+            placeholder="Move to…"
+            ariaLabel="Move selected tasks to"
+            variant="bar"
+          />
         )}
         <select
           defaultValue=""
