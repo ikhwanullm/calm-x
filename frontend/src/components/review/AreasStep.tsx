@@ -36,7 +36,11 @@ export function AreasStep({ onTaskAdded }: AreasStepProps) {
       setTaskTitleError('Task title is required')
       return
     }
-    await createTask.mutateAsync({ title: newTaskTitle.trim(), item_id: areaId })
+    try {
+      await createTask.mutateAsync({ title: newTaskTitle.trim(), item_id: areaId })
+    } catch {
+      return  // the hook already showed the error; the form keeps the title
+    }
     qc.invalidateQueries({ queryKey: reviewKeys.areas(today) })
     setAddingForArea(null)
     setNewTaskTitle('')

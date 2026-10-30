@@ -3,7 +3,7 @@
  * All actions must operate on the DISPLAYED (active) task, not on a stale reference.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -31,10 +31,14 @@ vi.mock('../hooks/useReview', () => ({
   },
 }))
 
+const itemsData = vi.hoisted(() => ({
+  projects: [{ id: 10, title: 'My Project', type: 'project' }] as Record<string, unknown>[],
+}))
+
 vi.mock('../hooks/useItems', () => ({
   useItems: (filter: { type: string }) => ({
     data: filter.type === 'project'
-      ? [{ id: 10, title: 'My Project', type: 'project' }]
+      ? itemsData.projects
       : [{ id: 20, title: 'My Area', type: 'area' }],
   }),
   itemKeys: { all: ['items'] },
@@ -223,5 +227,54 @@ describe('InboxStep — P/A button state', () => {
     renderStep([TASK_A])
     const areaBtn = screen.getByRole('button', { name: /move to area/i })
     expect(areaBtn).toHaveProperty('disabled', false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// One action at a time, and no filing into a finished project
+// ---------------------------------------------------------------------------
+
+describe('InboxStep — safety', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    itemsData.projects = [{ id: 10, title: 'My Project', type: 'project' }]
+  })
+
+  it('a second click while the first is still saving does not act twice', async () => {
+    const user = userEvent.setup()
+    let finish: () => void = () => {}
+    mockCompleteTask.mockImplementation(() => new Promise<void>((resolve) => { finish = resolve }))
+    renderStep([TASK_A, TASK_B])
+    const complete = screen.getByRole('button', { name: /mark complete/i })
+    await user.click(complete)
+    await user.click(complete)
+    expect(mockCompleteTask).toHaveBeenCalledTimes(1)
+    expect(mockCompleteTask).toHaveBeenCalledWith(TASK_A.id)
+    finish()
+    await waitFor(() => screen.getByText('Task B'))
+    mockCompleteTask.mockResolvedValue({})
+  })
+
+  it('a failed save keeps the task on screen and allows another try', async () => {
+    const user = userEvent.setup()
+    mockCompleteTask.mockRejectedValueOnce(new Error('offline'))
+    renderStep([TASK_A, TASK_B])
+    await user.click(screen.getByRole('button', { name: /mark complete/i }))
+    await waitFor(() => expect(mockCompleteTask).toHaveBeenCalledTimes(1))
+    expect(screen.getByText('Task A')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /mark complete/i }))
+    await waitFor(() => expect(mockCompleteTask).toHaveBeenCalledTimes(2))
+    await waitFor(() => screen.getByText('Task B'))
+  })
+
+  it('does not offer a completed project as a destination', () => {
+    itemsData.projects = [
+      { id: 10, title: 'My Project', type: 'project', project_status: 'active' },
+      { id: 11, title: 'Finished Project', type: 'project', project_status: 'completed' },
+    ]
+    renderStep([TASK_A])
+    const select = screen.getByLabelText('Select project to move task to')
+    expect(within(select).getByRole('option', { name: 'My Project' })).toBeTruthy()
+    expect(within(select).queryByRole('option', { name: 'Finished Project' })).toBeNull()
   })
 })

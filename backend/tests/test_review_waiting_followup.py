@@ -91,5 +91,19 @@ def test_the_review_leaves_out_done_someday_and_archived(client):
     assert [w["title"] for w in _waiting(client)] == ["kept"]
 
 
+def test_a_wait_without_a_recorded_start_is_still_in_the_review_but_never_stale(client):
+    t = _task(client, "old data", waiting_for="A")
+    factory = next(iter(client.app.dependency_overrides.values()))
+    session = next(factory())
+    try:
+        session.get(Task, t["id"]).waiting_since = None
+        session.commit()
+    finally:
+        session.close()
+    got = _waiting(client)
+    assert [(w["title"], w["waiting_days"]) for w in got] == [("old data", 0)]
+    assert client.get("/api/dashboard", params={"today": TODAY}).json()["stale_waiting_total"] == 0
+
+
 def test_the_review_waiting_list_rejects_a_bad_date(client):
     assert client.get("/api/weekly-review/waiting", params={"today": "x"}).status_code == 400

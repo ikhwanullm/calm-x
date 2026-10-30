@@ -7,6 +7,7 @@ import { useMoveTask, useCompleteTask, useDeleteTask, taskKeys } from '@/hooks/u
 import { tasksApi } from '@/api/tasks'
 import { useShortcuts } from '@/hooks/useShortcuts'
 import { useQueryClient } from '@tanstack/react-query'
+import { notify } from '@/lib/toast'
 import { formatRelativeDate, getLocalToday } from '@/utils/date'
 
 interface InboxStepProps {
@@ -19,7 +20,9 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
   const qc = useQueryClient()
   const today = getLocalToday()
   const { data: tasks = [], isLoading } = useReviewInbox()
-  const { data: projects = [] } = useItems({ type: 'project' })
+  const { data: allProjects = [] } = useItems({ type: 'project' })
+  // A task should not be filed into a project that is already completed
+  const projects = allProjects.filter(p => !('project_status' in p) || p.project_status !== 'completed')
   const { data: areas = [] } = useItems({ type: 'area' })
 
   const moveTask = useMoveTask()
@@ -86,7 +89,23 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
   // Action handlers — all use activeTask (= head of queue)
   // ---------------------------------------------------------------------------
 
-  const handleMoveToProject = useCallback(async () => {
+  // One action at a time: a second keypress while the first is still being saved would act on the same task
+  // again (or on the next one before it is on screen). A failed save leaves the task where it is; the
+  // move/complete/delete hooks already show their own error message.
+  const busy = useRef(false)
+  async function once(action: () => Promise<void>) {
+    if (busy.current) return
+    busy.current = true
+    try {
+      await action()
+    } catch {
+      // keep the task in the queue
+    } finally {
+      busy.current = false
+    }
+  }
+
+  const handleMoveToProject = useCallback(() => once(async () => {
     if (!activeTask) return
     if (!selectedProjectId) {
       setMoveError('project')
@@ -95,9 +114,9 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
     await moveTask.mutateAsync({ id: activeTask.id, payload: { item_id: Number(selectedProjectId) } })
     advanceQueue(activeTask.id)
     onOrganized()
-  }, [activeTask, selectedProjectId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }), [activeTask, selectedProjectId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleMoveToArea = useCallback(async () => {
+  const handleMoveToArea = useCallback(() => once(async () => {
     if (!activeTask) return
     if (!selectedAreaId) {
       setMoveError('area')
@@ -106,36 +125,41 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
     await moveTask.mutateAsync({ id: activeTask.id, payload: { item_id: Number(selectedAreaId) } })
     advanceQueue(activeTask.id)
     onOrganized()
-  }, [activeTask, selectedAreaId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }), [activeTask, selectedAreaId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleComplete = useCallback(async () => {
+  const handleComplete = useCallback(() => once(async () => {
     if (!activeTask) return
     await completeTask.mutateAsync(activeTask.id)
     advanceQueue(activeTask.id)
     onCompleted()
-  }, [activeTask]) // eslint-disable-line react-hooks/exhaustive-deps
+  }), [activeTask]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSomeday = useCallback(async () => {
+  const handleSomeday = useCallback(() => once(async () => {
     if (!activeTask) return
-    await tasksApi.update(activeTask.id, { is_someday: true })
+    try {
+      await tasksApi.update(activeTask.id, { is_someday: true })
+    } catch (err) {
+      notify.error("Couldn't move the task to Someday. Try again.", (err as Error).message)
+      return
+    }
     qc.invalidateQueries({ queryKey: taskKeys.all })
     advanceQueue(activeTask.id)
     onOrganized()
-  }, [activeTask]) // eslint-disable-line react-hooks/exhaustive-deps
+  }), [activeTask]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSkip = useCallback(() => {
     if (!activeTask) return
     skipQueue()
   }, [activeTask]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleDeleteConfirm = useCallback(async () => {
+  const handleDeleteConfirm = useCallback(() => once(async () => {
     if (!deleteConfirmTask) return
     const id = deleteConfirmTask.id
     await deleteTask.mutateAsync(id)
     advanceQueue(id)
     setDeleteConfirmTaskId(null)
     onDeleted()
-  }, [deleteConfirmTask]) // eslint-disable-line react-hooks/exhaustive-deps
+  }), [deleteConfirmTask]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keyboard shortcuts — active task is ALWAYS the same as the displayed task
   useShortcuts({

@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProgressBar, ConfirmDialog } from '@/components/common'
 import { useReviewProjects, type ReviewProjectItem } from '@/hooks/useReview'
-import { useCompleteTask, useDeleteTask, useUpdateTask, useItemTasks } from '@/hooks/useTasks'
+import { useCompleteTask, useCreateTask, useDeleteTask, useUpdateTask, useItemTasks } from '@/hooks/useTasks'
 import { useCompleteProject, useArchiveItem } from '@/hooks/useItems'
 import type { Task } from '@/types/models'
 import { formatRelativeDate, getLocalToday } from '@/utils/date'
@@ -12,12 +12,13 @@ interface ProjectsStepProps {
   onCompleted: () => void
   onUpdatedDueDate: () => void
   onArchived: () => void
+  onTaskAdded: () => void
 }
 
 // Per-task action states within a project
 type TaskAction = 'pending' | 'kept' | 'completed' | 'deleted' | 'updated'
 
-export function ProjectsStep({ onCompleted, onUpdatedDueDate, onArchived }: ProjectsStepProps) {
+export function ProjectsStep({ onCompleted, onUpdatedDueDate, onArchived, onTaskAdded }: ProjectsStepProps) {
   const today = getLocalToday()
   const { data: projects = [], isLoading } = useReviewProjects()
 
@@ -30,9 +31,10 @@ export function ProjectsStep({ onCompleted, onUpdatedDueDate, onArchived }: Proj
   const currentProject = projects[projIdx] ?? null
 
   // Load tasks for current project
-  const { data: allTasks = [] } = useItemTasks(currentProject?.id ?? 0, { include_complete: false })
+  const { data: allTasks = [], isLoading: tasksLoading } = useItemTasks(currentProject?.id ?? 0, { include_complete: false })
 
   const completeTask = useCompleteTask()
+  const createTask = useCreateTask()
   const deleteTask = useDeleteTask()
   const updateTask = useUpdateTask(editDueDateTaskId ?? 0)
   const completeProject = useCompleteProject()
@@ -65,20 +67,40 @@ export function ProjectsStep({ onCompleted, onUpdatedDueDate, onArchived }: Proj
 
   async function handleCompleteProject() {
     if (!currentProject) return
-    await completeProject.mutateAsync(currentProject.id)
+    try {
+      await completeProject.mutateAsync(currentProject.id)
+    } catch {
+      return  // the hook already showed the error
+    }
     setProjIdx(i => Math.min(i + 1, projects.length - 1))
   }
 
   async function handleArchiveProject() {
     if (!currentProject) return
-    await archiveItem.mutateAsync(currentProject.id)
+    try {
+      await archiveItem.mutateAsync(currentProject.id)
+    } catch {
+      return
+    }
     onArchived()
     setProjIdx(i => Math.min(i + 1, projects.length - 1))
   }
 
-  // Show max 5 tasks in review; rest shown as "+N more"
+  /** Give the project a next step right here, so no project leaves the review without one. */
+  async function handleAddNextStep(title: string): Promise<boolean> {
+    if (!currentProject) return false
+    try {
+      await createTask.mutateAsync({ title, item_id: currentProject.id })
+    } catch {
+      return false
+    }
+    onTaskAdded()
+    return true
+  }
+
+  // Show max 5 tasks in review; rest shown as "+N more". Someday ideas have their own step.
   const MAX_TASKS = 5
-  const openTasks = allTasks.filter((t: Task) => !t.is_complete)
+  const openTasks = allTasks.filter((t: Task) => !t.is_complete && !t.is_someday)
   const displayTasks = openTasks.slice(0, MAX_TASKS)
   const hiddenCount = Math.max(0, openTasks.length - MAX_TASKS)
 
@@ -126,6 +148,7 @@ export function ProjectsStep({ onCompleted, onUpdatedDueDate, onArchived }: Proj
           project={currentProject}
           today={today}
           displayTasks={displayTasks}
+          noOpenTasks={!tasksLoading && openTasks.length === 0}
           hiddenCount={hiddenCount}
           taskActions={taskActions}
           editDueDateTaskId={editDueDateTaskId}
@@ -139,6 +162,7 @@ export function ProjectsStep({ onCompleted, onUpdatedDueDate, onArchived }: Proj
           onCancelDueDate={() => { setEditDueDateTaskId(null); setNewDueDate('') }}
           onCompleteProject={handleCompleteProject}
           onArchiveProject={handleArchiveProject}
+          onAddNextStep={handleAddNextStep}
           isPrevDisabled={projIdx === 0}
           isNextDisabled={projIdx === projects.length - 1}
           onPrev={() => setProjIdx(i => i - 1)}
@@ -167,6 +191,8 @@ interface ProjectCardProps {
   project: ReviewProjectItem
   today: string
   displayTasks: Task[]
+  /** True once the tasks have loaded and none is open */
+  noOpenTasks: boolean
   hiddenCount: number
   taskActions: Record<number, TaskAction>
   editDueDateTaskId: number | null
@@ -180,6 +206,7 @@ interface ProjectCardProps {
   onCancelDueDate: () => void
   onCompleteProject: () => void
   onArchiveProject: () => void
+  onAddNextStep: (title: string) => Promise<boolean>
   isPrevDisabled: boolean
   isNextDisabled: boolean
   onPrev: () => void
@@ -187,14 +214,26 @@ interface ProjectCardProps {
 }
 
 function ProjectCard({
-  project, today, displayTasks, hiddenCount,
+  project, today, displayTasks, noOpenTasks, hiddenCount,
   taskActions, editDueDateTaskId, newDueDate, onNewDueDateChange,
   onKeepTask, onCompleteTask, onDeleteTask, onEditDueDate,
   onSaveDueDate, onCancelDueDate,
-  onCompleteProject, onArchiveProject,
+  onCompleteProject, onArchiveProject, onAddNextStep,
   isPrevDisabled, isNextDisabled, onPrev, onNext,
 }: ProjectCardProps) {
   const updatedRelative = formatRelativeDate(project.updated_at.split('T')[0], today)
+  const [nextStep, setNextStep] = useState('')
+  const [adding, setAdding] = useState(false)
+
+  async function submitNextStep(e: React.FormEvent) {
+    e.preventDefault()
+    const title = nextStep.trim()
+    if (!title || adding) return
+    setAdding(true)
+    const ok = await onAddNextStep(title)
+    setAdding(false)
+    if (ok) setNextStep('')
+  }
 
   return (
     <section
@@ -341,6 +380,31 @@ function ProjectCard({
           +{hiddenCount} more open task{hiddenCount === 1 ? '' : 's'} in this project
         </span>
       )}
+
+      {noOpenTasks && (
+        <p className="text-sm text-warn-fg font-medium">
+          No open tasks. Add a next step, or complete or archive the project.
+        </p>
+      )}
+
+      <form onSubmit={submitNextStep} className="flex gap-2">
+        <input
+          type="text"
+          value={nextStep}
+          onChange={e => setNextStep(e.target.value)}
+          maxLength={200}
+          placeholder="Add a next step…"
+          aria-label={`Add a next step to ${project.title}`}
+          className="flex-1 h-10 px-3 rounded-control border border-border-strong bg-surface text-sm text-text placeholder:text-muted focus:outline-2 focus:outline-accent"
+        />
+        <button
+          type="submit"
+          disabled={adding || !nextStep.trim()}
+          className="h-10 px-3.5 rounded-control border border-border bg-surface text-text text-sm font-semibold hover:bg-surface-2 disabled:opacity-50"
+        >
+          Add
+        </button>
+      </form>
 
       {/* Project actions + navigation */}
       <div className="flex flex-wrap gap-2 pt-1">

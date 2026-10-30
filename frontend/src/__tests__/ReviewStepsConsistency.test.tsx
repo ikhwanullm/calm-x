@@ -64,6 +64,7 @@ vi.mock('../hooks/useTasks', () => ({
   useCompleteTask: () => ({ mutateAsync: mockCompleteTask, isPending: false }),
   useDeleteTask: () => ({ mutateAsync: mockDeleteTask, isPending: false }),
   useUpdateTask: () => ({ mutateAsync: mockUpdateTask, isPending: false }),
+  useCreateTask: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
   useItemTasks: () => ({ data: mockItemTasks, isLoading: false }),
   taskKeys: { all: ['tasks'] },
 }))
@@ -93,20 +94,20 @@ describe('ProjectsStep — display/action consistency', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('shows Project A initially', () => {
-    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} />, { wrapper })
+    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} onTaskAdded={vi.fn()} />, { wrapper })
     expect(screen.getByText('Project A')).toBeTruthy()
   })
 
   it('Next project → shows Project B', async () => {
     const user = userEvent.setup()
-    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} />, { wrapper })
+    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} onTaskAdded={vi.fn()} />, { wrapper })
     await user.click(screen.getByRole('button', { name: /next project/i }))
     await waitFor(() => expect(screen.getByText('Project B')).toBeTruthy())
   })
 
   it('Project B is stale and shows stale banner', async () => {
     const user = userEvent.setup()
-    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} />, { wrapper })
+    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} onTaskAdded={vi.fn()} />, { wrapper })
     await user.click(screen.getByRole('button', { name: /next project/i }))
     await waitFor(() => screen.getByText('Project B'))
     expect(screen.getByRole('note')).toBeTruthy()  // stale banner
@@ -114,7 +115,7 @@ describe('ProjectsStep — display/action consistency', () => {
 
   it('Archive Project A (from Project A view) calls archive with Project A id', async () => {
     const user = userEvent.setup()
-    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} />, { wrapper })
+    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} onTaskAdded={vi.fn()} />, { wrapper })
     // On Project A, click Archive
     const archiveBtns = screen.getAllByRole('button', { name: /archive project/i })
     await user.click(archiveBtns[0])
@@ -124,7 +125,7 @@ describe('ProjectsStep — display/action consistency', () => {
 
   it('Navigate to Project B → Mark complete operates on Project B', async () => {
     const user = userEvent.setup()
-    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} />, { wrapper })
+    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} onTaskAdded={vi.fn()} />, { wrapper })
     await user.click(screen.getByRole('button', { name: /next project/i }))
     await waitFor(() => screen.getByText('Project B'))
     await user.click(screen.getByRole('button', { name: /mark project complete/i }))
@@ -133,7 +134,7 @@ describe('ProjectsStep — display/action consistency', () => {
   })
 
   it('Previous button disabled on first project', () => {
-    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} />, { wrapper })
+    render(<ProjectsStep onCompleted={vi.fn()} onUpdatedDueDate={vi.fn()} onArchived={vi.fn()} onTaskAdded={vi.fn()} />, { wrapper })
     expect(screen.getByRole('button', { name: /previous/i })).toHaveProperty('disabled', true)
   })
 })

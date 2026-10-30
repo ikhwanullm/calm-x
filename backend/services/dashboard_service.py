@@ -83,13 +83,13 @@ def get_waiting_tasks(
     """Open waiting-for tasks that have waited at least `min_days`, longest first.
 
     The wait counts from `waiting_since`: when the wait began or the last follow-up. Someday tasks,
-    tasks of archived items or completed projects, and tasks without a start are left out."""
+    and tasks of archived items or completed projects are left out. A wait with no recorded start counts as 0 days."""
     rows = session.execute(
         select(Task, Item)
         .outerjoin(Item, Task.item_id == Item.id)
         .where(
             Task.is_complete == 0, Task.is_someday == 0,
-            Task.waiting_for.isnot(None), Task.waiting_since.isnot(None),
+            Task.waiting_for.isnot(None),
             (Task.item_id.is_(None)) | (Item.archived_at.is_(None)),
         )
     ).all()
@@ -99,9 +99,12 @@ def get_waiting_tasks(
         if item is not None and item.type == "project" and item.project_status == "completed":
             continue
         since = task.waiting_since
-        if since.tzinfo is None:
-            since = since.replace(tzinfo=timezone.utc)
-        days = max(0, (client_today - since.astimezone(tz).date()).days)  # never negative (clock or timezone skew)
+        if since is None:
+            days = 0  # start unknown (old data): listed only when every wait is wanted (min_days 0)
+        else:
+            if since.tzinfo is None:
+                since = since.replace(tzinfo=timezone.utc)
+            days = max(0, (client_today - since.astimezone(tz).date()).days)  # never negative (clock or timezone skew)
         if days >= min_days:
             found.append(StaleWaiting(
                 id=task.id, title=task.title, waiting_for=task.waiting_for, waiting_days=days,

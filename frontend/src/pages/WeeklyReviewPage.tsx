@@ -40,6 +40,7 @@ export interface ActionCounts {
   completed: number
   updatedDueDates: number
   archived: number
+  tasksAdded: number      // next steps added to projects and areas
   followedUp: number      // waiting tasks followed up, received or released
   startedIdeas: number    // Someday ideas started
   droppedIdeas: number    // Someday ideas dropped
@@ -59,6 +60,7 @@ export default function WeeklyReviewPage() {
     completed: 0,
     updatedDueDates: 0,
     archived: 0,
+    tasksAdded: 0,
     followedUp: 0,
     startedIdeas: 0,
     droppedIdeas: 0,
@@ -224,11 +226,12 @@ export default function WeeklyReviewPage() {
                 onCompleted={() => incrementCount('completed')}
                 onUpdatedDueDate={() => incrementCount('updatedDueDates')}
                 onArchived={() => incrementCount('archived')}
+                onTaskAdded={() => incrementCount('tasksAdded')}
               />
             )}
             {currentStep.id === 'areas' && (
               <AreasStep
-                onTaskAdded={() => {}}
+                onTaskAdded={() => incrementCount('tasksAdded')}
               />
             )}
             {currentStep.id === 'resources' && (

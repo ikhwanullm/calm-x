@@ -3,7 +3,6 @@ import { Clock } from 'lucide-react'
 import { useReviewResources } from '@/hooks/useReview'
 import { useArchiveItem } from '@/hooks/useItems'
 import { formatRelativeDate, getLocalToday } from '@/utils/date'
-import { useNavigate } from 'react-router-dom'
 
 interface ResourcesStepProps {
   onArchived: () => void
@@ -13,7 +12,6 @@ type ResourceAction = 'pending' | 'kept' | 'archived'
 
 export function ResourcesStep({ onArchived }: ResourcesStepProps) {
   const today = getLocalToday()
-  const navigate = useNavigate()
   const { data: resources = [], isLoading } = useReviewResources()
   const archiveItem = useArchiveItem()
 
@@ -24,7 +22,11 @@ export function ResourcesStep({ onArchived }: ResourcesStepProps) {
   }
 
   async function handleArchive(id: number) {
-    await archiveItem.mutateAsync(id)
+    try {
+      await archiveItem.mutateAsync(id)
+    } catch {
+      return  // the hook already showed the error; the resource keeps its buttons
+    }
     setAction(id, 'archived')
     onArchived()
   }
@@ -124,13 +126,16 @@ export function ResourcesStep({ onArchived }: ResourcesStepProps) {
                   >
                     Keep
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/resources/${resource.id}`)}
-                    className="h-9 px-3 rounded-control border border-border bg-surface text-text text-[13px] font-semibold hover:bg-surface-2"
+                  {/* New tab: leaving the review page would lose its place and the counts */}
+                  <a
+                    href={`/resources/${resource.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center h-9 px-3 rounded-control border border-border bg-surface text-text text-[13px] font-semibold hover:bg-surface-2"
                   >
                     Update
-                  </button>
+                    <span className="sr-only"> {resource.title} in a new tab</span>
+                  </a>
                   <button
                     type="button"
                     onClick={() => handleArchive(resource.id)}

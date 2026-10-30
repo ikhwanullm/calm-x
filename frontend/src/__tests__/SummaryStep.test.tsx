@@ -6,7 +6,7 @@ describe('SummaryStep', () => {
   it('shows a count for every kind of action, including waiting follow-ups and Someday decisions', () => {
     render(
       <SummaryStep
-        actionCounts={{ organizedInbox: 1, completed: 2, updatedDueDates: 3, archived: 4, followedUp: 5, startedIdeas: 6, droppedIdeas: 7 }}
+        actionCounts={{ organizedInbox: 1, completed: 2, updatedDueDates: 3, archived: 4, tasksAdded: 8, followedUp: 5, startedIdeas: 6, droppedIdeas: 7 }}
         notes=""
         onNotesChange={() => {}}
       />
@@ -16,6 +16,7 @@ describe('SummaryStep', () => {
     expect(tile('Tasks completed')).toBe('2Tasks completed')
     expect(tile('Due dates updated')).toBe('3Due dates updated')
     expect(tile('Items archived')).toBe('4Items archived')
+    expect(tile('Next steps added')).toBe('8Next steps added')
     expect(tile('Waiting tasks followed up or closed')).toBe('5Waiting tasks followed up or closed')
     expect(tile('Someday ideas started')).toBe('6Someday ideas started')
     expect(tile('Someday ideas dropped')).toBe('7Someday ideas dropped')
