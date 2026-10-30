@@ -4,16 +4,17 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the Weekly Review rework (`52f7ef4`) is pushed to `origin/main`.
+- Everything up to the Weekly Review rework (`52f7ef4`) is pushed to `origin/main`. The smart capture and Inbox triage work is committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
-- Tests at the last commit: backend 606 passed, frontend 997 passed (78 files), `tsc -b` clean.
+- Tests at the last commit: backend 606 passed, frontend 1055 passed (81 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
+| (newest) | Smart capture (due date, priority, tags, project from the text; several lines at once) and Inbox row/bulk triage actions |
 | `5ce1e21`, `52f7ef4` | Weekly Review: new "Waiting for" and "Someday" steps (8 steps now), `POST /api/tasks/{id}/follow-up`, `GET /api/weekly-review/waiting` |
 | `634ee2c` | Dashboard reworked into an exceptions page (to process, waiting too long, projects needing attention); Today shows how long a task has waited; fixes broken task links on the Dashboard |
 | `2ba0b34` | Project/Area detail page: summary strip, tasks and meetings moved up, quick add, working drag-reorder, wider layout (`GET /api/items/{id}?today=` adds `stats`) |
@@ -340,12 +341,29 @@ Order is now Inbox, Meetings, **Waiting for**, Projects, Areas, Resources, **Som
 - Seen but left as it was: the Inbox step still pre-selects the first project/area in its dropdowns, so one press of [P] files the task there without choosing; there is no "Waiting for" action in the Inbox step.
 - Not done: saving progress to continue a review later.
 
+## Smart capture and Inbox triage (built 2026-10-30; the owner asked for ideas 1-3 of my Inbox list)
+
+- **Capture syntax** (`utils/capture.ts`, pure and tested): `!high|!medium|!low` (also `!h/!m/!l`, `!tinggi/!sedang/!rendah`), `#tag`,
+  `@name` or `@"two words"` for a project or area, and a due date as `today/hari ini`, `tomorrow/besok`, `lusa`, a weekday in English or
+  Indonesian (the next one after today, never today itself), `+3d`/`+2w` or `2026-11-05`. A backslash keeps a word plain (`esok`). Only the
+  first date and priority count. A marker that matches nothing stays in the title, and an `@name` that matches several projects is not guessed
+  (exact title, else a whole word of exactly one title, else a part of exactly one). A line made only of markers keeps the whole line as the title.
+  Completed projects are not offered.
+- **`components/capture/CaptureBox.tsx`** (used by the Inbox page and the Q dialog): a text box where Enter adds and Shift+Enter starts a new
+  line, so a pasted list becomes one task per line (bullets, numbers and `[ ]` are dropped; at most 50 lines at once). A preview lists how each
+  line was read (date, priority, tags, project, unmatched markers) whenever a marker was read or there are several lines. Lines are created one by
+  one with `tasksApi.create`; lines that fail stay in the box as typed. The toast names where tasks went ("Added to Inbox", "Added 3 tasks to X").
+  Only the Inbox page and Q dialog use it; the project quick-add field (detail page) and the Areas review step still take a plain title.
+- **Inbox row menu** (⋯): Add to Today, Set due date…, Waiting for… (asks who), Move to Someday, Delete (with confirmation and Undo).
+  **Bulk bar** for the selection: Move to…, Priority…, Today, Due date…, Waiting for…, Add tag… (adds to each task's own tags), Someday,
+  Delete (one Undo restores all). `hooks/useTriage.ts` tries every task, then reports how many worked and the first reason for any that did not.
+- Not done: a "process one by one" mode on the Inbox page, showing how old each Inbox task is, a description field at capture time.
+
 ## Other ideas the owner liked (backlog, not prioritised yet)
 
 Recurring tasks; weekly status report generated at the end of Weekly Review; one "next action" per project;
 "+ New project in this area" on the Area page; per-Area dashboard; search inside notes; "Done" log; bulk actions in
-project task lists; duplicate project / save project as template; smart quick-capture parsing
-(`besok`, `!high`, `#tag`, `@project`); desktop reminders; backups to a synced folder via `CALM_X_BACKUP_DIR`.
+project task lists; duplicate project / save project as template; desktop reminders; backups to a synced folder via `CALM_X_BACKUP_DIR`.
 
 Also from the 2026-10-29 review, after the safety round:
 

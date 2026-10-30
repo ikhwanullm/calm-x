@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import {
   useInboxTasks,
-  useCreateTask,
   useCompleteTask,
   useIncompleteTask,
   useMoveTask,
@@ -9,14 +8,18 @@ import {
 import { useItems } from "@/hooks/useItems"
 import { TaskDrawer } from "@/components/tasks/TaskDrawer"
 import { TaskRow } from "@/components/tasks/TaskRow"
-import { EmptyState } from "@/components/common"
+import { ConfirmDialog, EmptyState } from "@/components/common"
+import { BulkBar, InlineEdit, RowMenu } from "@/components/inbox/TriageControls"
+import type { EditKind } from "@/components/inbox/TriageControls"
+import { useTriage } from "@/hooks/useTriage"
+import { getLocalToday } from "@/utils/date"
+import { CaptureBox } from "@/components/capture/CaptureBox"
 import { notify } from "@/lib/toast"
-import type { Task, Item } from "@/types/models"
+import type { Task, Item, TaskPriority, TaskUpdatePayload } from "@/types/models"
 import { cn } from "@/lib/utils"
 
 export default function InboxPage() {
   const { data: tasks = [], isLoading } = useInboxTasks()
-  const createTask = useCreateTask()
   const completeTask = useCompleteTask()
   const incompleteTask = useIncompleteTask()
   const moveTask = useMoveTask()
@@ -99,6 +102,55 @@ export default function InboxPage() {
     else completeTask.mutate(task.id)
   }
 
+  // ---- Triage: do one thing to one row or to every selected task ----
+  const triage = useTriage()
+  const today = getLocalToday()
+  const [rowEdit, setRowEdit] = useState<{ id: number; kind: EditKind } | null>(null)
+  const [deleting, setDeleting] = useState<Task[] | null>(null)
+  const selectedTasks = openTasks.filter((t) => selectedIds.has(t.id))
+
+  /** Apply a change to some tasks. The tasks leave the selection and any open row editor closes. */
+  async function change(
+    targets: Task[],
+    build: (task: Task) => TaskUpdatePayload,
+    text: (n: number) => string,
+  ) {
+    setRowEdit(null)
+    setSelectedIds(new Set())
+    await triage.updateMany(targets, build, text)
+  }
+
+  const plural = (n: number) => `${n} ${n === 1 ? "task" : "tasks"}`
+  const todayChange = (targets: Task[]) =>
+    change(targets, () => ({ focus_date: today }), (n) => `${plural(n)} added to Today`)
+  const somedayChange = (targets: Task[]) =>
+    change(targets, () => ({ is_someday: true }), (n) => `${plural(n)} moved to Someday`)
+  const priorityChange = (targets: Task[], priority: TaskPriority) =>
+    change(targets, () => ({ priority }), (n) => `Priority of ${plural(n)} set to ${priority}`)
+
+  function applyValue(targets: Task[], kind: EditKind, value: string) {
+    if (kind === "due") {
+      return change(targets, () => ({ due_date: value }), (n) => `Due date set on ${plural(n)}`)
+    }
+    if (kind === "waiting") {
+      return change(targets, () => ({ waiting_for: value }), (n) => `${plural(n)} now waiting for ${value}`)
+    }
+    const tag = value.replace(/^#/, "").toLowerCase()
+    return change(
+      targets,
+      (t) => ({ tag_names: Array.from(new Set([...t.tags, tag])) }),
+      (n) => `Tag #${tag} added to ${plural(n)}`,
+    )
+  }
+
+  async function confirmDelete() {
+    const targets = deleting ?? []
+    setDeleting(null)
+    setRowEdit(null)
+    setSelectedIds(new Set())
+    await triage.deleteMany(targets)
+  }
+
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-semibold text-text mb-6">
@@ -110,34 +162,21 @@ export default function InboxPage() {
         )}
       </h1>
 
-      {/* Quick capture inline form */}
-      <InlineCapture
-        onCapture={(title) =>
-          createTask.mutate(
-            { title, priority: "medium" },
-            {
-              onSuccess: () => notify.success("Added to Inbox"),
-              onError: (err: Error) => notify.error("Could not capture task.", err.message),
-            }
-          )
-        }
-      />
+      <CaptureBox inputLabel="Capture task title" submitAriaLabel="Add to Inbox" />
 
       {/* Bulk action bar */}
-      {selectedIds.size > 0 && destinations.length > 0 && (
-        <div className="mt-3 flex items-center gap-3 px-3 py-2 rounded-control bg-accent-soft border border-accent">
-          <span className="text-sm font-medium text-accent-text">
-            {selectedIds.size} {selectedIds.size === 1 ? "task" : "tasks"} selected
-          </span>
-          <BulkMoveSelect destinations={destinations} onMove={handleBulkMove} />
-          <button
-            type="button"
-            onClick={() => setSelectedIds(new Set())}
-            className="ml-auto text-xs text-muted hover:text-text"
-          >
-            Clear selection
-          </button>
-        </div>
+      {selectedTasks.length > 0 && (
+        <BulkBar
+          count={selectedTasks.length}
+          destinations={destinations}
+          onMove={handleBulkMove}
+          onPriority={(priority) => priorityChange(selectedTasks, priority)}
+          onToday={() => todayChange(selectedTasks)}
+          onSomeday={() => somedayChange(selectedTasks)}
+          onDelete={() => setDeleting(selectedTasks)}
+          onEditValue={(kind, value) => applyValue(selectedTasks, kind, value)}
+          onClear={() => setSelectedIds(new Set())}
+        />
       )}
 
       {isLoading ? (
@@ -166,7 +205,8 @@ export default function InboxPage() {
 
           <div className="space-y-1">
             {openTasks.map((task) => (
-              <div key={task.id} className="flex items-center gap-2" role="listitem">
+              <div key={task.id} role="listitem">
+              <div className="flex items-center gap-2">
                 {/* Selection checkbox */}
                 <input
                   type="checkbox"
@@ -185,6 +225,24 @@ export default function InboxPage() {
                   />
                 </div>
                 <RowMoveSelect task={task} destinations={destinations} />
+                <RowMenu
+                  task={task}
+                  onToday={() => todayChange([task])}
+                  onEdit={(kind) => setRowEdit({ id: task.id, kind })}
+                  onSomeday={() => somedayChange([task])}
+                  onDelete={() => setDeleting([task])}
+                />
+              </div>
+              {rowEdit?.id === task.id && (
+                <div className="ml-6 mt-1 mb-2">
+                  <InlineEdit
+                    key={rowEdit.kind}
+                    kind={rowEdit.kind}
+                    onSave={(value) => applyValue([task], rowEdit.kind, value)}
+                    onCancel={() => setRowEdit(null)}
+                  />
+                </div>
+              )}
               </div>
             ))}
 
@@ -216,86 +274,22 @@ export default function InboxPage() {
         </div>
       )}
 
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => { if (!open) setDeleting(null) }}
+        title={deleting && deleting.length > 1 ? `Delete ${deleting.length} tasks?` : "Delete task?"}
+        description={
+          deleting && deleting.length === 1
+            ? `Delete "${deleting[0].title}"? You can undo it from the message that appears.`
+            : "These tasks and their subtasks will be deleted. You can undo it from the message that appears."
+        }
+        confirmLabel={deleting && deleting.length > 1 ? "Delete tasks" : "Delete task"}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
+      />
+
       <TaskDrawer taskId={selectedTaskId} onClose={closeTaskDrawer} />
     </div>
-  )
-}
-
-// ---- Inline capture form ----
-
-function InlineCapture({ onCapture }: { onCapture: (title: string) => void }) {
-  const [value, setValue] = useState("")
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const trimmed = value.trim()
-    if (!trimmed) return
-    onCapture(trimmed)
-    setValue("")
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Capture a task…"
-        maxLength={200}
-        aria-label="Capture task title"
-        className={cn(
-          "flex-1 h-11 px-4 rounded-control border border-border bg-surface",
-          "text-sm text-text placeholder:text-muted",
-          "focus:outline-2 focus:outline-offset-2 focus:outline-accent"
-        )}
-      />
-      <button
-        type="submit"
-        disabled={!value.trim()}
-        aria-label="Add to Inbox"
-        className={cn(
-          "h-11 px-4 rounded-control bg-accent text-accent-fg text-sm font-medium",
-          "hover:opacity-90 disabled:opacity-50 transition-opacity"
-        )}
-      >
-        Add
-      </button>
-    </form>
-  )
-}
-
-// ---- Bulk move select (shown in the bulk action bar) ----
-
-function BulkMoveSelect({
-  destinations,
-  onMove,
-}: {
-  destinations: Item[]
-  onMove: (itemId: number) => void
-}) {
-  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const val = e.target.value
-    if (!val) return
-    onMove(Number(val))
-    e.target.value = ""
-  }
-  return (
-    <select
-      defaultValue=""
-      onChange={handleChange}
-      aria-label="Move selected tasks to"
-      className={cn(
-        "h-8 px-2 text-sm rounded-control border border-accent bg-surface text-text",
-        "focus:outline-2 focus:outline-offset-2 focus:outline-accent"
-      )}
-    >
-      <option value="" disabled>Move to…</option>
-      {destinations.map((item) => (
-        <option key={item.id} value={String(item.id)}>
-          {item.title}
-        </option>
-      ))}
-    </select>
   )
 }
 
