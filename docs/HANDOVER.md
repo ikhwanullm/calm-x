@@ -4,7 +4,7 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the smart capture and Inbox triage work (`319ed78`) is pushed to `origin/main`. The searchable project/area picker is committed locally, not pushed.
+- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
@@ -14,7 +14,7 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 | Commit | What |
 |---|---|
-| (newest) | Searchable project/area picker (`ItemPicker`) replaces long dropdowns |
+| `be2fc2d` | Searchable project/area picker (`ItemPicker`) replaces long dropdowns |
 | `319ed78` | Smart capture (due date, priority, tags, project from the text; several lines at once) and Inbox row/bulk triage actions |
 | `5ce1e21`, `52f7ef4` | Weekly Review: new "Waiting for" and "Someday" steps (8 steps now), `POST /api/tasks/{id}/follow-up`, `GET /api/weekly-review/waiting` |
 | `634ee2c` | Dashboard reworked into an exceptions page (to process, waiting too long, projects needing attention); Today shows how long a task has waited; fixes broken task links on the Dashboard |
