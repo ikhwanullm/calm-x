@@ -19,6 +19,7 @@ import {
   useCreateTask,
   useCompleteTask,
   useIncompleteTask,
+  useReorderTasks,
 } from '../hooks/useTasks'
 
 const mockProject = {
@@ -60,10 +61,15 @@ vi.mock('../hooks/useTasks', () => ({
   useCreateTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
   useCompleteTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
   useIncompleteTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
+  useReorderTasks: vi.fn().mockReturnValue({ mutate: vi.fn() }),
 }))
 
+const taskListSpy = vi.hoisted(() => ({ props: {} as Record<string, unknown> }))
 vi.mock('../components/tasks/TaskList', () => ({
-  TaskList: () => null,
+  TaskList: (props: Record<string, unknown>) => {
+    taskListSpy.props = props
+    return null
+  },
 }))
 
 vi.mock('../hooks/useLinks', () => ({
@@ -211,19 +217,19 @@ describe('ItemDetailView', () => {
   })
 
   // 3.30: Tasks section
-  it('shows add task button when not archived', () => {
+  it('shows the add task field when not archived', () => {
     render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
-    expect(screen.getByRole('button', { name: 'Add task' })).toBeTruthy()
+    expect(screen.getByRole('textbox', { name: 'Add task' })).toBeTruthy()
   })
 
-  it('does not show add task button when archived', () => {
+  it('does not show the add task field when archived', () => {
     vi.mocked(useItem).mockReturnValueOnce({
       data: { ...mockProject, archived_at: '2024-06-01T00:00:00Z' },
       isLoading: false,
       isError: false,
     } as any)
     render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
-    expect(screen.queryByRole('button', { name: 'Add task' })).toBeNull()
+    expect(screen.queryByRole('textbox', { name: 'Add task' })).toBeNull()
   })
 
 
@@ -259,7 +265,7 @@ describe('ItemDetailView', () => {
       isLoading: false, isError: false,
     } as any)
     render(<ItemDetailView id={1} listPath="/resources" listLabel="Resources" />, { wrapper })
-    expect(screen.queryByRole("button", { name: "Add task" })).toBeNull()
+    expect(screen.queryByRole("textbox", { name: "Add task" })).toBeNull()
   })
 
   it("project page shows its linked resources", () => {
@@ -276,5 +282,113 @@ describe('ItemDetailView', () => {
     render(<ItemDetailView id={1} listPath="/resources" listLabel="Resources" />, { wrapper })
     expect(screen.getByTestId("resource-links")).toBeTruthy()
     expect(screen.queryByTestId("linked-resources")).toBeNull()
+  })
+
+  const stats = {
+    open_task_count: 4, overdue_task_count: 2, waiting_task_count: 1,
+    next_task: { id: 9, title: 'Send report', due_date: '2020-01-01' },
+    next_meeting_at: null, last_meeting_at: null, linked_resource_count: 0,
+    last_activity_at: '2026-10-28T10:00:00Z', project_count: 3,
+  }
+  const summaryOf = (container: HTMLElement) => container.querySelector('dl[aria-label="Summary"]')
+
+  it('summary strip: open, overdue and waiting counts and a next-task link that opens its drawer', () => {
+    vi.mocked(useItem).mockReturnValue({ data: { ...mockProject, stats }, isLoading: false, isError: false } as any)
+    const { container } = render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    const text = summaryOf(container)!.textContent!
+    expect(text).toContain('Open tasks4')
+    expect(text).toContain('Overdue2')
+    expect(text).toContain('Waiting1')
+    expect(text).not.toContain('Projects')
+    expect(screen.getByRole('link', { name: /Send report/ }).getAttribute('href')).toMatch(/\?task=9$/)
+  })
+
+  it('an area summary also counts its projects; a resource has no summary', () => {
+    vi.mocked(useItem).mockReturnValue({ data: { ...mockProject, type: 'area' as const, stats }, isLoading: false, isError: false } as any)
+    const first = render(<ItemDetailView id={1} listPath="/areas" listLabel="Areas" />, { wrapper })
+    expect(summaryOf(first.container)!.textContent).toContain('Projects3')
+    first.unmount()
+    vi.mocked(useItem).mockReturnValue({
+      data: { ...mockProject, type: 'resource' as const, stats: { reference_link_count: 1, linked_item_count: 1 } },
+      isLoading: false, isError: false,
+    } as any)
+    const second = render(<ItemDetailView id={1} listPath="/resources" listLabel="Resources" />, { wrapper })
+    expect(summaryOf(second.container)).toBeNull()
+  })
+
+  it('no summary strip when the item came without stats', () => {
+    const { container } = render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    expect(summaryOf(container)).toBeNull()
+  })
+
+  it('puts tasks and meetings before notes and links', () => {
+    const { container } = render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+    const all = Array.from(container.querySelectorAll('*'))
+    const tasks = Array.from(container.querySelectorAll('h3')).find((h) => h.textContent?.startsWith('Tasks'))!
+    const meetings = Array.from(container.querySelectorAll('h2')).find((h) => h.textContent?.startsWith('Meetings'))!
+    const notes = Array.from(container.querySelectorAll('p')).find((p) => p.textContent === 'Notes')!
+    const refs = screen.getByTestId('ref-links')
+    expect(all.indexOf(tasks)).toBeLessThan(all.indexOf(meetings))
+    expect(all.indexOf(meetings)).toBeLessThan(all.indexOf(notes))
+    expect(all.indexOf(notes)).toBeLessThan(all.indexOf(refs))
+  })
+
+  describe('adding tasks', () => {
+    it('Enter creates a task with that title in this item and clears the field', async () => {
+      const user = userEvent.setup()
+      const mutate = vi.fn((_payload: unknown, options?: { onSuccess?: () => void }) => options?.onSuccess?.())
+      vi.mocked(useCreateTask).mockReturnValue({ mutate, isPending: false } as any)
+      render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+      const field = screen.getByRole('textbox', { name: 'Add task' }) as HTMLInputElement
+      await user.type(field, '  Write the plan  {Enter}')
+      expect(mutate).toHaveBeenCalledTimes(1)
+      expect(mutate.mock.calls[0][0]).toEqual({ title: 'Write the plan', item_id: 1, priority: 'medium' })
+      expect(field.value).toBe('')
+    })
+
+    it('a blank title creates nothing', async () => {
+      const user = userEvent.setup()
+      const mutate = vi.fn()
+      vi.mocked(useCreateTask).mockReturnValue({ mutate, isPending: false } as any)
+      render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+      await user.type(screen.getByRole('textbox', { name: 'Add task' }), '   {Enter}')
+      expect(mutate).not.toHaveBeenCalled()
+    })
+
+    it('a failed create keeps what was typed', async () => {
+      const user = userEvent.setup()
+      vi.mocked(useCreateTask).mockReturnValue({ mutate: vi.fn(), isPending: false } as any)  // never reaches onSuccess
+      render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+      const field = screen.getByRole('textbox', { name: 'Add task' }) as HTMLInputElement
+      await user.type(field, 'Keep me{Enter}')
+      expect(field.value).toBe('Keep me')
+    })
+
+    it('the field is disabled at the 100-task limit', () => {
+      const many = Array.from({ length: 100 }, (_, i) => ({ id: i + 1, title: `T${i}` }))
+      vi.mocked(useItemTasks).mockReturnValue({ data: many, isLoading: false } as any)
+      render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+      const field = screen.getByRole('textbox', { name: 'Add task' }) as HTMLInputElement
+      expect(field.disabled).toBe(true)
+      expect(field.placeholder).toContain('maximum of 100')
+    })
+  })
+
+  describe('reordering tasks', () => {
+    it('hands the new order of the open tasks to the server', () => {
+      const mutate = vi.fn()
+      vi.mocked(useReorderTasks).mockReturnValue({ mutate } as any)
+      render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+      ;(taskListSpy.props.onReorder as (ids: number[]) => void)([3, 1, 2])
+      expect(mutate).toHaveBeenCalledWith([3, 1, 2])
+    })
+
+    it('an archived item cannot be reordered', () => {
+      vi.mocked(useItem).mockReturnValue({
+        data: { ...mockProject, archived_at: '2024-06-01T00:00:00Z' }, isLoading: false, isError: false,
+      } as any)
+      render(<ItemDetailView id={1} listPath="/projects" listLabel="Projects" />, { wrapper })
+      expect(taskListSpy.props.onReorder).toBeUndefined()
+    })
   })
 })

@@ -49,6 +49,7 @@ vi.mock('../hooks/useTasks', () => ({
   useCreateTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
   useCompleteTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
   useIncompleteTask: vi.fn().mockReturnValue({ mutate: vi.fn() }),
+  useReorderTasks: vi.fn().mockReturnValue({ mutate: vi.fn() }),
   taskKeys: { all: ['tasks'], forItem: (id: number) => ['tasks', 'item', id] },
 }))
 

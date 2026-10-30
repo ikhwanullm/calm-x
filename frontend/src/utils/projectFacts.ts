@@ -1,13 +1,16 @@
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { formatRelativeDate, isoToLocalDateStr } from './date'
 import { daysSinceActivity, STALE_DAYS } from './projectList'
-import type { Project } from '../types/models'
+import type { Project, ProjectStats } from '../types/models'
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
 /** "Meeting today 09:00", "Meeting Tue", "Meeting 4 Nov"; else "Last meeting 3 days ago"; null when none. */
 export function meetingLabel(p: Project, today: string): string | null {
-  const stats = p.stats
+  return meetingLabelFromStats(p.stats, today)
+}
+
+export function meetingLabelFromStats(stats: ProjectStats | null | undefined, today: string): string | null {
   if (!stats) return null
   if (stats.next_meeting_at) {
     const date = isoToLocalDateStr(stats.next_meeting_at)

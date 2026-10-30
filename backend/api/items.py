@@ -37,6 +37,25 @@ def _escape_like(query: str) -> str:
     return query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
+def _parse_today(today: Optional[str]) -> Optional[date]:
+    if not today:
+        return None
+    try:
+        return date.fromisoformat(today)
+    except ValueError:
+        raise ValidationError(f"Invalid date: {today!r}. Expected YYYY-MM-DD.")
+
+
+def _attach_stats(session: Session, items: list[Item], responses: list, client_today: date) -> None:
+    """Set `stats` on the responses: task and meeting numbers for Projects and Areas, link counts for Resources."""
+    stats = project_stats_service.get_project_stats(
+        session, [i for i in items if i.type in ("project", "area")], client_today
+    )
+    resource_stats = project_stats_service.get_resource_stats(session, [i for i in items if i.type == "resource"])
+    for response in responses:
+        response.stats = resource_stats[response.id] if response.type == "resource" else stats[response.id]
+
+
 @router.get("", response_model=list[AnyItemResponse])
 def list_items(
     session: SessionDep,
@@ -56,12 +75,7 @@ def list_items(
     Date filters ``archived_from``/``archived_to`` accept ISO 8601 datetime strings with timezone
     offset (e.g. ``2026-10-28T00:00:00+07:00``) so the server can compare correctly in UTC.
     """
-    client_today: Optional[date] = None
-    if today:
-        try:
-            client_today = date.fromisoformat(today)
-        except ValueError:
-            raise ValidationError(f"Invalid date: {today!r}. Expected YYYY-MM-DD.")
+    client_today = _parse_today(today)
 
     # Determine archived-only mode
     archived_only = archived == "only"
@@ -118,24 +132,24 @@ def list_items(
     responses = [item_to_response(item, task_count=total, completed_task_count=completed)
                  for item, total, completed in items_with_counts]
     if client_today is not None:
-        with_tasks = [item for item, _, _ in items_with_counts if item.type in ("project", "area")]
-        resources = [item for item, _, _ in items_with_counts if item.type == "resource"]
-        stats = project_stats_service.get_project_stats(session, with_tasks, client_today)
-        resource_stats = project_stats_service.get_resource_stats(session, resources)
-        for response in responses:
-            if response.type == "resource":
-                response.stats = resource_stats[response.id]
-            else:
-                response.stats = stats[response.id]
+        _attach_stats(session, [item for item, _, _ in items_with_counts], responses, client_today)
     return responses
 
 
 @router.get("/{item_id}", response_model=AnyItemResponse)
-def get_item(item_id: int, session: SessionDep):
+def get_item(
+    item_id: int,
+    session: SessionDep,
+    today: Optional[str] = Query(default=None, description="Client local date YYYY-MM-DD; adds `stats`"),
+):
     """Get a single item by id."""
+    client_today = _parse_today(today)
     item = item_service.get_item(session, item_id)
     total, completed = item_service._get_task_counts(session, item_id)
-    return item_to_response(item, task_count=total, completed_task_count=completed)
+    response = item_to_response(item, task_count=total, completed_task_count=completed)
+    if client_today is not None:
+        _attach_stats(session, [item], [response], client_today)
+    return response
 
 
 @router.post("", response_model=AnyItemResponse, status_code=201)

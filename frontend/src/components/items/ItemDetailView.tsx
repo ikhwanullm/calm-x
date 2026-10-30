@@ -11,7 +11,7 @@ import {
   useRestoreItem,
   useDeleteItem,
 } from '@/hooks/useItems'
-import { useItemTasks, useCreateTask, useCompleteTask, useIncompleteTask } from '@/hooks/useTasks'
+import { useItemTasks, useCreateTask, useCompleteTask, useIncompleteTask, useReorderTasks } from '@/hooks/useTasks'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { ProgressBar, StatusBadge, RelativeDate, Skeleton, SkeletonGroup, ConfirmDialog } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
@@ -32,6 +32,7 @@ import { LinkedResourcesSection } from '@/components/items/LinkedResourcesSectio
 import { ProjectAreaField } from '@/components/items/ProjectAreaField'
 import { AreaProjectsSection } from '@/components/items/AreaProjectsSection'
 import { MeetingsSection } from '@/components/meetings/MeetingsSection'
+import { ItemSummary } from '@/components/items/ItemSummary'
 import { TaskDrawer } from '@/components/tasks/TaskDrawer'
 
 interface ItemDetailViewProps {
@@ -105,7 +106,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
     !archived
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-4xl">
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="mb-4">
         <ol className="flex items-center gap-2 text-sm text-muted">
@@ -279,16 +280,9 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         </div>
       )}
 
-      {/* Area maintenance notes */}
-      {isArea(item) && (
-        <InlineField
-          label="Maintenance notes"
-          value={item.area_maintenance_notes ?? ''}
-          placeholder="Notes on how to maintain this area…"
-          multiline
-          disabled={archived}
-          onSave={(v) => updateItem.mutate({ area_maintenance_notes: v || null })}
-        />
+      {/* Open / overdue / waiting numbers, next task and meetings (Projects and Areas) */}
+      {item.type !== 'resource' && item.stats && (
+        <ItemSummary stats={item.stats} isArea={isArea(item)} today={today} />
       )}
 
       {/* Description */}
@@ -300,6 +294,31 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         disabled={archived}
         onSave={(v) => updateItem.mutate({ description: v })}
       />
+
+      {/* Projects that belong to this Area */}
+      {isArea(item) && <AreaProjectsSection areaId={item.id} isArchived={archived} />}
+
+      {/* Tasks section — not shown for Resources (R3.7) */}
+      {item.type !== 'resource' && (
+        <TasksSection item={item} archived={archived} />
+      )}
+
+      {/* Meeting notes — Projects and Areas only */}
+      {item.type !== 'resource' && (
+        <MeetingsSection itemId={item.id} itemTitle={item.title} isArchived={archived} />
+      )}
+
+      {/* Area maintenance notes */}
+      {isArea(item) && (
+        <InlineField
+          label="Maintenance notes"
+          value={item.area_maintenance_notes ?? ''}
+          placeholder="Notes on how to maintain this area…"
+          multiline
+          disabled={archived}
+          onSave={(v) => updateItem.mutate({ area_maintenance_notes: v || null })}
+        />
+      )}
 
       {/* Notes */}
       <InlineField
@@ -319,20 +338,6 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         <ResourceLinksSection resourceId={item.id} isArchived={archived} />
       ) : (
         <LinkedResourcesSection itemId={item.id} isArchived={archived} />
-      )}
-
-
-      {/* Projects that belong to this Area */}
-      {isArea(item) && <AreaProjectsSection areaId={item.id} isArchived={archived} />}
-
-      {/* Tasks section — not shown for Resources (R3.7) */}
-      {item.type !== 'resource' && (
-        <TasksSection item={item} archived={archived} />
-      )}
-
-      {/* Meeting notes — Projects and Areas only */}
-      {item.type !== 'resource' && (
-        <MeetingsSection itemId={item.id} itemTitle={item.title} isArchived={archived} />
       )}
 
       {/* 2.15: Archive prompt after completing project (R1.6) */}
@@ -361,7 +366,7 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         title={`Delete ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}?`}
-        description={`This will permanently delete "${item.title}" and all its tasks. This cannot be undone.`}
+        description={`This will permanently delete "${item.title}" and all its tasks${item.type === 'resource' ? '' : ' and meeting notes'}. This cannot be undone.`}
         confirmLabel={`Delete ${item.type}`}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setShowDeleteConfirm(false)}
@@ -377,7 +382,9 @@ export function ItemDetailView({ id, listPath, listLabel }: ItemDetailViewProps)
 function TasksSection({ item, archived }: { item: Item; archived: boolean }) {
   const { data: tasks = [], isLoading: tasksLoading } = useItemTasks(item.id)
   const createTask = useCreateTask()
+  const reorderTasks = useReorderTasks(item.id)
   const completeTask = useCompleteTask()
+  const [newTitle, setNewTitle] = useState('')
   const incompleteTask = useIncompleteTask()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -420,10 +427,14 @@ function TasksSection({ item, archived }: { item: Item; archived: boolean }) {
     }
   }
 
-  function handleAddTask() {
+  /** Type a title and press Enter: the task is created at once and the field stays ready for the next one. */
+  function handleAddTask(e: React.FormEvent) {
+    e.preventDefault()
+    const title = newTitle.trim()
+    if (!title || atLimit || createTask.isPending) return
     createTask.mutate(
-      { title: 'New task', item_id: item.id, priority: 'medium' },
-      { onSuccess: (newTask) => openDrawer(newTask.id) }
+      { title, item_id: item.id, priority: 'medium' },
+      { onSuccess: () => setNewTitle('') }
     )
   }
 
@@ -436,19 +447,22 @@ function TasksSection({ item, archived }: { item: Item; archived: boolean }) {
             <span className="ml-2 text-muted font-normal">{tasks.length}</span>
           )}
         </h3>
-        {!archived && (
-          <button
-            type="button"
-            onClick={handleAddTask}
-            disabled={atLimit}
-            title={atLimit ? 'This item has reached the maximum of 100 tasks.' : undefined}
-            aria-label="Add task"
-            className="text-sm text-accent-text hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
-          >
-            + Add task
-          </button>
-        )}
       </div>
+
+      {!archived && (
+        <form onSubmit={handleAddTask} className="mb-3">
+          <input
+            type="text"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            maxLength={200}
+            disabled={atLimit}
+            placeholder={atLimit ? 'This item has reached the maximum of 100 tasks.' : 'Add a task and press Enter'}
+            aria-label="Add task"
+            className="w-full h-10 px-3 rounded-control border border-border-strong bg-surface text-sm text-text placeholder:text-muted focus:outline-2 focus:outline-offset-2 focus:outline-accent disabled:opacity-50"
+          />
+        </form>
+      )}
 
       {tasksLoading ? (
         <p className="text-sm text-muted">Loading tasks…</p>
@@ -458,6 +472,7 @@ function TasksSection({ item, archived }: { item: Item; archived: boolean }) {
           selectedTaskId={selectedTaskId ?? undefined}
           onOpenDrawer={openDrawer}
           onToggleComplete={handleToggleComplete}
+          onReorder={archived ? undefined : (ids) => reorderTasks.mutate(ids)}
           showDeadlineStatus={!archived}
         />
       )}

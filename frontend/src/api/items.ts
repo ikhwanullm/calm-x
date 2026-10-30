@@ -21,8 +21,8 @@ export const itemsApi = {
   list: (params?: ListItemsParams) =>
     apiClient.get<Item[]>('/items/', { params }).then(r => r.data),
 
-  get: (id: number) =>
-    apiClient.get<Item>(`/items/${id}`).then(r => r.data),
+  get: (id: number, today?: string) =>
+    apiClient.get<Item>(`/items/${id}`, { params: today ? { today } : undefined }).then(r => r.data),
 
   create: (payload: ItemCreatePayload) =>
     apiClient.post<Item>('/items/', payload).then(r => r.data),

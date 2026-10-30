@@ -137,3 +137,26 @@ def test_stats_use_a_flat_number_of_queries_however_many_projects(client):
         _task(client, p, "t", due_date="2026-10-01")
         _meeting(client, p, body="x\n")
     assert count_queries() <= few + 1  # item lookups for area titles may differ by one; never per project
+
+
+def test_a_single_item_gets_stats_when_today_is_given(client):
+    p = _item(client)
+    _task(client, p, "late", due_date="2026-10-01")
+    plain = client.get(f"/api/items/{p}").json()
+    assert plain["stats"] is None
+    got = client.get(f"/api/items/{p}", params={"today": TODAY}).json()
+    assert got["stats"]["open_task_count"] == 1 and got["stats"]["overdue_task_count"] == 1
+    assert got["stats"]["next_task"]["title"] == "late"
+
+
+def test_single_area_and_resource_get_their_kind_of_stats(client):
+    area = _item(client, kind="area")
+    res = _item(client, kind="resource")
+    a = client.get(f"/api/items/{area}", params={"today": TODAY}).json()
+    r = client.get(f"/api/items/{res}", params={"today": TODAY}).json()
+    assert "project_count" in a["stats"] and "linked_item_count" in r["stats"]
+
+
+def test_a_single_item_rejects_a_bad_today(client):
+    p = _item(client)
+    assert client.get(f"/api/items/{p}", params={"today": "nope"}).status_code == 400

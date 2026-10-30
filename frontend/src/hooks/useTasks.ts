@@ -8,7 +8,6 @@ import type {
   Task,
   TaskCreatePayload,
   TaskMovePayload,
-  TaskReorderPayload,
   TaskUpdatePayload,
 } from '../types/models'
 
@@ -138,6 +137,36 @@ export function useDeleteTask() {
   })
 }
 
+/** Drag-and-drop order of the open tasks of one item: updates the list at once and puts it back if the server refuses. */
+export function useReorderTasks(itemId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (taskIds: number[]) => tasksApi.reorder(itemId, { task_ids: taskIds }),
+    onMutate: async (taskIds) => {
+      await qc.cancelQueries({ queryKey: taskKeys.forItem(itemId) })
+      const previous = qc.getQueryData<Task[]>(taskKeys.forItem(itemId))
+      if (previous) {
+        const position = new Map(taskIds.map((id, index) => [id, index]))
+        // Open tasks take the new order and keep the slots they occupied; the rest stay where they are
+        const slots = previous.map((t, i) => (position.has(t.id) ? i : -1)).filter((i) => i >= 0)
+        const reordered = [...taskIds].map((id) => previous.find((t) => t.id === id)!).filter(Boolean)
+        const next = [...previous]
+        slots.forEach((slot, i) => { next[slot] = reordered[i] })
+        qc.setQueryData<Task[]>(taskKeys.forItem(itemId), next)
+      }
+      return { previous }
+    },
+    onError: (err: Error, _ids, ctx) => {
+      if (ctx?.previous) qc.setQueryData(taskKeys.forItem(itemId), ctx.previous)
+      notify.error("Couldn't change the order. Try again.", err.message)
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: taskKeys.forItem(itemId) })
+      qc.invalidateQueries({ queryKey: itemKeys.all })  // the next task in the item's summary may change
+    },
+  })
+}
+
 export function useMoveTask() {
   const qc = useQueryClient()
   return useMutation({
@@ -209,14 +238,5 @@ export function useIncompleteTask() {
       qc.invalidateQueries({ queryKey: itemKeys.all })
       qc.invalidateQueries({ queryKey: dashboardKeys.all })
     },
-  })
-}
-
-export function useReorderTasks(itemId: number) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (payload: TaskReorderPayload) => tasksApi.reorder(itemId, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: taskKeys.forItem(itemId) }),
-    onError: (err: Error) => notify.error("Couldn't reorder tasks. Try again.", err.message),
   })
 }

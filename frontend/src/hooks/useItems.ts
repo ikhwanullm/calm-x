@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-query'
 import { itemsApi, type ListItemsParams } from '../api/items'
 import { notify } from '../lib/toast'
+import { getLocalToday } from '../utils/date'
 import { dashboardKeys } from './useDashboard'
 import { taskKeys } from './useTasks'
 import type {
@@ -57,7 +58,7 @@ export function useArchivedItems(params?: {
 export function useItem(id: number) {
   return useQuery({
     queryKey: itemKeys.detail(id),
-    queryFn: () => itemsApi.get(id),
+    queryFn: () => itemsApi.get(id, getLocalToday()),
     enabled: id > 0,
   })
 }
