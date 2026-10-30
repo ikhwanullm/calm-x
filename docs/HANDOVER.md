@@ -4,7 +4,7 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the Areas and Resources list reworks (`83509d2`) is pushed to `origin/main`. The Project/Area detail page rework is committed locally, not pushed.
+- Everything up to the Project/Area detail page rework (`2ba0b34`) is pushed to `origin/main`.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
@@ -14,7 +14,7 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 | Commit | What |
 |---|---|
-| (newest) | Project/Area detail page: summary strip, tasks and meetings moved up, quick add, working drag-reorder, wider layout (`GET /api/items/{id}?today=` adds `stats`) |
+| `2ba0b34` | Project/Area detail page: summary strip, tasks and meetings moved up, quick add, working drag-reorder, wider layout (`GET /api/items/{id}?today=` adds `stats`) |
 | `83509d2` | Areas and Resources lists: search, sort, filters, card/compact-list toggle, per-item stats (`GET /api/items?type=area|resource&today=`); `ItemListView` removed |
 | `81f688b` | All tasks: search, status, state chips, sort, group by, card/compact-list toggle (`GET /api/tasks` gains `q`, `status`, `waiting`, `someday`, `deferred`, `from_meeting`, `today`, `sort`, `order`) |
 | `07cee28` | Projects list: search, sort, filters, card/compact-list toggle, per-project stats (`GET /api/items?type=project&today=`) |
