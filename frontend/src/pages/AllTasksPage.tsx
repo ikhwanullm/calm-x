@@ -1,62 +1,86 @@
 import React from "react"
-import { useSearchParams } from "react-router-dom"
-import { useFilteredTasks, type FilterParams } from "@/hooks/useFilterTasks"
+import { ChevronDown, ChevronRight } from "lucide-react"
+import { useFilteredTasks, type FilterParams, type TaskListParams } from "@/hooks/useFilterTasks"
 import { useCompleteTask, useIncompleteTask } from "@/hooks/useTasks"
 import { useDeadlineThreshold } from "@/hooks/useSettings"
+import { useUrlParams } from "@/hooks/useUrlParams"
+import { useViewMode } from "@/hooks/useViewMode"
 import { TaskDrawer } from "@/components/tasks/TaskDrawer"
 import { TaskRow } from "@/components/tasks/TaskRow"
+import { TaskCompactList } from "@/components/tasks/TaskCompactList"
+import { ListToolbar } from "@/components/lists/ListToolbar"
+import type { ToolbarChip } from "@/components/lists/ListToolbar"
 import { EmptyState, Skeleton } from "@/components/common"
 import { FilterPanel } from "@/components/filters/FilterPanel"
+import { getLocalToday } from "@/utils/date"
+import {
+  GROUPS, STATUSES, TASK_SORTS, groupTasks, isGroupBy, isTaskSort, isTaskStatus,
+} from "@/utils/taskList"
 import type { Task } from "@/types/models"
 
-function paramsFromSearch(sp: URLSearchParams): FilterParams {
-  const tagParam = sp.get("tags")
-  const priParam = sp.get("priorities")
-  return {
-    tagIds: tagParam ? tagParam.split(",").map(Number).filter(Boolean) : undefined,
-    priorities: priParam ? priParam.split(",").filter(Boolean) : undefined,
-    dueStart: sp.get("due_start") ?? undefined,
-    dueEnd: sp.get("due_end") ?? undefined,
-    category: sp.get("category") ?? undefined,
-  }
-}
-
-function paramsToSearch(f: FilterParams): URLSearchParams {
-  const sp = new URLSearchParams()
-  if (f.tagIds?.length) sp.set("tags", f.tagIds.join(","))
-  if (f.priorities?.length) sp.set("priorities", f.priorities.join(","))
-  if (f.dueStart) sp.set("due_start", f.dueStart)
-  if (f.dueEnd) sp.set("due_end", f.dueEnd)
-  if (f.category) sp.set("category", f.category)
-  return sp
-}
+// Every key this page keeps in the query string besides `task` (the open drawer)
+const LIST_KEYS = ["q", "status", "sort", "group", "waiting", "deferred", "someday", "meeting"]
+const PANEL_KEYS = ["tags", "priorities", "due_start", "due_end", "category"]
 
 export default function AllTasksPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const filters = paramsFromSearch(searchParams)
-  const selectedTaskId = searchParams.get("task") ? Number(searchParams.get("task")) : null
+  const url = useUrlParams()
   const drawerTriggerRef = React.useRef<HTMLElement | null>(null)
+  const [view, setView] = useViewMode("tasks")
+  const [collapsed, setCollapsed] = React.useState<Set<string>>(new Set())
+  const today = getLocalToday()
 
-  const { data: tasks = [], isLoading } = useFilteredTasks(filters)
+  const selectedTaskId = url.get("task") ? Number(url.get("task")) : null
+  const tagParam = url.get("tags")
+  const priParam = url.get("priorities")
+  const panel: FilterParams = {
+    tagIds: tagParam ? tagParam.split(",").map(Number).filter(Boolean) : undefined,
+    priorities: priParam ? priParam.split(",").filter(Boolean) : undefined,
+    dueStart: url.get("due_start") || undefined,
+    dueEnd: url.get("due_end") || undefined,
+    category: url.get("category") || undefined,
+  }
+  const statusParam = url.get("status")
+  const sortParam = url.get("sort")
+  const groupParam = url.get("group")
+  const status = isTaskStatus(statusParam) ? statusParam : "open"
+  const sort = isTaskSort(sortParam) ? sortParam : "due"
+  const group = isGroupBy(groupParam) ? groupParam : "none"
+  const q = url.get("q")
+  const chipOn = { waiting: url.get("waiting") === "1", deferred: url.get("deferred") === "1", someday: url.get("someday") === "1", meeting: url.get("meeting") === "1" }
+
+  const params: TaskListParams = {
+    ...panel, q, status, sort, hideParked: true,
+    waiting: chipOn.waiting, deferred: chipOn.deferred, someday: chipOn.someday, fromMeeting: chipOn.meeting,
+  }
+  const { data: tasks = [], isLoading } = useFilteredTasks(params)
   const completeTask = useCompleteTask()
   const incompleteTask = useIncompleteTask()
   useDeadlineThreshold()  // consumed by TaskRow children
 
-  function handleChange(f: FilterParams) {
-    const sp = paramsToSearch(f)
-    if (selectedTaskId) sp.set("task", String(selectedTaskId))
-    setSearchParams(sp)
+  const panelActive = !!(panel.tagIds?.length || panel.priorities?.length || panel.dueStart || panel.dueEnd || panel.category)
+  const hasActiveFilters = panelActive || q !== "" || status !== "open" || chipOn.waiting || chipOn.deferred || chipOn.someday || chipOn.meeting
+
+  function clearAll() {
+    url.set(Object.fromEntries([...LIST_KEYS.filter((k) => k !== "sort" && k !== "group"), ...PANEL_KEYS].map((k) => [k, null])))
+  }
+
+  function handlePanelChange(f: FilterParams) {
+    url.set({
+      tags: f.tagIds?.length ? f.tagIds.join(",") : null,
+      priorities: f.priorities?.length ? f.priorities.join(",") : null,
+      due_start: f.dueStart ?? null,
+      due_end: f.dueEnd ?? null,
+      category: f.category ?? null,
+    })
   }
 
   function openDrawer(taskId: number) {
     drawerTriggerRef.current = document.activeElement as HTMLElement | null
-    const sp = paramsToSearch(filters)
-    sp.set("task", String(taskId))
-    setSearchParams(sp)
+    url.set({ task: String(taskId) })
   }
 
   function closeDrawer() {
-    setSearchParams(paramsToSearch(filters))
+    url.set({ task: null })
     requestAnimationFrame(() => {
       drawerTriggerRef.current?.focus()
       drawerTriggerRef.current = null
@@ -68,17 +92,90 @@ export default function AllTasksPage() {
     else completeTask.mutate(task.id)
   }
 
-  const openTasks = tasks.filter((t) => !t.is_complete)
-  const completedTasks = tasks.filter((t) => t.is_complete)
+  function toggleCollapsed(key: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  const toggle = (id: string, label: string, key: string, on: boolean): ToolbarChip => ({
+    kind: "toggle", id, label, pressed: on, onToggle: () => url.set({ [key]: on ? null : "1" }),
+  })
+  const chips: ToolbarChip[] = [
+    {
+      kind: "select", id: "status", label: "Status", emptyLabel: "Open", value: status === "open" ? "" : status,
+      options: [{ value: "", label: "Open" }, ...STATUSES.filter((s) => s.value !== "open")],
+      onChange: (v) => url.set({ status: v }),
+    },
+    toggle("waiting", "Waiting", "waiting", chipOn.waiting),
+    toggle("deferred", "Deferred", "deferred", chipOn.deferred),
+    toggle("someday", "Someday", "someday", chipOn.someday),
+    toggle("meeting", "From a meeting", "meeting", chipOn.meeting),
+  ]
+
+  const groups = groupTasks(tasks, group, today)
+
+  function renderTasks(list: Task[], label: string) {
+    if (view === "list") {
+      return (
+        <TaskCompactList
+          tasks={list}
+          label={label}
+          selectedTaskId={selectedTaskId}
+          onOpenDrawer={openDrawer}
+          onToggleComplete={handleToggleComplete}
+        />
+      )
+    }
+    return (
+      <div className="space-y-1" role="list" aria-label={label}>
+        {list.map((task) => (
+          <div key={task.id} role="listitem">
+            <TaskRow
+              task={task}
+              isSelected={selectedTaskId === task.id}
+              onOpenDrawer={openDrawer}
+              onToggleComplete={handleToggleComplete}
+              isDraggable={false}
+              showItem
+            />
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-5xl">
       <h1 className="text-2xl font-semibold text-text mb-6 tracking-tight" style={{ letterSpacing: "-0.02em" }}>
         All tasks
       </h1>
 
+      <ListToolbar
+        searchValue={q}
+        onSearchChange={(v) => url.set({ q: v })}
+        searchLabel="Search tasks"
+        sort={{ value: sort, options: TASK_SORTS, onChange: (v) => url.set({ sort: v === "due" ? null : v }) }}
+        chips={chips}
+        view={{ value: view, onChange: setView }}
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearAll}
+      >
+        <select
+          value={group}
+          onChange={(e) => url.set({ group: e.target.value === "none" ? null : e.target.value })}
+          aria-label="Group by"
+          className="h-9 px-2 text-sm rounded-control border border-border-strong bg-surface text-text focus:outline-2 focus:outline-offset-2 focus:outline-accent"
+        >
+          {GROUPS.map((g) => <option key={g.value} value={g.value}>{g.value === "none" ? "No grouping" : `Group: ${g.label}`}</option>)}
+        </select>
+      </ListToolbar>
+
       <div className="mb-4">
-        <FilterPanel filters={filters} onChange={handleChange} />
+        <FilterPanel filters={panel} onChange={handlePanelChange} />
       </div>
 
       {isLoading ? (
@@ -91,37 +188,27 @@ export default function AllTasksPage() {
           description="Try adjusting or clearing the filters."
           dashedBorder
         />
+      ) : group === "none" ? (
+        <div className="mt-4">{renderTasks(tasks, "Filtered tasks")}</div>
       ) : (
-        <div className="mt-4 space-y-1" role="list" aria-label="Filtered tasks">
-          {openTasks.map((task) => (
-            <div key={task.id} role="listitem">
-              <TaskRow
-                task={task}
-                isSelected={selectedTaskId === task.id}
-                onOpenDrawer={openDrawer}
-                onToggleComplete={handleToggleComplete}
-                isDraggable={false}
-              />
-            </div>
-          ))}
-          {completedTasks.length > 0 && (
-            <div className="mt-4 border-t border-border pt-4">
-              <p className="text-xs text-muted mb-2 font-medium uppercase tracking-wide">
-                Completed ({completedTasks.length})
-              </p>
-              {completedTasks.map((task) => (
-                <div key={task.id} role="listitem">
-                  <TaskRow
-                    task={task}
-                    isSelected={selectedTaskId === task.id}
-                    onOpenDrawer={openDrawer}
-                    onToggleComplete={handleToggleComplete}
-                    isDraggable={false}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="mt-4 space-y-5">
+          {groups.map((g) => {
+            const isCollapsed = collapsed.has(g.key)
+            return (
+              <section key={g.key} aria-label={g.label}>
+                <button
+                  type="button"
+                  aria-expanded={!isCollapsed}
+                  onClick={() => toggleCollapsed(g.key)}
+                  className="flex items-center gap-1.5 mb-2 text-xs font-semibold text-muted uppercase tracking-wide hover:text-text"
+                >
+                  {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
+                  {g.label} <span className="font-normal tabular-nums">{g.tasks.length}</span>
+                </button>
+                {!isCollapsed && renderTasks(g.tasks, g.label)}
+              </section>
+            )
+          })}
         </div>
       )}
 

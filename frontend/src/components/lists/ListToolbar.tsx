@@ -5,7 +5,7 @@ import type { ViewMode } from '@/hooks/useViewMode'
 
 export type ToolbarChip =
   | { kind: 'toggle'; id: string; label: string; pressed: boolean; onToggle: () => void }
-  | { kind: 'select'; id: string; label: string; value: string; options: { value: string; label: string }[]; onChange: (value: string) => void }
+  | { kind: 'select'; id: string; label: string; /** Text of the '' option when it differs from the label */ emptyLabel?: string; value: string; options: { value: string; label: string }[]; onChange: (value: string) => void }
 
 export interface ListToolbarProps {
   searchValue: string
@@ -92,7 +92,7 @@ export function ListToolbar({
             aria-label={chip.label}
             className={cn(CONTROL, chip.value !== '' && 'border-accent bg-accent-soft text-accent-text')}
           >
-            {chip.options.map((o) => <option key={o.value} value={o.value}>{o.value === '' ? chip.label : o.label}</option>)}
+            {chip.options.map((o) => <option key={o.value} value={o.value}>{o.value === '' ? chip.emptyLabel ?? chip.label : o.label}</option>)}
           </select>
         )
       )}

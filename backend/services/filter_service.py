@@ -14,6 +14,32 @@ from backend.services.task_service import _task_to_response
 
 VALID_PRIORITIES = {"high", "medium", "low"}
 VALID_CATEGORIES = {"project", "area", "inbox"}
+VALID_STATUS = {"open", "completed", "all"}
+VALID_SORTS = {"due", "priority", "project", "created", "updated"}
+VALID_ORDERS = {"asc", "desc"}
+_PRIORITY_RANK = {"high": 0, "medium": 1, "low": 2}
+
+
+def _escape_like(query: str) -> str:
+    return query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def _sort_tasks(tasks: list[Task], sort: str, order: str) -> list[Task]:
+    """Sort by `sort`; tasks without a value (no due date) always come last, ties by id."""
+    sign = -1 if order == "desc" else 1
+    if sort == "project":
+        # Inbox tasks (no project) have an empty name, so they come first ascending and last descending
+        return sorted(tasks, key=lambda t: ((t.item.title.lower() if t.item is not None else ""), t.id), reverse=sign == -1)
+
+    def key(t: Task):
+        if sort == "due":
+            return (t.due_date is None, (t.due_date.toordinal() * sign) if t.due_date else 0, t.id)
+        if sort == "priority":
+            return (False, _PRIORITY_RANK.get(t.priority, 1) * sign, t.id)
+        stamp = (t.created_at if sort == "created" else t.updated_at).timestamp()
+        return (False, stamp * sign, t.id)
+
+    return sorted(tasks, key=key)
 
 
 def filter_tasks(
@@ -25,13 +51,37 @@ def filter_tasks(
     category: Optional[str] = None,
     item_id: Optional[int] = None,
     include_complete: bool = True,
+    q: Optional[str] = None,
+    status: Optional[str] = None,
+    waiting: Optional[bool] = None,
+    someday: Optional[bool] = None,
+    deferred: Optional[bool] = None,
+    from_meeting: Optional[bool] = None,
+    today: Optional[date] = None,
+    sort: Optional[str] = None,
+    order: str = "asc",
 ) -> list[TaskResponse]:
     """Return tasks matching ALL provided filters (AND logic across filter types).
 
     Within tags: OR. Within priorities: OR. Date range: inclusive both ends.
     Tasks on archived items are excluded; Inbox tasks are included unless
     category filter explicitly excludes them.
+
+    Extra filters (all AND): `q` searches title, description and notes; `status` (open, completed,
+    all) replaces `include_complete`; `waiting`, `someday`, `deferred` and `from_meeting` are
+    tri-state (True = only those, False = leave those out, None = don't care); "deferred" means
+    not started yet (defer_until after `today`, the client's local date). `sort` (due, priority,
+    project, created, updated) with `order` reorders the result; without it the legacy order stays.
     """
+    if status is not None and status not in VALID_STATUS:
+        raise ValidationError(f"Unknown status: {status!r}", detail=f"Valid values: {sorted(VALID_STATUS)}")
+    if sort is not None and sort not in VALID_SORTS:
+        raise ValidationError(f"Unknown sort: {sort!r}", detail=f"Valid values: {sorted(VALID_SORTS)}")
+    if order not in VALID_ORDERS:
+        raise ValidationError(f"Unknown order: {order!r}", detail=f"Valid values: {sorted(VALID_ORDERS)}")
+    if deferred is not None and today is None:
+        raise ValidationError("today is required with the deferred filter", detail="today=YYYY-MM-DD")
+
     # Validate inputs
     if priorities:
         bad = [p for p in priorities if p not in VALID_PRIORITIES]
@@ -63,8 +113,27 @@ def filter_tasks(
         )
     )
 
-    if not include_complete:
+    if status == "open" or (status is None and not include_complete):
         stmt = stmt.where(Task.is_complete == 0)
+    elif status == "completed":
+        stmt = stmt.where(Task.is_complete == 1)
+
+    if q and q.strip():
+        pattern = f"%{_escape_like(q.strip())}%"
+        stmt = stmt.where(or_(
+            Task.title.ilike(pattern, escape="\\"),
+            Task.description.ilike(pattern, escape="\\"),
+            Task.notes.ilike(pattern, escape="\\"),
+        ))
+    if waiting is not None:
+        stmt = stmt.where(Task.waiting_for.isnot(None) if waiting else Task.waiting_for.is_(None))
+    if someday is not None:
+        stmt = stmt.where(Task.is_someday == (1 if someday else 0))
+    if deferred is not None:
+        not_started = and_(Task.defer_until.isnot(None), Task.defer_until > today)
+        stmt = stmt.where(not_started if deferred else ~not_started)
+    if from_meeting is not None:
+        stmt = stmt.where(Task.meeting_id.isnot(None) if from_meeting else Task.meeting_id.is_(None))
 
     # ---- Category / item filters ----
     if item_id is not None:
@@ -96,5 +165,7 @@ def filter_tasks(
         )
 
     stmt = stmt.order_by(Task.item_id.nulls_first(), Task.sort_order, Task.id)
-    tasks = session.execute(stmt).scalars().unique().all()
+    tasks = list(session.execute(stmt).scalars().unique().all())
+    if sort is not None:
+        tasks = _sort_tasks(tasks, sort, order)
     return [_task_to_response(session, t) for t in tasks]

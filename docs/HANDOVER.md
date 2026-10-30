@@ -4,17 +4,18 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the dialog scroll fix (`9c02e85`) is pushed to `origin/main`. The Projects list rework is committed locally, not pushed.
+- Everything up to the dialog scroll fix (`9c02e85`) is pushed to `origin/main`. The Projects list rework (`07cee28`) and the All tasks rework are committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
-- Tests at the last commit: backend 581 passed, frontend 895 passed (71 files), `tsc -b` clean.
+- Tests at the last commit: backend 596 passed, frontend 915 passed (73 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
-| (newest) | Projects list: search, sort, filters, card/compact-list toggle, per-project stats (`GET /api/items?type=project&today=`) |
+| (newest) | All tasks: search, status, state chips, sort, group by, card/compact-list toggle (`GET /api/tasks` gains `q`, `status`, `waiting`, `someday`, `deferred`, `from_meeting`, `today`, `sort`, `order`) |
+| `07cee28` | Projects list: search, sort, filters, card/compact-list toggle, per-project stats (`GET /api/items?type=project&today=`) |
 | `9c02e85` | Dialogs scroll when taller than the window |
 | `59bc57a` | Week view on `/today`: 7-day strip (meetings, due, planned, deadlines, starts), week navigation in the URL, day selection, drag a task to another day to change its due date (with Undo), `GET /api/calendar/week` |
 | `6b38a9f` | Sidebar toggle: collapse/expand button; on screens < 1280px it opens as an overlay |
@@ -217,8 +218,8 @@ stay below it. Only meetings have a time; everything else is date-only, so it is
 
 ## Richer Projects and All tasks lists (designed with the owner, 2026-10-29)
 
-The owner found the list pages static. **Projects is built; All tasks is next** (Areas and Resources follow later with the
-same pattern). Two commits: Projects, then All tasks.
+The owner found the list pages static. **Projects and All tasks are built**; Areas and Resources can follow later with the
+same toolbar (`components/lists/ListToolbar.tsx`).
 
 ### Projects: how it works (done)
 
@@ -239,44 +240,23 @@ same pattern). Two commits: Projects, then All tasks.
 - `ItemListView` is still used by Areas and Resources; its project-only area filter is now dead code.
 - Not done: the filter toolbar for Areas/Resources, server-side sorting (not needed at this size).
 
-### Decisions already made (apply to both pages)
+### All tasks: how it works (done)
 
-- Both pages get a **card view and a compact list view** with a toggle; the choice is remembered per page
-  (`localStorage`, wrapped in try/catch, falling back to cards).
-- **Default sort for Projects: nearest deadline first** (projects without a deadline last, then by title).
-- The card contents below are approved as they are.
-- Sort, filters and search live in the URL query string (shareable, survive refresh); the view toggle does not.
-
-### Shared toolbar (one component for both pages, reusable later for Areas/Resources)
-
-Search box (filters as you type, debounced), Sort select, filter chips (toggle chips and dropdown chips), view toggle
-(grid / list icons with `aria-label`s and `aria-pressed`), and a "Clear filters" link when anything is active.
-Empty result: "No projects match these filters" with Clear filters.
-
-### All tasks page
-
-- Keep the existing FilterPanel filters (tags, priority, due range, category) inside the new toolbar, and add:
-  text search (title, description, notes), status (Open default / Completed / All), and state chips
-  Waiting, Deferred, Someday, From a meeting (each: show only those; Someday and deferred-not-started are hidden
-  unless their chip is on, matching the Today rules).
-- **Sort**: Due date (default; no due date last), Priority, Project, Created, Updated.
-- **Group by**: Project, Due (Overdue / This week / Later / No due date), Priority, None (default). Group headers show
-  counts and can collapse.
-- **Compact list**: one row per task: checkbox, title, Project/Area, due (relative, coloured as usual), priority chip,
-  tags, state chips. Card view = today's TaskRow style.
-
-### Backend
-
-- Tasks list: extend `GET /api/tasks` (scope=all) with `q`, `status`, `waiting`, `deferred`, `someday`, `from_meeting`,
-  `sort`, `order`; grouping can stay client-side. Validate params (400 on unknown sort/status).
-- Escape LIKE wildcards in `q` like SearchService does.
-
-### Tests
-
-Backend: each new aggregate (incl. overdue relative to `today`, next task choice, last activity), each sort with ties,
-each filter and combinations, params validation, no N+1 (assert query count stays flat as projects grow, e.g. with an
-SQLAlchemy event counter). Frontend: toolbar state in the URL, view toggle remembered, card and list render the
-fields, sort/group/filter behaviour, empty state with Clear filters. Browser check on a DB copy.
+- **API** (`GET /api/tasks`, handled by `services/filter_service.filter_tasks` once any filter is present): new params `q` (title,
+  description, notes; LIKE wildcards escaped), `status` (`open|completed|all`, replaces `include_complete`), tri-state
+  `waiting`, `someday`, `deferred`, `from_meeting` (true = only those, false = leave them out; `deferred` means
+  `defer_until` after `today`, and needs `today`), `sort` (`due|priority|project|created|updated`) with `order`. No-value-last
+  for due date, ties by id, Inbox sorts as an empty project name. Unknown values give 400. Calls without the new params behave as before.
+- **UI**: `pages/AllTasksPage.tsx`, `components/tasks/TaskCompactList.tsx`, `utils/taskList.ts` (grouping), `hooks/useFilterTasks.ts`
+  (`hideParked` sends `someday=false&deferred=false`). The old FilterPanel (tags, priority, due range, category) stays below the toolbar.
+  URL params: `q`, `status` (omitted = open), `sort` (omitted = due), `group` (none/project/due/priority), `waiting`, `deferred`,
+  `someday`, `meeting` (=1), plus the FilterPanel's `tags`, `priorities`, `due_start`, `due_end`, `category` and the drawer's
+  `task`. Grouping is done in the browser; group headers show counts and collapse. "Clear filters" resets search, status, chips and
+  the panel but keeps sort and group. View choice: `localStorage` (`calmx.view.tasks`).
+- **Chosen by me**: Someday and not-yet-started tasks are hidden unless their chip is on (the Today rules); chips combine with AND;
+  the old separate "Completed (n)" block is gone (use the Status select); completed tasks due earlier go in an "Earlier (completed)"
+  group instead of "Overdue"; the compact list repeats its header row in every group.
+- Not done: ascending/descending toggle in the UI (the API has `order`), server-side grouping, the toolbar for Areas/Resources.
 
 ## Other ideas the owner liked (backlog, not prioritised yet)
 

@@ -18,6 +18,15 @@ export const tasksApi = {
     due_end?: string
     category?: string
     scope?: string
+    q?: string
+    status?: 'open' | 'completed' | 'all'
+    waiting?: boolean
+    someday?: boolean
+    deferred?: boolean
+    from_meeting?: boolean
+    today?: string
+    sort?: 'due' | 'priority' | 'project' | 'created' | 'updated'
+    order?: 'asc' | 'desc'
   }) =>
     apiClient.get<Task[]>('/tasks', { params }).then(r => r.data),
 

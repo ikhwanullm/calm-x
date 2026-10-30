@@ -49,12 +49,22 @@ def list_all_tasks(
     due_end: Optional[str] = Query(default=None, description="YYYY-MM-DD"),
     category: Optional[str] = Query(default=None, description="project|area|inbox"),
     scope: Optional[str] = Query(default=None, description="all: return Inbox + all non-archived items"),
+    q: Optional[str] = Query(default=None, max_length=200, description="Search title, description and notes"),
+    status: Optional[str] = Query(default=None, description="open|completed|all (replaces include_complete)"),
+    waiting: Optional[bool] = Query(default=None, description="true: only waiting-for tasks; false: leave them out"),
+    someday: Optional[bool] = Query(default=None, description="true: only Someday tasks; false: leave them out"),
+    deferred: Optional[bool] = Query(default=None, description="true: only not-yet-started tasks; false: leave them out (needs today)"),
+    from_meeting: Optional[bool] = Query(default=None, description="true: only tasks made from a meeting; false: leave them out"),
+    today: Optional[date] = Query(default=None, description="Client local date YYYY-MM-DD, for the deferred filter"),
+    sort: Optional[str] = Query(default=None, description="due|priority|project|created|updated"),
+    order: str = Query(default="asc", description="asc|desc"),
 ):
     """List tasks with optional filters. Supports tag/priority/date/category filtering."""
     # If any filter param provided, use filter service; otherwise use simple list
     has_filters = any([
         tags, priorities, due_start, due_end, category,
-        item_id is not None, scope == "all",
+        item_id is not None, scope == "all", q, status, sort,
+        waiting is not None, someday is not None, deferred is not None, from_meeting is not None,
     ])
     if has_filters:
         if tags:
@@ -75,6 +85,15 @@ def list_all_tasks(
             category=category,
             item_id=item_id,
             include_complete=include_complete,
+            q=q,
+            status=status,
+            waiting=waiting,
+            someday=someday,
+            deferred=deferred,
+            from_meeting=from_meeting,
+            today=today,
+            sort=sort,
+            order=order,
         )
     return task_service.list_tasks(session, item_id=item_id, include_complete=include_complete)
 
