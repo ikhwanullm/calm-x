@@ -4,7 +4,7 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the dialog scroll fix (`9c02e85`) is pushed to `origin/main`. The Projects list rework (`07cee28`) and the All tasks rework are committed locally, not pushed.
+- Everything up to the dialog scroll fix (`9c02e85`) is pushed to `origin/main`. The Projects (`07cee28`) and All tasks (`81f688b`) list reworks are pushed too.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
@@ -14,7 +14,7 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 | Commit | What |
 |---|---|
-| (newest) | All tasks: search, status, state chips, sort, group by, card/compact-list toggle (`GET /api/tasks` gains `q`, `status`, `waiting`, `someday`, `deferred`, `from_meeting`, `today`, `sort`, `order`) |
+| `81f688b` | All tasks: search, status, state chips, sort, group by, card/compact-list toggle (`GET /api/tasks` gains `q`, `status`, `waiting`, `someday`, `deferred`, `from_meeting`, `today`, `sort`, `order`) |
 | `07cee28` | Projects list: search, sort, filters, card/compact-list toggle, per-project stats (`GET /api/items?type=project&today=`) |
 | `9c02e85` | Dialogs scroll when taller than the window |
 | `59bc57a` | Week view on `/today`: 7-day strip (meetings, due, planned, deadlines, starts), week navigation in the URL, day selection, drag a task to another day to change its due date (with Undo), `GET /api/calendar/week` |
