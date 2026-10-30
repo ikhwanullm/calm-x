@@ -4,16 +4,17 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 
 ## Where things stand
 
-- Everything up to the dialog scroll fix (`9c02e85`) is pushed to `origin/main`. The Projects (`07cee28`) and All tasks (`81f688b`) list reworks are pushed too.
+- Everything up to the list reworks for Projects and All tasks (`81f688b`) is pushed to `origin/main`. The Areas and Resources reworks are committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
-- Tests at the last commit: backend 596 passed, frontend 915 passed (73 files), `tsc -b` clean.
+- Tests at the last commit: backend 602 passed, frontend 932 passed (74 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
+| (newest) | Areas and Resources lists: search, sort, filters, card/compact-list toggle, per-item stats (`GET /api/items?type=area|resource&today=`); `ItemListView` removed |
 | `81f688b` | All tasks: search, status, state chips, sort, group by, card/compact-list toggle (`GET /api/tasks` gains `q`, `status`, `waiting`, `someday`, `deferred`, `from_meeting`, `today`, `sort`, `order`) |
 | `07cee28` | Projects list: search, sort, filters, card/compact-list toggle, per-project stats (`GET /api/items?type=project&today=`) |
 | `9c02e85` | Dialogs scroll when taller than the window |
@@ -218,8 +219,8 @@ stay below it. Only meetings have a time; everything else is date-only, so it is
 
 ## Richer Projects and All tasks lists (designed with the owner, 2026-10-29)
 
-The owner found the list pages static. **Projects and All tasks are built**; Areas and Resources can follow later with the
-same toolbar (`components/lists/ListToolbar.tsx`).
+The owner found the list pages static. **Projects, All tasks, Areas and Resources are built**, all with the same toolbar
+(`components/lists/ListToolbar.tsx`).
 
 ### Projects: how it works (done)
 
@@ -237,8 +238,23 @@ same toolbar (`components/lists/ListToolbar.tsx`).
 - **Chosen by me**: Active/Completed are two toggle chips (both off shows nothing); "this week" means up to Sunday;
   a completed project is never "overdue"; the meeting chip shows the next meeting, else "Last meeting …"; Someday and
   not-yet-started tasks are left out of the open count and the Next line.
-- `ItemListView` is still used by Areas and Resources; its project-only area filter is now dead code.
-- Not done: the filter toolbar for Areas/Resources, server-side sorting (not needed at this size).
+- Not done: server-side sorting (not needed at this size).
+
+### Areas and Resources: how it works (done; not designed with the owner, chosen by me)
+
+- **API**: `GET /api/items?type=area|resource&today=` adds `stats` (same `today` rule as Projects). Areas get the Project stats
+  (`ProjectStats`) computed for the Area's **own** tasks, plus `project_count` (active projects in the Area) and a last activity
+  that also counts its projects' updates. Resources get `ResourceStats`: `reference_link_count` (URLs) and `linked_item_count`
+  (active Projects/Areas it is linked to). Both are grouped queries, with a flat-query-count test
+  (`services/project_stats_service.py`: `get_project_stats`, `get_resource_stats`).
+- **UI**: `pages/AreasPage.tsx`, `pages/ResourcesPage.tsx`, `components/areas/AreaViews.tsx`, `components/resources/ResourceViews.tsx`,
+  `utils/areaResourceList.ts`; `ItemListView` is gone. Areas: sort Name (default) / Last activity / Most overdue / Most projects /
+  Most open tasks; chips Has overdue, Stale 30+ days, No projects. Resources: sort Name (default) / Recently updated / Most used;
+  chips Not linked, No links, Stale 90+ days. Card/list toggle remembered per page (`calmx.view.areas`, `calmx.view.resources`).
+  Search covers title and description; state is in the URL like on Projects.
+- **Chosen by me**: an Area card's task numbers are the Area's own tasks, not its projects' (the project count is shown beside
+  them); "stale" for Areas is 30 days like Projects and 90 days for Resources; an Area with no open tasks shows no "add a next step" hint.
+- Not done: counting an Area's projects' tasks in its numbers, a per-Area dashboard (backlog).
 
 ### All tasks: how it works (done)
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -14,7 +14,6 @@ import { itemsApi } from '../api/items'
 import type { Project } from '../types/models'
 import { ProjectAreaField } from '../components/items/ProjectAreaField'
 import { AreaProjectsSection } from '../components/items/AreaProjectsSection'
-import { ItemListView } from '../components/items/ItemListView'
 
 const AREAS = [
   { id: 3, type: 'area', title: 'Platform', archived_at: null },
@@ -120,49 +119,5 @@ describe('AreaProjectsSection', () => {
   it('shows an empty state', async () => {
     renderWithClient(<AreaProjectsSection areaId={3} isArchived={false} />)
     expect(await screen.findByText(/No projects in this area yet/)).toBeTruthy()
-  })
-})
-
-describe('Projects list area filter', () => {
-  function renderList(path = '/projects') {
-    vi.mocked(itemsApi.list).mockImplementation(async (params) => {
-      if (params?.type === 'area') return AREAS as never
-      return [
-        project({ id: 1, title: 'In Platform', area_id: 3, area_title: 'Platform' }),
-        project({ id: 2, title: 'In Health', area_id: 4, area_title: 'Health' }),
-        project({ id: 3, title: 'No area project' }),
-      ] as never
-    })
-    return renderWithClient(
-      <ItemListView
-        type="project" title="Projects" emptyTitle="None" emptyDescription="" newItemLabel="New project"
-        onNew={() => {}} basePath="/projects"
-      />,
-      path
-    )
-  }
-
-  it('shows the area name on project cards', async () => {
-    renderList()
-    await screen.findByText('In Platform')
-    expect(screen.getAllByText('Platform').length).toBeGreaterThan(0)
-  })
-
-  it('filters by area and keeps the filter in the URL', async () => {
-    const user = userEvent.setup()
-    renderList()
-    await screen.findByText('In Platform')
-    await screen.findByRole('option', { name: 'Health' })
-    await user.selectOptions(screen.getByLabelText('Filter projects by area'), '4')
-    await waitFor(() => expect(screen.queryByText('In Platform')).toBeNull())
-    expect(screen.getByText('In Health')).toBeTruthy()
-    expect(screen.getByTestId('location').textContent).toBe('?area=4')
-  })
-
-  it('can show only projects without an area', async () => {
-    renderList('/projects?area=none')
-    expect(await screen.findByText('No area project')).toBeTruthy()
-    expect(screen.queryByText('In Platform')).toBeNull()
-    expect(screen.queryByText('In Health')).toBeNull()
   })
 })

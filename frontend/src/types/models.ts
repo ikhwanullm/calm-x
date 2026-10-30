@@ -49,6 +49,13 @@ export interface ProjectStats {
   last_meeting_at: string | null
   linked_resource_count: number
   last_activity_at: string         // ISO datetime (UTC)
+  project_count: number            // Areas: active projects in the Area
+}
+
+/** Sent with the Resources list when it is asked for with `today`. */
+export interface ResourceStats {
+  reference_link_count: number
+  linked_item_count: number        // active Projects and Areas it is linked to
 }
 
 export interface Project extends ItemBase {
@@ -66,10 +73,12 @@ export interface Project extends ItemBase {
 export interface Area extends ItemBase {
   type: 'area'
   area_maintenance_notes: string | null
+  stats?: ProjectStats | null
 }
 
 export interface Resource extends ItemBase {
   type: 'resource'
+  stats?: ResourceStats | null
 }
 
 // Discriminated union for type-safe narrowing

@@ -9,7 +9,7 @@ const TODAY = '2026-10-29'  // Thursday
 function stats(extra: Partial<ProjectStats> = {}): ProjectStats {
   return {
     open_task_count: 1, overdue_task_count: 0, waiting_task_count: 0, next_task: null,
-    next_meeting_at: null, last_meeting_at: null, linked_resource_count: 0,
+    next_meeting_at: null, last_meeting_at: null, linked_resource_count: 0, project_count: 0,
     last_activity_at: '2026-10-28T10:00:00Z', ...extra,
   }
 }

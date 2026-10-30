@@ -41,12 +41,6 @@ def test_a_bad_today_is_rejected(client):
     assert client.get("/api/items", params={"type": "project", "today": "x"}).status_code == 400
 
 
-def test_areas_get_no_stats_even_with_today(client):
-    _item(client, kind="area")
-    r = client.get("/api/items", params={"type": "area", "today": TODAY}).json()
-    assert "stats" not in r[0] or r[0]["stats"] is None
-
-
 def test_an_empty_project_has_zeroes_and_no_next_task(client):
     s = _stats(client, _item(client))
     assert (s["open_task_count"], s["overdue_task_count"], s["waiting_task_count"], s["linked_resource_count"]) == (0, 0, 0, 0)

@@ -4,15 +4,15 @@ import { getDeadlineStatus } from '@/utils/deadline'
 import { formatRelativeDate } from '@/utils/date'
 import { activityLabel, meetingLabel } from '@/utils/projectFacts'
 import { cn } from '@/lib/utils'
-import type { Project } from '@/types/models'
+import type { Project, ProjectStats } from '@/types/models'
 
 const CHIP = 'inline-flex items-center h-5 px-1.5 rounded-pill text-xs'
 
-export function NextTaskLine({ project, today }: { project: Project; today: string }) {
-  const next = project.stats?.next_task
-  if (!project.stats) return null
+export function NextTaskLine({ stats, completed = false, hintWhenEmpty = true, today }: { stats: ProjectStats | null | undefined; completed?: boolean; hintWhenEmpty?: boolean; today: string }) {
+  if (!stats) return null
+  const next = stats.next_task
   if (!next) {
-    return project.project_status === 'completed' ? null : (
+    return completed || !hintWhenEmpty ? null : (
       <p className="text-xs text-muted mt-2">No open tasks. Add a next step or archive it.</p>
     )
   }
@@ -63,7 +63,7 @@ export function ProjectCard({ project, today }: { project: Project; today: strin
         <ProgressBar completed={project.completed_task_count} total={project.task_count} label={`${project.title} progress`} />
       </div>
 
-      <NextTaskLine project={project} today={today} />
+      <NextTaskLine stats={project.stats} completed={completed} today={today} />
 
       {stats && (stats.overdue_task_count > 0 || stats.waiting_task_count > 0 || meeting || stats.linked_resource_count > 0) && (
         <div className="flex flex-wrap items-center gap-1.5 mt-2">

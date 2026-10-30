@@ -7,8 +7,8 @@ from typing import Iterable
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.models.item import Item, Meeting, ResourceLink, Task
-from backend.schemas.item import NextTask, ProjectStats
+from backend.models.item import Item, Meeting, ReferenceLink, ResourceLink, Task
+from backend.schemas.item import NextTask, ProjectStats, ResourceStats
 
 
 def _utc(value: datetime | None) -> datetime | None:
@@ -20,7 +20,11 @@ def _utc(value: datetime | None) -> datetime | None:
 def get_project_stats(
     session: Session, projects: Iterable[Item], today: date, now: datetime | None = None
 ) -> dict[int, ProjectStats]:
-    """Stats for the given projects, keyed by id. `today` is the client's local date."""
+    """Stats for the given Projects or Areas, keyed by id. `today` is the client's local date.
+
+    For an Area the task numbers cover the Area's own tasks; `project_count` counts its active
+    Projects and its last activity also counts those Projects' updates.
+    """
     by_id = {p.id: p for p in projects}
     if not by_id:
         return {}
@@ -80,10 +84,26 @@ def get_project_stats(
         select(Meeting.item_id, func.max(Meeting.updated_at)).where(Meeting.item_id.in_(ids)).group_by(Meeting.item_id)
     ).all())
 
+    area_ids = [pid for pid, p in by_id.items() if p.type == "area"]
+    project_counts: dict[int, int] = {}
+    child_activity: dict[int, datetime] = {}
+    if area_ids:
+        project_counts = dict(session.execute(
+            select(Item.area_id, func.count())
+            .where(Item.area_id.in_(area_ids), Item.type == "project", Item.archived_at.is_(None))
+            .group_by(Item.area_id)
+        ).all())
+        child_activity = dict(session.execute(
+            select(Item.area_id, func.max(Item.updated_at)).where(Item.area_id.in_(area_ids)).group_by(Item.area_id)
+        ).all())
+
     stats: dict[int, ProjectStats] = {}
     for pid, project in by_id.items():
         open_n, overdue_n, waiting_n = open_counts.get(pid, (0, 0, 0))
-        moments = [_utc(v) for v in (project.updated_at, task_activity.get(pid), meeting_activity.get(pid)) if v is not None]
+        moments = [
+            _utc(v) for v in (project.updated_at, task_activity.get(pid), meeting_activity.get(pid), child_activity.get(pid))
+            if v is not None
+        ]
         stats[pid] = ProjectStats(
             open_task_count=open_n,
             overdue_task_count=overdue_n,
@@ -93,5 +113,26 @@ def get_project_stats(
             last_meeting_at=_utc(last_meeting.get(pid)),
             linked_resource_count=resources.get(pid, 0),
             last_activity_at=max(moments),
+            project_count=project_counts.get(pid, 0),
         )
     return stats
+
+
+def get_resource_stats(session: Session, resources: Iterable[Item]) -> dict[int, ResourceStats]:
+    """Link counts for the given Resources, keyed by id."""
+    ids = [r.id for r in resources]
+    if not ids:
+        return {}
+    references = dict(session.execute(
+        select(ReferenceLink.item_id, func.count()).where(ReferenceLink.item_id.in_(ids)).group_by(ReferenceLink.item_id)
+    ).all())
+    linked = dict(session.execute(
+        select(ResourceLink.resource_id, func.count())
+        .join(Item, Item.id == ResourceLink.linked_item_id)
+        .where(ResourceLink.resource_id.in_(ids), Item.archived_at.is_(None))
+        .group_by(ResourceLink.resource_id)
+    ).all())
+    return {
+        rid: ResourceStats(reference_link_count=references.get(rid, 0), linked_item_count=linked.get(rid, 0))
+        for rid in ids
+    }

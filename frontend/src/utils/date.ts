@@ -15,6 +15,11 @@ export function getLocalToday(): string {
   return `${y}-${m}-${day}`
 }
 
+/** Whole local days from an ISO datetime to `today` (0 = today). */
+export function daysSinceIso(isoDatetime: string, today: string): number {
+  return differenceInCalendarDays(parseISO(today), parseISO(isoToLocalDateStr(isoDatetime)))
+}
+
 /**
  * Convert an ISO 8601 datetime string (e.g. "2026-10-27T20:00:00Z") to a
  * YYYY-MM-DD string in the **client's local timezone**.

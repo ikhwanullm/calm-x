@@ -113,6 +113,7 @@ class ProjectStats(BaseModel):
     last_meeting_at: Optional[datetime] = None
     linked_resource_count: int
     last_activity_at: datetime
+    project_count: int = 0       # Areas: active projects in the Area
 
 
 class ProjectResponse(BaseModel):
@@ -157,6 +158,14 @@ class AreaResponse(BaseModel):
     area_maintenance_notes: Optional[str] = None
     task_count: int = 0
     completed_task_count: int = 0
+    stats: Optional[ProjectStats] = None
+
+
+class ResourceStats(BaseModel):
+    """Numbers for a Resources list card; only sent when the list is asked for with `today`."""
+
+    reference_link_count: int
+    linked_item_count: int       # active Projects and Areas this Resource is linked to
 
 
 class ResourceResponse(BaseModel):
@@ -173,6 +182,7 @@ class ResourceResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     reference_link_count: int = 0
+    stats: Optional[ResourceStats] = None
     linked_item_count: int = 0
 
 

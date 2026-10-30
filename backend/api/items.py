@@ -47,7 +47,7 @@ def list_items(
     archived_from: Optional[datetime] = Query(default=None, description="Filter archived items from this datetime (ISO 8601 with tz offset, e.g. 2026-10-28T00:00:00+07:00)"),
     archived_to: Optional[datetime] = Query(default=None, description="Filter archived items to this datetime (ISO 8601 with tz offset, e.g. 2026-10-28T23:59:59+07:00)"),
     area_id: Optional[int] = Query(default=None, description="Only Projects that belong to this Area"),
-    today: Optional[str] = Query(default=None, description="Client local date YYYY-MM-DD; adds `stats` to each Project"),
+    today: Optional[str] = Query(default=None, description="Client local date YYYY-MM-DD; adds `stats` to each Project, Area and Resource"),
 ):
     """List items. Filter by type and/or include archived.
 
@@ -118,10 +118,14 @@ def list_items(
     responses = [item_to_response(item, task_count=total, completed_task_count=completed)
                  for item, total, completed in items_with_counts]
     if client_today is not None:
-        projects = [item for item, _, _ in items_with_counts if item.type == "project"]
-        stats = project_stats_service.get_project_stats(session, projects, client_today)
+        with_tasks = [item for item, _, _ in items_with_counts if item.type in ("project", "area")]
+        resources = [item for item, _, _ in items_with_counts if item.type == "resource"]
+        stats = project_stats_service.get_project_stats(session, with_tasks, client_today)
+        resource_stats = project_stats_service.get_resource_stats(session, resources)
         for response in responses:
-            if response.type == "project":
+            if response.type == "resource":
+                response.stats = resource_stats[response.id]
+            else:
                 response.stats = stats[response.id]
     return responses
 
