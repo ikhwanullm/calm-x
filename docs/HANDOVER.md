@@ -2,12 +2,12 @@
 
 Last updated 2026-11-02. Written for the next coding session; read `CLAUDE.md` first for the hard rules.
 
-**Next to build: the foundation round** (section "Next up: foundation round" below), chosen by the owner on 2026-11-02
-before any new feature.
+**The foundation round (section "Foundation round" below) is built**, chosen by the owner on 2026-11-02 before any new feature.
+Nothing new is queued: wait for the owner's feedback (see "After this round").
 
 ## Where things stand
 
-- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. Foundation round parts 1 (`ec8ef37`, completed_at), 2 (old plans) and 3 (UTC datetimes) are committed locally, not pushed.
+- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. The whole foundation round (parts 1-4, from `ec8ef37`) is committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and upgrades to 009 on the next app start.
@@ -17,7 +17,8 @@ before any new feature.
 
 | Commit | What |
 |---|---|
-| (newest) | Foundation part 3: every API datetime is timezone-aware (`schemas/base.py` `ApiModel`) |
+| (newest) | Foundation part 4: one refresh helper for task hooks, v1 spec files marked archived |
+| `155e2a9` | Foundation part 3: every API datetime is timezone-aware (`schemas/base.py` `ApiModel`) |
 | `a0825af` | Foundation part 2: "Planned earlier" block on Today (Keep for today / Remove from Today / Clear all with Undo) |
 | `ec8ef37` | Foundation part 1: `tasks.completed_at` (migration 009), "Completed …" in the task drawer, All tasks sort "Recently completed" |
 | `be2fc2d` | Searchable project/area picker (`ItemPicker`) replaces long dropdowns |
@@ -43,7 +44,7 @@ before any new feature.
 | `b66df4e` | No deadline badges on archived projects or their tasks (R7.8) |
 | `d8d9c5d` | Project deadline: set at creation and edit inline |
 
-## Next up: foundation round (chosen by the owner 2026-11-02; details proposed in the brainstorming session)
+## Foundation round (chosen by the owner 2026-11-02; details proposed in the brainstorming session) — DONE
 
 Why: the next features the owner wants (Done log, weekly status report, recurring tasks) all need to know *when* a task
 was completed, and a few small data issues are felt daily. Build in this order, **one commit per part**, each verified with
@@ -105,7 +106,9 @@ a shared Pydantic base (e.g. `schemas/base.py` `ApiModel`) with a serializer tha
 UTC-aware before output, and make every response schema inherit it. Then remove `task_service._as_utc` and similar
 per-field patches. Test: create, update and fetch an item, a task and a meeting; every datetime string ends with `Z` or `+00:00`.
 
-### Part 4: small cleanups (one commit)
+### Part 4: small cleanups (one commit) — DONE
+
+Every hook in `hooks/useTasks.ts` (and `useTriage`) now calls the exported `refreshAfterTaskChange(qc)`; the v1 spec files carry an "archived" note. No behaviour change.
 
 - `hooks/useTasks.ts`: the same three `invalidateQueries` lines are repeated in about eight hooks; make every hook use
   the existing `refreshAfterTaskChange(qc)` helper. No behaviour change.
@@ -465,8 +468,7 @@ Also from the 2026-10-29 review, after the safety round:
 
 - **Weekly Review steps for Waiting for and Someday** (follow up waits, promote or drop parked ideas). Highest value;
   design it with the owner first.
-- "Planned for today" never expires: show "planned since …" and offer to clear old plans, or reset daily.
 - Search and tag filters ignore Someday/Defer: label them in results or hide by default with a toggle.
-- `requirements.md` / `design.md` don't describe the features built after v1; `HANDOVER.md` is the source of truth.
+- `requirements.md` / `design.md` don't describe the features built after v1 (they now say so at the top); `HANDOVER.md` is the source of truth.
 - Performance later: 3–4 queries per task in list responses (subtask counts, tags, item); frontend tests take
   5–10 min because jsdom is created per file (vitest pool/isolation settings); 811 kB bundle could use route lazy loading.

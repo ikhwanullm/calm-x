@@ -1,3 +1,6 @@
+> **v1 spec, archived.** This describes Calm-X as first built. It was not updated for later features (Today, Someday, Defer, meetings,
+> week view, richer lists, Weekly Review steps, smart capture and more). **Current behaviour is in `docs/HANDOVER.md`.**
+
 # Requirements Document
 
 ## Introduction

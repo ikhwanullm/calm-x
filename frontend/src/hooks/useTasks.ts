@@ -57,9 +57,7 @@ export function useCreateTask() {
   return useMutation({
     mutationFn: (payload: TaskCreatePayload) => tasksApi.create(payload),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: taskKeys.all })
-      qc.invalidateQueries({ queryKey: itemKeys.all })
-      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+      refreshAfterTaskChange(qc)
       if (vars.item_id) qc.invalidateQueries({ queryKey: taskKeys.forItem(vars.item_id) })
     },
     onError: (err: Error) => {
@@ -89,9 +87,7 @@ export function useUpdateTask(id: number) {
       notify.error("Couldn't save the task. Try again.", err.message)
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: taskKeys.all })
-      qc.invalidateQueries({ queryKey: itemKeys.all })
-      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+      refreshAfterTaskChange(qc)
     },
   })
 }
@@ -103,9 +99,7 @@ export function useDeleteTask() {
   const qc = useQueryClient()
 
   function refreshAll() {
-    qc.invalidateQueries({ queryKey: taskKeys.all })
-    qc.invalidateQueries({ queryKey: itemKeys.all })
-    qc.invalidateQueries({ queryKey: dashboardKeys.all })
+    refreshAfterTaskChange(qc)
   }
 
   async function undo(id: number, previousItemId: number | null | undefined) {
@@ -200,9 +194,7 @@ export function useMoveTask() {
     mutationFn: ({ id, payload }: { id: number; payload: TaskMovePayload }) =>
       tasksApi.move(id, payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: taskKeys.all })
-      qc.invalidateQueries({ queryKey: itemKeys.all })
-      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+      refreshAfterTaskChange(qc)
     },
     onError: (err: Error) => notify.error("Couldn't move task. Try again.", err.message),
   })
@@ -232,9 +224,7 @@ export function useCompleteTask() {
       notify.error("Couldn't complete task. Try again.", err.message)
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: taskKeys.all })
-      qc.invalidateQueries({ queryKey: itemKeys.all })
-      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+      refreshAfterTaskChange(qc)
     },
   })
 }
@@ -261,9 +251,7 @@ export function useIncompleteTask() {
       notify.error("Couldn't reopen task. Try again.", err.message)
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: taskKeys.all })
-      qc.invalidateQueries({ queryKey: itemKeys.all })
-      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+      refreshAfterTaskChange(qc)
     },
   })
 }

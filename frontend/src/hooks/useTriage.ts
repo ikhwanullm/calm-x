@@ -1,8 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { tasksApi } from '../api/tasks'
-import { dashboardKeys } from './useDashboard'
-import { itemKeys } from './useItems'
-import { taskKeys, UNDO_TOAST_MS } from './useTasks'
+import { UNDO_TOAST_MS, refreshAfterTaskChange } from './useTasks'
 import { notify } from '../lib/toast'
 import type { Task, TaskUpdatePayload } from '../types/models'
 
@@ -15,11 +13,7 @@ const plural = (n: number) => `${n} ${n === 1 ? 'task' : 'tasks'}`
 export function useTriage() {
   const qc = useQueryClient()
 
-  function refresh() {
-    qc.invalidateQueries({ queryKey: taskKeys.all })
-    qc.invalidateQueries({ queryKey: itemKeys.all })
-    qc.invalidateQueries({ queryKey: dashboardKeys.all })
-  }
+  const refresh = () => refreshAfterTaskChange(qc)
 
   function report(done: number, failures: string[], text: (n: number) => string) {
     if (done > 0) notify.success(text(done))
