@@ -11,51 +11,9 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and
   upgrades to 009 on the next app start.
-- Tests at the last code commit: backend 632 passed, frontend 1120 passed (84 files, about 35-55 s), `tsc -b` clean.
+- Tests at the last code commit: backend 632 passed, frontend 1125 passed (85 files, about 35-55 s), `tsc -b` clean.
 
 ## Next up
-
-### Typography and app identity (chosen by the owner 2026-11-02, from a mockup in the brainstorming session)
-
-Two commits: font first, then logo + favicon. **Look only**: no layout, size or behaviour changes beyond what is listed.
-Found while designing: Inter is loaded from Google Fonts in `frontend/index.html`, so offline the app silently falls back to
-Segoe UI and every start contacts Google; there is no favicon link (`public/favicon.svg` is Vite's purple default and unused);
-`public/icons.svg` is a Vite template leftover (Bluesky/social icons); the sidebar logo is plain text and disappears when collapsed.
-
-**Part 1: Plus Jakarta Sans, bundled locally**
-
-- Add `@fontsource-variable/plus-jakarta-sans` (one variable file covers all weights) and import it once in `main.tsx`.
-  Remove the three Google Fonts tags (`preconnect` x2 and the stylesheet) from `index.html`. After this the app makes no
-  request to any other host; check the Network panel on a scratch build.
-- Font stack everywhere it is set (`tailwind.config.ts` `fontFamily.sans`, `index.css` body):
-  `'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif`.
-- Keep every size, weight and letter-spacing from `ui-guidelines.md` §3 Typography; only the family changes. Update that
-  section's "Font:" line (and say it is bundled with @fontsource, never loaded from a CDN).
-- `tabular-nums` must still line up numbers (counts, %, dates in the week strip and lists). Check that the font has
-  tabular figures. If it does not, stop and tell the owner; do not mix in a second font for numbers.
-- Plus Jakarta Sans is a little wider than Inter. Check, at 1280px and at 768px, in light and dark: sidebar labels, the
-  week strip day cells and chips, Projects cards, the task drawer header, the Weekly Review step bar (eight labels on one
-  line), toasts, the command palette. Fix only real overflow/wrapping (truncate, not smaller text).
-- Test: a guard test that `index.html` contains no `fonts.googleapis.com` / `fonts.gstatic.com`.
-
-**Part 2: logo and favicon**
-
-- Mark: a rounded square (rx 8 on a 32 grid) in the accent color with a white open "C" arc and a check mark inside
-  (the "Monogram C + check" from the mockup). Draw it as a small inline SVG component `components/common/Logo.tsx`
-  (`size` prop, `aria-hidden`; the wordmark text next to it carries the name). Colors from tokens: square `var(--accent)`,
-  strokes `var(--accent-fg)`, so it follows dark mode. Strokes slightly thicker at 16px so it stays readable.
-  Reference geometry (32x32): square `rect 0 0 32 32 rx 8`; C `M21 10.5 a8 8 0 1 0 0 11` stroke 3; check
-  `M14 16 l2.5 2.5 L22 13` stroke 2.6; round caps and joins. Adjust by eye if needed; keep it simple.
-- Sidebar header, expanded: logo 24-28px + "Calm-X" wordmark (`font-semibold`, `tracking-tight`) on the left, collapse
-  button on the right, as now. Collapsed: show the logo centred; the logo itself is the expand button (`aria-label` and
-  `title` "Expand sidebar"), and on hover/focus it shows the `PanelLeftOpen` icon instead, so the header never has two
-  buttons squeezed into 56px. The overlay mode (< 1280px) follows the same rule.
-- Favicon: replace `public/favicon.svg` with the same mark in fixed colors (`#3B5BDB` square, white strokes; an SVG
-  `@media (prefers-color-scheme: dark)` block may switch to the dark accent `#8EA2FF` with `#10142B` strokes). Add
-  `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />` to `index.html`. The backend already serves root files from
-  `dist` (`main._safe_static_file`); confirm `/favicon.svg` returns 200 on the scratch server and the tab shows it.
-- Delete `public/icons.svg` after grepping that nothing references it.
-- Not in this round: an installable app icon/manifest, a logo on other pages, a loading splash.
 
 ### After that
 
@@ -95,6 +53,7 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
+| (newest) | Typography and identity: Plus Jakarta Sans bundled with @fontsource (no Google Fonts request; guard test `noExternalFonts`), `components/common/Logo.tsx` in the sidebar header (collapsed: the logo is the expand button), new `public/favicon.svg` linked in `index.html`, `icons.svg` removed |
 | `bf7f813` to `69a7d7a` | Code health round, parts 1-5: faster tests, `TaskDrawer` and `ItemDetailView` split, task lists in fixed queries, lazy routes |
 | `a868009` | Foundation part 4: one refresh helper for task hooks, v1 spec files marked archived |
 | `155e2a9` | Foundation part 3: every API datetime is timezone-aware (`schemas/base.py` `ApiModel`) |

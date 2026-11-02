@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useState } from "react"
 import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import { RouteFallback } from "./RouteFallback"
+import { Logo } from "@/components/common/Logo"
 import {
   LayoutDashboard,
   Sun,
@@ -196,16 +197,37 @@ export function AppShell() {
               expanded ? "justify-between px-4" : "justify-center px-3"
             )}
           >
-            {expanded && <span className="text-base font-semibold text-text tracking-tight">Calm-X</span>}
+            {expanded && (
+              <span className="flex items-center gap-2.5">
+                <Logo size={28} />
+                <span className="text-base font-semibold text-text tracking-tight">Calm-X</span>
+              </span>
+            )}
+            {/* Collapsed: the logo is the expand button and shows the open-panel icon on hover or focus */}
             <button
               type="button"
               onClick={toggleSidebar}
               aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
               aria-expanded={expanded}
               title={expanded ? "Collapse sidebar" : "Expand sidebar"}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-control text-muted hover:bg-surface-2 hover:text-text"
+              className={cn(
+                "group relative inline-flex items-center justify-center w-9 h-9 rounded-control",
+                expanded ? "text-muted hover:bg-surface-2 hover:text-text" : "hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
+              )}
             >
-              {expanded ? <PanelLeftClose size={18} strokeWidth={1.75} aria-hidden="true" /> : <PanelLeftOpen size={18} strokeWidth={1.75} aria-hidden="true" />}
+              {expanded ? (
+                <PanelLeftClose size={18} strokeWidth={1.75} aria-hidden="true" />
+              ) : (
+                <>
+                  <Logo size={32} className="group-hover:opacity-0 group-focus-visible:opacity-0" />
+                  <PanelLeftOpen
+                    size={18}
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                    className="absolute text-muted opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                  />
+                </>
+              )}
             </button>
           </div>
 
