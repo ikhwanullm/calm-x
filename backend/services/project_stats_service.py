@@ -12,6 +12,7 @@ from backend.schemas.item import NextTask, ProjectStats, ResourceStats
 
 
 def _utc(value: datetime | None) -> datetime | None:
+    """Aware UTC so activity moments of different tables can be compared (responses are made aware by ApiModel)."""
     if value is None or value.tzinfo is not None:
         return value
     return value.replace(tzinfo=timezone.utc)
@@ -109,8 +110,8 @@ def get_project_stats(
             overdue_task_count=overdue_n,
             waiting_task_count=waiting_n,
             next_task=best[pid][1] if pid in best else None,
-            next_meeting_at=_utc(next_meeting.get(pid)),
-            last_meeting_at=_utc(last_meeting.get(pid)),
+            next_meeting_at=next_meeting.get(pid),
+            last_meeting_at=last_meeting.get(pid),
             linked_resource_count=resources.get(pid, 0),
             last_activity_at=max(moments),
             project_count=project_counts.get(pid, 0),

@@ -4,7 +4,9 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
+
+from backend.schemas.base import ApiModel
 
 
 # ---------------------------------------------------------------------------
@@ -25,7 +27,7 @@ def _validate_url(v: object) -> object:
 # Reference Link schemas
 # ---------------------------------------------------------------------------
 
-class ReferenceLinkCreate(BaseModel):
+class ReferenceLinkCreate(ApiModel):
     url: str = Field(..., max_length=2000, description="http/https URL, max 2000 chars")
 
     @field_validator("url", mode="before")
@@ -34,7 +36,7 @@ class ReferenceLinkCreate(BaseModel):
         return _validate_url(v)
 
 
-class ReferenceLinkResponse(BaseModel):
+class ReferenceLinkResponse(ApiModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -44,7 +46,7 @@ class ReferenceLinkResponse(BaseModel):
     created_at: datetime
 
 
-class ReferenceLinkReorder(BaseModel):
+class ReferenceLinkReorder(ApiModel):
     link_ids: list[int]
 
 
@@ -52,12 +54,12 @@ class ReferenceLinkReorder(BaseModel):
 # Resource Link schemas
 # ---------------------------------------------------------------------------
 
-class ResourceLinkCreate(BaseModel):
+class ResourceLinkCreate(ApiModel):
     """Body for POST /resources/{id}/link."""
     linked_item_id: int
 
 
-class ResourceLinkResponse(BaseModel):
+class ResourceLinkResponse(ApiModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -66,7 +68,7 @@ class ResourceLinkResponse(BaseModel):
     created_at: datetime
 
 
-class LinkedItemSummary(BaseModel):
+class LinkedItemSummary(ApiModel):
     """Summary of an item that is linked from a Resource."""
     id: int
     type: str
@@ -78,7 +80,7 @@ class LinkedItemSummary(BaseModel):
 # Type Conversion schemas
 # ---------------------------------------------------------------------------
 
-class TypeConversionPayload(BaseModel):
+class TypeConversionPayload(ApiModel):
     target_type: str = Field(..., description="project | area | resource")
     # Optional fields for target-type-specific data
     project_goal: Optional[str] = Field(default=None, max_length=500)
@@ -86,7 +88,7 @@ class TypeConversionPayload(BaseModel):
     area_maintenance_notes: Optional[str] = Field(default=None, max_length=1000)
 
 
-class TypeConversionPreview(BaseModel):
+class TypeConversionPreview(ApiModel):
     """Preview data returned before confirming a conversion."""
     current_type: str
     target_type: str

@@ -4,18 +4,19 @@ from __future__ import annotations
 from datetime import date
 from typing import List
 
-from pydantic import BaseModel
+
+from backend.schemas.base import ApiModel
 
 from backend.schemas.meeting import MeetingSummary
 from backend.schemas.task import TaskResponse
 
 
-class DeadlineEntry(BaseModel):
+class DeadlineEntry(ApiModel):
     id: int
     title: str
 
 
-class CalendarDay(BaseModel):
+class CalendarDay(ApiModel):
     date: date
     meetings: List[MeetingSummary]
     due: List[TaskResponse]
@@ -24,7 +25,7 @@ class CalendarDay(BaseModel):
     starts: List[TaskResponse]
 
 
-class CalendarWeekResponse(BaseModel):
+class CalendarWeekResponse(ApiModel):
     """Seven consecutive days starting on the requested Monday."""
 
     days: List[CalendarDay]

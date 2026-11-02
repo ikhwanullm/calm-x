@@ -4,14 +4,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
+
+from backend.schemas.base import ApiModel
 
 
 # ---------------------------------------------------------------------------
 # Review completion
 # ---------------------------------------------------------------------------
 
-class WeeklyReviewComplete(BaseModel):
+class WeeklyReviewComplete(ApiModel):
     """Payload for POST /api/weekly-review/complete."""
 
     notes: str = Field(default="", max_length=500)
@@ -24,7 +26,7 @@ class WeeklyReviewComplete(BaseModel):
         return v
 
 
-class WeeklyReviewResponse(BaseModel):
+class WeeklyReviewResponse(ApiModel):
     """Response for a completed review record."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -38,7 +40,7 @@ class WeeklyReviewResponse(BaseModel):
 # Review status
 # ---------------------------------------------------------------------------
 
-class ReviewStatusResponse(BaseModel):
+class ReviewStatusResponse(ApiModel):
     """GET /api/weekly-review/status response."""
 
     last_review_date: Optional[str]        # YYYY-MM-DD local date, or None
@@ -49,7 +51,7 @@ class ReviewStatusResponse(BaseModel):
 # Inbox step
 # ---------------------------------------------------------------------------
 
-class ReviewTaskItem(BaseModel):
+class ReviewTaskItem(ApiModel):
     """One inbox task shown during the review."""
 
     id: int
@@ -63,7 +65,7 @@ class ReviewTaskItem(BaseModel):
 # Projects step
 # ---------------------------------------------------------------------------
 
-class ReviewProjectItem(BaseModel):
+class ReviewProjectItem(ApiModel):
     """One active project shown during review."""
 
     id: int
@@ -84,7 +86,7 @@ class ReviewProjectItem(BaseModel):
 # Areas step
 # ---------------------------------------------------------------------------
 
-class ReviewAreaItem(BaseModel):
+class ReviewAreaItem(ApiModel):
     """One active area shown during review."""
 
     id: int
@@ -100,7 +102,7 @@ class ReviewAreaItem(BaseModel):
 # Resources step
 # ---------------------------------------------------------------------------
 
-class ReviewResourceItem(BaseModel):
+class ReviewResourceItem(ApiModel):
     """One active resource shown during review."""
 
     id: int
@@ -115,7 +117,7 @@ class ReviewResourceItem(BaseModel):
 # History
 # ---------------------------------------------------------------------------
 
-class WeeklyReviewHistoryResponse(BaseModel):
+class WeeklyReviewHistoryResponse(ApiModel):
     """GET /api/weekly-review/history response — list of past reviews."""
 
     reviews: List[WeeklyReviewResponse]

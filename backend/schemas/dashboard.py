@@ -8,10 +8,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+
+from backend.schemas.base import ApiModel
 
 
-class MeetingToProcess(BaseModel):
+class MeetingToProcess(ApiModel):
     id: int
     title: str
     held_at: datetime
@@ -21,7 +22,7 @@ class MeetingToProcess(BaseModel):
     open_action_count: int
 
 
-class StaleWaiting(BaseModel):
+class StaleWaiting(ApiModel):
     id: int
     title: str
     waiting_for: str
@@ -32,7 +33,7 @@ class StaleWaiting(BaseModel):
     item_type: Optional[str] = None     # "project" | "area" | None for the Inbox
 
 
-class AttentionProject(BaseModel):
+class AttentionProject(ApiModel):
     id: int
     title: str
     # overdue_tasks | deadline_passed | deadline_soon | stale | no_open_tasks
@@ -44,7 +45,7 @@ class AttentionProject(BaseModel):
     days_inactive: int
 
 
-class DashboardCounts(BaseModel):
+class DashboardCounts(ApiModel):
     active_projects: int
     areas: int
     resources: int
@@ -52,7 +53,7 @@ class DashboardCounts(BaseModel):
     someday: int
 
 
-class DashboardSchema(BaseModel):
+class DashboardSchema(ApiModel):
     inbox_count: int
     last_review_date: Optional[str]          # YYYY-MM-DD or None
     days_since_review: Optional[int]

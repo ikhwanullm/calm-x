@@ -4,7 +4,9 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Annotated, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
+
+from backend.schemas.base import ApiModel
 
 
 # ---------------------------------------------------------------------------
@@ -22,7 +24,7 @@ def _calculate_progress(completed: int, total: int) -> int:
 # Create schemas
 # ---------------------------------------------------------------------------
 
-class ProjectCreate(BaseModel):
+class ProjectCreate(ApiModel):
     type: Literal["project"]
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(default="", max_length=5000)
@@ -37,7 +39,7 @@ class ProjectCreate(BaseModel):
         return v.strip() if isinstance(v, str) else v
 
 
-class AreaCreate(BaseModel):
+class AreaCreate(ApiModel):
     type: Literal["area"]
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(default="", max_length=5000)
@@ -50,7 +52,7 @@ class AreaCreate(BaseModel):
         return v.strip() if isinstance(v, str) else v
 
 
-class ResourceCreate(BaseModel):
+class ResourceCreate(ApiModel):
     type: Literal["resource"]
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(default="", max_length=5000)
@@ -73,7 +75,7 @@ ItemCreateUnion = Annotated[
 # Update schema
 # ---------------------------------------------------------------------------
 
-class ItemUpdate(BaseModel):
+class ItemUpdate(ApiModel):
     """Partial update schema — all fields are optional."""
 
     title: Optional[str] = Field(default=None, min_length=1, max_length=200)
@@ -96,13 +98,13 @@ class ItemUpdate(BaseModel):
 # Type-specific response schemas
 # ---------------------------------------------------------------------------
 
-class NextTask(BaseModel):
+class NextTask(ApiModel):
     id: int
     title: str
     due_date: Optional[date] = None
 
 
-class ProjectStats(BaseModel):
+class ProjectStats(ApiModel):
     """Numbers for a Projects list card; only sent when the list is asked for with `today`."""
 
     open_task_count: int
@@ -116,7 +118,7 @@ class ProjectStats(BaseModel):
     project_count: int = 0       # Areas: active projects in the Area
 
 
-class ProjectResponse(BaseModel):
+class ProjectResponse(ApiModel):
     """Response schema for Project items."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -142,7 +144,7 @@ class ProjectResponse(BaseModel):
     stats: Optional[ProjectStats] = None
 
 
-class AreaResponse(BaseModel):
+class AreaResponse(ApiModel):
     """Response schema for Area items."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -161,14 +163,14 @@ class AreaResponse(BaseModel):
     stats: Optional[ProjectStats] = None
 
 
-class ResourceStats(BaseModel):
+class ResourceStats(ApiModel):
     """Numbers for a Resources list card; only sent when the list is asked for with `today`."""
 
     reference_link_count: int
     linked_item_count: int       # active Projects and Areas this Resource is linked to
 
 
-class ResourceResponse(BaseModel):
+class ResourceResponse(ApiModel):
     """Response schema for Resource items."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -190,7 +192,7 @@ class ResourceResponse(BaseModel):
 # Flat response used by the router (covers all item types in one schema)
 # ---------------------------------------------------------------------------
 
-class ItemResponse(BaseModel):
+class ItemResponse(ApiModel):
     """Flat response schema covering all item types. Used by the API router."""
 
     model_config = ConfigDict(from_attributes=True)

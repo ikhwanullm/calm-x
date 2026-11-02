@@ -31,13 +31,6 @@ from backend.services.meeting_parser import ParsedMeeting, mark_converted, parse
 MAX_TITLE = 200
 
 
-def _utc(value: datetime | None) -> datetime | None:
-    """Aware UTC for responses (values just written are naive UTC)."""
-    if value is None or value.tzinfo is not None:
-        return value
-    return value.replace(tzinfo=timezone.utc)
-
-
 def _naive_utc(value: datetime) -> datetime:
     """Naive UTC for storage; a naive input is taken to be UTC already."""
     if value.tzinfo is None:
@@ -61,8 +54,8 @@ def _summary_fields(session: Session, m: Meeting) -> dict:
     return dict(
         id=m.id, item_id=m.item_id, item_title=item.title, item_type=item.type,
         item_archived=item.archived_at is not None,
-        title=m.title, held_at=_utc(m.held_at), attendees=m.attendees,
-        processed_at=_utc(m.processed_at), updated_at=_utc(m.updated_at),
+        title=m.title, held_at=m.held_at, attendees=m.attendees,
+        processed_at=m.processed_at, updated_at=m.updated_at,
         open_action_count=_open_action_count(parse_meeting(m.body)),
     )
 
@@ -72,7 +65,7 @@ def to_summary(session: Session, m: Meeting) -> MeetingSummary:
 
 
 def to_response(session: Session, m: Meeting) -> MeetingResponse:
-    return MeetingResponse(**_summary_fields(session, m), body=m.body, created_at=_utc(m.created_at))
+    return MeetingResponse(**_summary_fields(session, m), body=m.body, created_at=m.created_at)
 
 
 def _guard_item_accepts_meetings(item: Item | None, item_id: int) -> Item:
@@ -254,7 +247,7 @@ def get_carry_over(session: Session, item_id: int) -> CarryOverResponse | None:
         select(Task).where(Task.meeting_id == previous.id, Task.is_complete == 0).order_by(Task.created_at, Task.id)
     ).scalars().all()
     return CarryOverResponse(
-        meeting_id=previous.id, title=previous.title, held_at=_utc(previous.held_at),
+        meeting_id=previous.id, title=previous.title, held_at=previous.held_at,
         questions=[q.text for q in parse_meeting(previous.body).questions],
         open_tasks=[CarryOverTask(id=t.id, title=t.title, waiting_for=t.waiting_for) for t in open_tasks],
     )

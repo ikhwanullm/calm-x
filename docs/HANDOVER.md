@@ -7,17 +7,18 @@ before any new feature.
 
 ## Where things stand
 
-- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. Foundation round parts 1 (`ec8ef37`, completed_at) and 2 (old plans) are committed locally, not pushed.
+- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. Foundation round parts 1 (`ec8ef37`, completed_at), 2 (old plans) and 3 (UTC datetimes) are committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and upgrades to 009 on the next app start.
-- Tests at the last commit: backend 623 passed, frontend 1094 passed (84 files), `tsc -b` clean.
+- Tests at the last commit: backend 628 passed, frontend 1094 passed (84 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
-| (newest) | Foundation part 2: "Planned earlier" block on Today (Keep for today / Remove from Today / Clear all with Undo) |
+| (newest) | Foundation part 3: every API datetime is timezone-aware (`schemas/base.py` `ApiModel`) |
+| `a0825af` | Foundation part 2: "Planned earlier" block on Today (Keep for today / Remove from Today / Clear all with Undo) |
 | `ec8ef37` | Foundation part 1: `tasks.completed_at` (migration 009), "Completed …" in the task drawer, All tasks sort "Recently completed" |
 | `be2fc2d` | Searchable project/area picker (`ItemPicker`) replaces long dropdowns |
 | `319ed78` | Smart capture (due date, priority, tags, project from the text; several lines at once) and Inbox row/bulk triage actions |
@@ -90,7 +91,14 @@ Decision proposed: **never clear plans silently**; show them and let the owner d
 - The week view strip counts only today's plans for today; old plans are not drawn on past days.
 - Dashboard: nothing new.
 
-### Part 3: timezone-aware datetimes in every response
+### Part 3: timezone-aware datetimes in every response — DONE
+
+Built as specified below: `backend/schemas/base.py` `ApiModel` (a wrap field serializer that makes a naive datetime UTC-aware); every schema in
+`backend/schemas/` inherits it, and **new schemas must too**. `task_service._as_utc` and `meeting_service._utc` are gone. `project_stats_service._utc`
+stays only to compare activity moments of different tables. `backend/tests/test_api_datetimes_utc.py` walks the responses of ~50 endpoints
+right after writes and fails on any datetime string without `Z`/offset (it found two real ones: reference links and subtasks). Request/response
+models defined inside `api/backup.py`, `api/settings.py`, `api/tasks.py` still derive from plain `BaseModel` (they have no datetimes except the
+backup list, which is built from aware values).
 
 Item (Project/Area/Resource) responses still send naive datetimes right after a write. Fix it once, not per field:
 a shared Pydantic base (e.g. `schemas/base.py` `ApiModel`) with a serializer that turns any naive `datetime` into
@@ -153,9 +161,9 @@ Migrations: after starting on the copy, compare row counts of every table before
 - **CSRF**: non-GET requests need header `X-Calm-X: 1` (and an allowed Origin if one is sent).
 - **Dates**: anything "today"-relative takes the client's local date as `?today=YYYY-MM-DD`
   (dashboard, weekly review, `/api/tasks/today`). Archive date filters send ISO datetimes with offset.
-- **Datetimes**: `models.utils.now_utc()` returns *naive* UTC; `UTCDateTime` adds UTC on load. So a value you just
-  wrote serializes without `Z`. `task_service._as_utc()` fixes that for task responses; follow the same idea for new
-  datetime fields (the browser reads a bare ISO string as local time).
+- **Datetimes**: `models.utils.now_utc()` returns *naive* UTC; `UTCDateTime` adds UTC on load. A value you just wrote is still
+  naive in memory, so every response schema derives from `schemas.base.ApiModel`, which makes any naive datetime aware
+  (the browser reads a bare ISO string as local time). Derive new schemas from `ApiModel`, not `BaseModel`.
 - **Archived items are read-only** (guards in `services/guards.py`); only `delete_item` bypasses them.
 - **Limits**: 100 tasks per Project/Area (Inbox unlimited), 20 tags per task, 50 tasks per template,
   50 reference links per item, 20 resource links per resource.
@@ -459,8 +467,6 @@ Also from the 2026-10-29 review, after the safety round:
   design it with the owner first.
 - "Planned for today" never expires: show "planned since …" and offer to clear old plans, or reset daily.
 - Search and tag filters ignore Someday/Defer: label them in results or hide by default with a toggle.
-- Item (Project/Area/Resource) responses still send naive datetimes right after a write; fix once for all responses
-  (e.g. a shared serializer) instead of per field like `task_service._as_utc`.
 - `requirements.md` / `design.md` don't describe the features built after v1; `HANDOVER.md` is the source of truth.
 - Performance later: 3–4 queries per task in list responses (subtask counts, tags, item); frontend tests take
   5–10 min because jsdom is created per file (vitest pool/isolation settings); 811 kB bundle could use route lazy loading.

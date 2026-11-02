@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
+
+from backend.schemas.base import ApiModel
 
 
-class TagCreate(BaseModel):
+class TagCreate(ApiModel):
     name: str = Field(..., min_length=1, max_length=50)
 
     @field_validator("name", mode="before")
@@ -18,7 +20,7 @@ class TagCreate(BaseModel):
         return v
 
 
-class TagRename(BaseModel):
+class TagRename(ApiModel):
     name: str = Field(..., min_length=1, max_length=50)
 
     @field_validator("name", mode="before")
@@ -30,7 +32,7 @@ class TagRename(BaseModel):
         return v
 
 
-class TagResponse(BaseModel):
+class TagResponse(ApiModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int

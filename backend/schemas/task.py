@@ -4,7 +4,9 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
+
+from backend.schemas.base import ApiModel
 
 
 # ---------------------------------------------------------------------------
@@ -24,7 +26,7 @@ def _strip_title(v: object) -> object:
 # Subtask schemas
 # ---------------------------------------------------------------------------
 
-class SubtaskCreate(BaseModel):
+class SubtaskCreate(ApiModel):
     title: str = Field(..., max_length=200)
 
     @field_validator("title", mode="before")
@@ -33,7 +35,7 @@ class SubtaskCreate(BaseModel):
         return _strip_title(v)
 
 
-class SubtaskUpdate(BaseModel):
+class SubtaskUpdate(ApiModel):
     title: Optional[str] = Field(default=None, max_length=200)
 
     @field_validator("title", mode="before")
@@ -44,7 +46,7 @@ class SubtaskUpdate(BaseModel):
         return _strip_title(v)
 
 
-class SubtaskResponse(BaseModel):
+class SubtaskResponse(ApiModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -60,7 +62,7 @@ class SubtaskResponse(BaseModel):
 # Task schemas
 # ---------------------------------------------------------------------------
 
-class TaskCreate(BaseModel):
+class TaskCreate(ApiModel):
     title: str = Field(..., max_length=200)
     item_id: Optional[int] = None
     description: str = Field(default="", max_length=5000)
@@ -85,7 +87,7 @@ class TaskCreate(BaseModel):
         return v or []
 
 
-class TaskUpdate(BaseModel):
+class TaskUpdate(ApiModel):
     """Partial update schema — only provided fields are applied."""
 
     model_config = ConfigDict(extra="ignore")
@@ -130,7 +132,7 @@ class TaskUpdate(BaseModel):
         return _strip_title(v)
 
 
-class TaskResponse(BaseModel):
+class TaskResponse(ApiModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -160,7 +162,7 @@ class TaskResponse(BaseModel):
     meeting_held_at: Optional[datetime] = None
 
 
-class TodayResponse(BaseModel):
+class TodayResponse(ApiModel):
     """Open tasks for the Today view, each task in at most one list."""
 
     overdue: List[TaskResponse]
@@ -173,13 +175,13 @@ class TodayResponse(BaseModel):
 # Payload schemas (move / reorder)
 # ---------------------------------------------------------------------------
 
-class TaskMovePayload(BaseModel):
+class TaskMovePayload(ApiModel):
     """Payload for moving a task to an item or to the Inbox (item_id=None)."""
 
     item_id: Optional[int] = None
 
 
-class TaskReorderPayload(BaseModel):
+class TaskReorderPayload(ApiModel):
     """Payload for reordering tasks within a list."""
 
     task_ids: List[int]

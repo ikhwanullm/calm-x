@@ -1,7 +1,7 @@
 """Task management service."""
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date
 from typing import Optional
 
 from sqlalchemy import func, select
@@ -25,13 +25,6 @@ def _guard_not_resource(item: Item | None) -> None:
             "Resources cannot have tasks. Convert to Project or Area first.",
             detail=f"item_id={item.id}",
         )
-
-
-def _as_utc(value: datetime | None) -> datetime | None:
-    """Values just written are naive UTC (see now_utc); loaded ones are aware. Return aware UTC."""
-    if value is None or value.tzinfo is not None:
-        return value
-    return value.replace(tzinfo=timezone.utc)
 
 
 def _task_to_response(session: Session, task: Task) -> TaskResponse:
@@ -62,22 +55,22 @@ def _task_to_response(session: Session, task: Task) -> TaskResponse:
         priority=task.priority,
         is_complete=bool(task.is_complete),
         sort_order=task.sort_order,
-        created_at=_as_utc(task.created_at),
-        updated_at=_as_utc(task.updated_at),
+        created_at=task.created_at,
+        updated_at=task.updated_at,
         subtask_count=total_subs,
         completed_subtask_count=done_subs,
         tags=tag_names,
         focus_date=task.focus_date,
         waiting_for=task.waiting_for,
-        waiting_since=_as_utc(task.waiting_since),
-        completed_at=_as_utc(task.completed_at),
+        waiting_since=task.waiting_since,
+        completed_at=task.completed_at,
         defer_until=task.defer_until,
         is_someday=bool(task.is_someday),
         item_title=task.item.title if task.item is not None else None,
         item_type=task.item.type if task.item is not None else None,
         meeting_id=task.meeting_id,
         meeting_title=meeting.title if meeting is not None else None,
-        meeting_held_at=_as_utc(meeting.held_at) if meeting is not None else None,
+        meeting_held_at=meeting.held_at if meeting is not None else None,
     )
 
 

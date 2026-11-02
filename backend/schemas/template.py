@@ -4,7 +4,9 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
+
+from backend.schemas.base import ApiModel
 
 
 # ---------------------------------------------------------------------------
@@ -24,7 +26,7 @@ def _strip_title(v: object) -> object:
 # TemplateTask schemas
 # ---------------------------------------------------------------------------
 
-class TemplateTaskBase(BaseModel):
+class TemplateTaskBase(ApiModel):
     title: str = Field(..., max_length=200)
     description: str = Field(default="", max_length=5000)
     priority: Literal["high", "medium", "low"] = "medium"
@@ -41,7 +43,7 @@ class TemplateTaskCreate(TemplateTaskBase):
     pass
 
 
-class TemplateTaskUpdate(BaseModel):
+class TemplateTaskUpdate(ApiModel):
     """Schema for updating an existing template task."""
 
     model_config = ConfigDict(extra="ignore")
@@ -59,7 +61,7 @@ class TemplateTaskUpdate(BaseModel):
         return _strip_title(v)
 
 
-class TemplateTaskResponse(BaseModel):
+class TemplateTaskResponse(ApiModel):
     """Schema for template task response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -77,7 +79,7 @@ class TemplateTaskResponse(BaseModel):
 # Template schemas
 # ---------------------------------------------------------------------------
 
-class TemplateBase(BaseModel):
+class TemplateBase(ApiModel):
     title: str = Field(..., max_length=100)
     description: str = Field(default="", max_length=500)
 
@@ -100,7 +102,7 @@ class TemplateCreate(TemplateBase):
         return v
 
 
-class TemplateUpdate(BaseModel):
+class TemplateUpdate(ApiModel):
     """Schema for updating an existing template."""
 
     model_config = ConfigDict(extra="ignore")
@@ -116,7 +118,7 @@ class TemplateUpdate(BaseModel):
         return _strip_title(v)
 
 
-class TemplateResponse(BaseModel):
+class TemplateResponse(ApiModel):
     """Schema for template response (without tasks)."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -139,7 +141,7 @@ class TemplateDetailResponse(TemplateResponse):
 # CreateProjectFromTemplate schema
 # ---------------------------------------------------------------------------
 
-class CreateProjectFromTemplatePayload(BaseModel):
+class CreateProjectFromTemplatePayload(ApiModel):
     """Payload for creating a project from a template."""
 
     title: str = Field(..., max_length=200)
@@ -158,7 +160,7 @@ class CreateProjectFromTemplatePayload(BaseModel):
 # TemplateTask reorder schema
 # ---------------------------------------------------------------------------
 
-class TemplateTaskReorderPayload(BaseModel):
+class TemplateTaskReorderPayload(ApiModel):
     """Payload for reordering template tasks."""
 
     task_ids: List[int]
