@@ -15,7 +15,51 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
 
 ## Next up
 
-**Nothing is queued.** The owner first uses the features marked "chosen by me" for about a week (Areas/Resources lists,
+### Typography and app identity (chosen by the owner 2026-11-02, from a mockup in the brainstorming session)
+
+Two commits: font first, then logo + favicon. **Look only**: no layout, size or behaviour changes beyond what is listed.
+Found while designing: Inter is loaded from Google Fonts in `frontend/index.html`, so offline the app silently falls back to
+Segoe UI and every start contacts Google; there is no favicon link (`public/favicon.svg` is Vite's purple default and unused);
+`public/icons.svg` is a Vite template leftover (Bluesky/social icons); the sidebar logo is plain text and disappears when collapsed.
+
+**Part 1: Plus Jakarta Sans, bundled locally**
+
+- Add `@fontsource-variable/plus-jakarta-sans` (one variable file covers all weights) and import it once in `main.tsx`.
+  Remove the three Google Fonts tags (`preconnect` x2 and the stylesheet) from `index.html`. After this the app makes no
+  request to any other host; check the Network panel on a scratch build.
+- Font stack everywhere it is set (`tailwind.config.ts` `fontFamily.sans`, `index.css` body):
+  `'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif`.
+- Keep every size, weight and letter-spacing from `ui-guidelines.md` §3 Typography; only the family changes. Update that
+  section's "Font:" line (and say it is bundled with @fontsource, never loaded from a CDN).
+- `tabular-nums` must still line up numbers (counts, %, dates in the week strip and lists). Check that the font has
+  tabular figures. If it does not, stop and tell the owner; do not mix in a second font for numbers.
+- Plus Jakarta Sans is a little wider than Inter. Check, at 1280px and at 768px, in light and dark: sidebar labels, the
+  week strip day cells and chips, Projects cards, the task drawer header, the Weekly Review step bar (eight labels on one
+  line), toasts, the command palette. Fix only real overflow/wrapping (truncate, not smaller text).
+- Test: a guard test that `index.html` contains no `fonts.googleapis.com` / `fonts.gstatic.com`.
+
+**Part 2: logo and favicon**
+
+- Mark: a rounded square (rx 8 on a 32 grid) in the accent color with a white open "C" arc and a check mark inside
+  (the "Monogram C + check" from the mockup). Draw it as a small inline SVG component `components/common/Logo.tsx`
+  (`size` prop, `aria-hidden`; the wordmark text next to it carries the name). Colors from tokens: square `var(--accent)`,
+  strokes `var(--accent-fg)`, so it follows dark mode. Strokes slightly thicker at 16px so it stays readable.
+  Reference geometry (32x32): square `rect 0 0 32 32 rx 8`; C `M21 10.5 a8 8 0 1 0 0 11` stroke 3; check
+  `M14 16 l2.5 2.5 L22 13` stroke 2.6; round caps and joins. Adjust by eye if needed; keep it simple.
+- Sidebar header, expanded: logo 24-28px + "Calm-X" wordmark (`font-semibold`, `tracking-tight`) on the left, collapse
+  button on the right, as now. Collapsed: show the logo centred; the logo itself is the expand button (`aria-label` and
+  `title` "Expand sidebar"), and on hover/focus it shows the `PanelLeftOpen` icon instead, so the header never has two
+  buttons squeezed into 56px. The overlay mode (< 1280px) follows the same rule.
+- Favicon: replace `public/favicon.svg` with the same mark in fixed colors (`#3B5BDB` square, white strokes; an SVG
+  `@media (prefers-color-scheme: dark)` block may switch to the dark accent `#8EA2FF` with `#10142B` strokes). Add
+  `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />` to `index.html`. The backend already serves root files from
+  `dist` (`main._safe_static_file`); confirm `/favicon.svg` returns 200 on the scratch server and the tab shows it.
+- Delete `public/icons.svg` after grepping that nothing references it.
+- Not in this round: an installable app icon/manifest, a logo on other pages, a loading splash.
+
+### After that
+
+**Nothing else is queued.** The owner first uses the features marked "chosen by me" for about a week (Areas/Resources lists,
 detail page, Dashboard, 8-step Weekly Review) and gives feedback. Next design candidates, to be designed with the owner:
 recurring tasks, Done log + weekly status report (can use `tasks.completed_at`), Inbox "one by one" mode.
 
