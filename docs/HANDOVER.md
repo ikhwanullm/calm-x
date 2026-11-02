@@ -413,7 +413,7 @@ Order is now Inbox, Meetings, **Waiting for**, Projects, Areas, Resources, **Som
 
 - **Capture syntax** (`utils/capture.ts`, pure and tested): `!high|!medium|!low` (also `!h/!m/!l`, `!tinggi/!sedang/!rendah`), `#tag`,
   `@name` or `@"two words"` for a project or area, and a due date as `today/hari ini`, `tomorrow/besok`, `lusa`, a weekday in English or
-  Indonesian (the next one after today, never today itself), `+3d`/`+2w` or `2026-11-05`. A backslash keeps a word plain (`esok` stays `besok`). Only the
+  Indonesian (the next one after today, never today itself), `+3d`/`+2w` or `2026-11-05`. A backslash keeps a word plain (`\besok` stays `besok`). Only the
   first date and priority count. A marker that matches nothing stays in the title, and an `@name` that matches several projects is not guessed
   (exact title, else a whole word of exactly one title, else a part of exactly one). A line made only of markers keeps the whole line as the title.
   Completed projects are not offered.
