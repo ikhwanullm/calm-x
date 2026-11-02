@@ -7,7 +7,7 @@ Nothing new is queued: wait for the owner's feedback (see "After this round").
 
 ## Where things stand
 
-- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. The whole foundation round (parts 1-4, from `ec8ef37`) is committed locally, not pushed.
+- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. The whole foundation round (parts 1-4, `ec8ef37` to `a868009`) is pushed to `origin/main`.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and upgrades to 009 on the next app start.
