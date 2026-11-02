@@ -25,7 +25,7 @@ export const tasksApi = {
     deferred?: boolean
     from_meeting?: boolean
     today?: string
-    sort?: 'due' | 'priority' | 'project' | 'created' | 'updated'
+    sort?: 'due' | 'priority' | 'project' | 'created' | 'updated' | 'completed'
     order?: 'asc' | 'desc'
   }) =>
     apiClient.get<Task[]>('/tasks', { params }).then(r => r.data),

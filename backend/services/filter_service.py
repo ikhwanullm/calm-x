@@ -15,7 +15,7 @@ from backend.services.task_service import _task_to_response
 VALID_PRIORITIES = {"high", "medium", "low"}
 VALID_CATEGORIES = {"project", "area", "inbox"}
 VALID_STATUS = {"open", "completed", "all"}
-VALID_SORTS = {"due", "priority", "project", "created", "updated"}
+VALID_SORTS = {"due", "priority", "project", "created", "updated", "completed"}
 VALID_ORDERS = {"asc", "desc"}
 _PRIORITY_RANK = {"high": 0, "medium": 1, "low": 2}
 
@@ -36,6 +36,9 @@ def _sort_tasks(tasks: list[Task], sort: str, order: str) -> list[Task]:
             return (t.due_date is None, (t.due_date.toordinal() * sign) if t.due_date else 0, t.id)
         if sort == "priority":
             return (False, _PRIORITY_RANK.get(t.priority, 1) * sign, t.id)
+        if sort == "completed":
+            # Tasks without a completion date (open ones, or completed before it was recorded) always come last
+            return (t.completed_at is None, (t.completed_at.timestamp() * sign) if t.completed_at else 0, t.id)
         stamp = (t.created_at if sort == "created" else t.updated_at).timestamp()
         return (False, stamp * sign, t.id)
 
@@ -71,7 +74,7 @@ def filter_tasks(
     all) replaces `include_complete`; `waiting`, `someday`, `deferred` and `from_meeting` are
     tri-state (True = only those, False = leave those out, None = don't care); "deferred" means
     not started yet (defer_until after `today`, the client's local date). `sort` (due, priority,
-    project, created, updated) with `order` reorders the result; without it the legacy order stays.
+    project, created, updated, completed) with `order` reorders the result; without it the legacy order stays.
     """
     if status is not None and status not in VALID_STATUS:
         raise ValidationError(f"Unknown status: {status!r}", detail=f"Valid values: {sorted(VALID_STATUS)}")

@@ -42,6 +42,7 @@ def _reevaluate_task_status(session: Session, task: Task) -> None:
     new_status = 1 if all_done else 0
     if task.is_complete != new_status:
         task.is_complete = new_status
+        task.completed_at = now_utc() if new_status else None
         task.updated_at = now_utc()
         # Propagate to parent item
         if task.item_id is not None:
@@ -89,6 +90,7 @@ def create_subtask(session: Session, task_id: int, data: SubtaskCreate) -> Subta
     # R8.10: Adding subtask to complete task -> mark task incomplete
     if task.is_complete:
         task.is_complete = 0
+        task.completed_at = None
         task.updated_at = now
         if task.item_id is not None:
             item = session.get(Item, task.item_id)
@@ -161,6 +163,7 @@ def mark_subtask_incomplete(session: Session, subtask_id: int) -> SubtaskRespons
     # Always mark parent incomplete when any subtask goes incomplete (R8.7)
     if task.is_complete:
         task.is_complete = 0
+        task.completed_at = None
         task.updated_at = now
         if task.item_id is not None:
             item = session.get(Item, task.item_id)

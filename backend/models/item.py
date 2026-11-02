@@ -124,6 +124,8 @@ class Task(Base):
     defer_until: Mapped[Date | None] = mapped_column(Date, nullable=True)
     # Parked idea, kept out of Today (0/1)
     is_someday: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    # When the task was marked complete (None = open, or completed before this was recorded)
+    completed_at: Mapped[UTCDateTime | None] = mapped_column(UTCDateTime, nullable=True)
     # Meeting this task was created from (None = not from a meeting)
     meeting_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("meetings.id", ondelete="SET NULL"), nullable=True

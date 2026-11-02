@@ -3,7 +3,7 @@ import { tasksApi } from "../api/tasks"
 import { getLocalToday } from "../utils/date"
 
 export type TaskStatus = "open" | "completed" | "all"
-export type TaskSort = "due" | "priority" | "project" | "created" | "updated"
+export type TaskSort = "due" | "priority" | "project" | "created" | "updated" | "completed"
 
 export interface FilterParams {
   tagIds?: number[]
@@ -48,6 +48,8 @@ export function useFilteredTasks(params: TaskListParams, enabled = true) {
         deferred: params.deferred ? true : params.hideParked ? false : undefined,
         from_meeting: params.fromMeeting ? true : undefined,
         sort: params.sort,
+        // Newest first; tasks without a completion date always come last
+        ...(params.sort === 'completed' ? { order: 'desc' as const } : {}),
         today,
       }),
     enabled,

@@ -56,7 +56,7 @@ def list_all_tasks(
     deferred: Optional[bool] = Query(default=None, description="true: only not-yet-started tasks; false: leave them out (needs today)"),
     from_meeting: Optional[bool] = Query(default=None, description="true: only tasks made from a meeting; false: leave them out"),
     today: Optional[date] = Query(default=None, description="Client local date YYYY-MM-DD, for the deferred filter"),
-    sort: Optional[str] = Query(default=None, description="due|priority|project|created|updated"),
+    sort: Optional[str] = Query(default=None, description="due|priority|project|created|updated|completed"),
     order: str = Query(default="asc", description="asc|desc"),
 ):
     """List tasks with optional filters. Supports tag/priority/date/category filtering."""

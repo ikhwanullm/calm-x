@@ -70,6 +70,7 @@ def _task_to_response(session: Session, task: Task) -> TaskResponse:
         focus_date=task.focus_date,
         waiting_for=task.waiting_for,
         waiting_since=_as_utc(task.waiting_since),
+        completed_at=_as_utc(task.completed_at),
         defer_until=task.defer_until,
         is_someday=bool(task.is_someday),
         item_title=task.item.title if task.item is not None else None,
@@ -299,9 +300,13 @@ def mark_complete(session: Session, task_id: int) -> TaskResponse:
     parent = session.get(Item, task.item_id) if task.item_id else None
     guard_task_item_not_archived(parent)
 
+    now = now_utc()
+    if not task.is_complete:
+        # Completing a task that is already complete changes nothing: it keeps its first date (or none, for
+        # a task completed before the date was recorded)
+        task.completed_at = now
     task.is_complete = 1
     # Auto-complete all subtasks
-    now = now_utc()
     for subtask in task.subtasks:
         subtask.is_complete = 1
         subtask.updated_at = now
@@ -323,6 +328,7 @@ def mark_incomplete(session: Session, task_id: int) -> TaskResponse:
     guard_task_item_not_archived(parent)
 
     task.is_complete = 0
+    task.completed_at = None
     now = now_utc()
     for subtask in task.subtasks:
         subtask.is_complete = 0

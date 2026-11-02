@@ -24,7 +24,7 @@ import { useItems } from '@/hooks/useItems'
 import { useTags } from '@/hooks/useTags'
 import type { TaskPriority } from '@/types/models'
 import { cn } from '@/lib/utils'
-import { formatAbsoluteDate, formatRelativeDate, getLocalToday, isoToLocalDateStr } from '@/utils/date'
+import { formatAbsoluteDate, formatLocalDateTime, formatRelativeDate, getLocalToday, isoToLocalDateStr } from '@/utils/date'
 
 export interface TaskDrawerProps {
   taskId: number | null
@@ -207,6 +207,18 @@ export function TaskDrawer({ taskId, onClose, onDeleted }: TaskDrawerProps) {
               )}
               {titleEdit.error && (
                 <p className="mt-1 text-xs text-danger-fg" role="alert">{titleEdit.error}</p>
+              )}
+              {task?.is_complete && task.completed_at && (
+                <p className="mt-0.5 text-xs text-muted">
+                  Completed{' '}
+                  <time
+                    dateTime={task.completed_at}
+                    title={formatLocalDateTime(task.completed_at)}
+                    className="underline decoration-dotted underline-offset-2"
+                  >
+                    {formatRelativeDate(isoToLocalDateStr(task.completed_at), getLocalToday()).toLowerCase()}
+                  </time>
+                </p>
               )}
             </div>
 

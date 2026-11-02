@@ -168,7 +168,8 @@ export interface Task {
   tags: string[]
   focus_date: string | null      // YYYY-MM-DD local date it was put on Today
   waiting_for: string | null     // who or what the task waits on
-  waiting_since: string | null   // ISO datetime (UTC)
+  waiting_since: string | null
+  completed_at: string | null    // when it was completed; null for open tasks and ones completed before this was recorded   // ISO datetime (UTC)
   defer_until: string | null     // YYYY-MM-DD local date the task starts
   is_someday: boolean            // parked idea
   meeting_id: number | null      // meeting the task was created from

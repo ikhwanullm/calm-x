@@ -135,3 +135,15 @@ def test_without_the_new_params_the_old_order_and_content_stay(client):
     _task(client, "parked", is_someday=True)
     _task(client, "plain")
     assert sorted(_list(client)) == ["parked", "plain"]
+
+
+def test_sort_by_completed_puts_the_newest_first_and_tasks_without_a_date_last(client):
+    import time
+    first = _task(client, "first done")
+    client.post(f"/api/tasks/{first['id']}/complete", headers=HEADERS)
+    time.sleep(0.02)
+    second = _task(client, "second done")
+    client.post(f"/api/tasks/{second['id']}/complete", headers=HEADERS)
+    _task(client, "still open")
+    assert _list(client, sort="completed", order="desc") == ["second done", "first done", "still open"]
+    assert _list(client, sort="completed", order="asc") == ["first done", "second done", "still open"]

@@ -10,6 +10,7 @@ export const TASK_SORTS: { value: TaskSort; label: string }[] = [
   { value: 'project', label: 'Project' },
   { value: 'created', label: 'Created' },
   { value: 'updated', label: 'Updated' },
+  { value: 'completed', label: 'Recently completed' },
 ]
 
 export const GROUPS: { value: GroupBy; label: string }[] = [

@@ -24,7 +24,7 @@ const baseTask: Task = {
   subtask_count: 2,
   completed_subtask_count: 1,
   tags: [],
-  focus_date: null, waiting_for: null, waiting_since: null, defer_until: null, is_someday: false, meeting_id: null, meeting_title: null, meeting_held_at: null, item_title: null, item_type: null,
+  focus_date: null, waiting_for: null, waiting_since: null, completed_at: null, defer_until: null, is_someday: false, meeting_id: null, meeting_title: null, meeting_held_at: null, item_title: null, item_type: null,
 }
 
 const subtasks: Subtask[] = [
@@ -265,5 +265,36 @@ describe('TaskDrawer', () => {
     await user.click(screen.getByRole('button', { name: 'Clear' }))
     expect(mockMutate).toHaveBeenCalledWith({ waiting_for: null })
     vi.mocked(useTask).mockReturnValue({ data: baseTask, isLoading: false } as unknown as ReturnType<typeof useTask>)
+  })
+
+  describe('completion date', () => {
+    const asComplete = (completed_at: string | null) =>
+      vi.mocked(useTask).mockReturnValue({
+        data: { ...baseTask, is_complete: true, completed_at }, isLoading: false,
+      } as unknown as ReturnType<typeof useTask>)
+
+    it('shows when a completed task was completed', () => {
+      asComplete(new Date().toISOString())
+      renderDrawer(1)
+      expect(screen.getByText(/^Completed/).textContent).toMatch(/^Completed today$/)
+    })
+
+    it('shows a relative day for an older completion', () => {
+      asComplete(new Date(Date.now() - 3 * 86_400_000).toISOString())
+      renderDrawer(1)
+      expect(screen.getByText(/^Completed/).textContent).toMatch(/^Completed 3 days ago$/)
+    })
+
+    it('shows nothing for a completed task whose date was never recorded', () => {
+      asComplete(null)
+      renderDrawer(1)
+      expect(screen.queryByText(/^Completed/)).toBeNull()
+    })
+
+    it('shows nothing for an open task', () => {
+      vi.mocked(useTask).mockReturnValue({ data: { ...baseTask, completed_at: null }, isLoading: false } as unknown as ReturnType<typeof useTask>)
+      renderDrawer(1)
+      expect(screen.queryByText(/^Completed/)).toBeNull()
+    })
   })
 })

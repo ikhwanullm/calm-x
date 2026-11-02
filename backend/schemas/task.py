@@ -150,6 +150,7 @@ class TaskResponse(BaseModel):
     focus_date: Optional[date] = None
     waiting_for: Optional[str] = None
     waiting_since: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
     defer_until: Optional[date] = None
     is_someday: bool = False
     item_title: Optional[str] = None
