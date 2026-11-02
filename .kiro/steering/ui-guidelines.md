@@ -89,7 +89,7 @@ Rules:
 
 ### Typography
 
-Font: **Inter** (400, 500, 600, 700), fallback `system-ui, -apple-system, sans-serif`.
+Font: **Plus Jakarta Sans** (variable, 400, 500, 600, 700), bundled with `@fontsource-variable/plus-jakarta-sans` and imported in `main.tsx`; never loaded from a CDN. Fallback `system-ui, -apple-system, 'Segoe UI', sans-serif`.
 Use `font-variant-numeric: tabular-nums` for counts, percentages and dates in tables.
 
 | Role | Size / line height | Weight | Extra |

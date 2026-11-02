@@ -118,10 +118,7 @@ export default function WeeklyReviewPage() {
     : ''
 
   return (
-    <div
-      className="flex flex-col min-h-screen bg-bg"
-      style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}
-    >
+    <div className="flex flex-col min-h-screen bg-bg">
       {/* Header */}
       <header className="flex flex-wrap items-center gap-3 px-8 py-3.5 bg-surface border-b border-border shrink-0">
         {/* Logo + title */}
