@@ -4,6 +4,7 @@ Calm-X is a local, single-user PARA task manager (FastAPI + SQLite backend, Reac
 The owner talks in **Indonesian**; reply in Indonesian, keep code, commits and docs in English.
 
 **Read `docs/HANDOVER.md` first.** It has the current state, architecture, gotchas and the next item to build.
+How each feature behaves is in `docs/features/` (read the file for the area you touch, and update it when you change it).
 
 ## Non-negotiable: the owner's real data
 

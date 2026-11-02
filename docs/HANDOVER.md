@@ -1,24 +1,57 @@
 # Calm-X handover
 
 Last updated 2026-11-02. Written for the next coding session; read `CLAUDE.md` first for the hard rules.
-
-**Nothing is queued.** The foundation round and the code health round (2026-11-02) are built. Wait for the owner's feedback
-on the features marked "chosen by me" before starting new features (see "After this round").
+This file is the entry point: status, what to build next, how to run and verify, architecture and gotchas.
+How each feature behaves is in `docs/features/`; finished work rounds are recorded in `docs/history/rounds.md`.
 
 ## Where things stand
 
-- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. The whole foundation round (parts 1-4, `ec8ef37` to `a868009`) is pushed to `origin/main`.
-- The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
-  Everything after that was added on top, directly in code (no spec files were updated for it).
-- Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and upgrades to 009 on the next app start.
-- Tests at the last commit: backend 632 passed, frontend 1120 passed (84 files, about 35-55 s), `tsc -b` clean.
-- The code health round (5 commits after `1bd2a03`) is committed locally and not pushed until the owner asks.
+- Everything up to the code health round (`69a7d7a`, docs `ebab360`) is pushed to `origin/main`.
+- The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built and archived.
+  Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
+- Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and
+  upgrades to 009 on the next app start.
+- Tests at the last code commit: backend 632 passed, frontend 1120 passed (84 files, about 35-55 s), `tsc -b` clean.
+
+## Next up
+
+**Nothing is queued.** The owner first uses the features marked "chosen by me" for about a week (Areas/Resources lists,
+detail page, Dashboard, 8-step Weekly Review) and gives feedback. Next design candidates, to be designed with the owner:
+recurring tasks, Done log + weekly status report (can use `tasks.completed_at`), Inbox "one by one" mode.
+
+Small fixes that may be done any time (one commit each; found in the 2026-11-02 review):
+
+- **Stale chunks after a rebuild.** Pages are lazy-loaded since the code health round. The launcher rebuilds `frontend/dist`
+  on start, so a browser tab left open from before the rebuild asks for chunk files that no longer exist and the page
+  fails to open (react-router's default error screen). Fix: listen for Vite's `vite:preloadError` event in `main.tsx` and
+  reload the page once (a `sessionStorage` flag prevents a reload loop), and give the router an `errorElement` with a
+  quiet "Calm-X was updated. Reload" message. Verify on a scratch build: open the app, rebuild into the same scratch dist with
+  a changed source, then open a page that was not loaded yet.
+- **"Planned earlier" buttons** (`components/today/PlannedEarlier.tsx`): Keep for today, Remove from Today and Clear all stay
+  clickable while saving (a double click gives two toasts); disable them while their request runs. Check the row at a narrow
+  width (task, label and two buttons on one line) and let the buttons wrap below the task if it is cramped.
+
+## Feature docs
+
+| File | Covers | Designed with the owner? |
+|---|---|---|
+| [`features/today-and-week.md`](features/today-and-week.md) | Today page, week strip, Planned earlier | Yes |
+| [`features/defer-someday.md`](features/defer-someday.md) | Defer until, Someday | Yes |
+| [`features/meetings.md`](features/meetings.md) | Meeting notes, carry-over, line syntax | Yes |
+| [`features/lists.md`](features/lists.md) | Projects, Areas, Resources, All tasks lists | Projects and All tasks yes; Areas and Resources chosen by me |
+| [`features/item-detail.md`](features/item-detail.md) | Project/Area/Resource page | Chosen by me |
+| [`features/dashboard.md`](features/dashboard.md) | Dashboard as an exceptions page | Chosen by me |
+| [`features/weekly-review.md`](features/weekly-review.md) | Waiting for and Someday steps, fixes to the old steps | Chosen by me |
+| [`features/capture-and-inbox.md`](features/capture-and-inbox.md) | Smart capture syntax, Inbox triage, `ItemPicker` | Asked for by the owner, details chosen by me |
+| [`history/rounds.md`](history/rounds.md) | Safety, foundation and code health rounds | Records |
+
+When you build or change a feature, update its file (or add one and list it here), and add a row to the table below.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
-| (newest) | Code health round, parts 1-5 (see "Code health round" below): faster tests, `TaskDrawer` and `ItemDetailView` split, task lists in fixed queries, lazy routes |
+| `bf7f813` to `69a7d7a` | Code health round, parts 1-5: faster tests, `TaskDrawer` and `ItemDetailView` split, task lists in fixed queries, lazy routes |
 | `a868009` | Foundation part 4: one refresh helper for task hooks, v1 spec files marked archived |
 | `155e2a9` | Foundation part 3: every API datetime is timezone-aware (`schemas/base.py` `ApiModel`) |
 | `a0825af` | Foundation part 2: "Planned earlier" block on Today (Keep for today / Remove from Today / Clear all with Undo) |
@@ -45,98 +78,6 @@ on the features marked "chosen by me" before starting new features (see "After t
 | `539e016` | "Linked resources" on Project/Area pages (`GET /api/items/{id}/linked-resources`) |
 | `b66df4e` | No deadline badges on archived projects or their tasks (R7.8) |
 | `d8d9c5d` | Project deadline: set at creation and edit inline |
-
-## Foundation round (chosen by the owner 2026-11-02; details proposed in the brainstorming session) — DONE
-
-Why: the next features the owner wants (Done log, weekly status report, recurring tasks) all need to know *when* a task
-was completed, and a few small data issues are felt daily. Build in this order, **one commit per part**, each verified with
-the recipe below. No new pages in this round.
-
-### Part 1: `tasks.completed_at` (migration 009) — DONE
-
-Built as specified below. Notes from the build: completing an already complete task changes nothing (a task completed before 009 keeps NULL even if
-"completed" again); the auto-complete/reopen paths in `subtask_service` (`_reevaluate_task_status`, `create_subtask`, `mark_subtask_incomplete`) set/clear it
-like `mark_complete`/`mark_incomplete`; `PUT /api/tasks/{id}` cannot set it; the filter API has `sort=completed` (with `order=desc` newest first,
-NULLs always last) and the UI sends `desc`. Checked on a copy of the real DB: its 12 completed tasks stayed NULL, row counts and foreign keys unchanged.
-
-- Migration `009_task_completed_at.py`: `ALTER TABLE tasks ADD COLUMN completed_at DATETIME` (plain ADD COLUMN, never
-  `batch_alter_table`). **No backfill**: tasks completed before 009 keep NULL ("completed, date unknown"). Do not guess it
-  from `updated_at`. Pin the revision in the migration test like 004/005 do.
-- Set it to `now_utc()` on every path that turns a task complete, and back to NULL on every path that reopens one:
-  `task_service.mark_complete` / `mark_incomplete`, and the auto-complete / auto-reopen in `subtask_service` (lines ~44, ~91, ~163).
-  Grep `is_complete = ` before finishing; a path that is missed makes the Done log lie. Completing an already complete task
-  keeps the first `completed_at`.
-- Carry it everywhere a task's columns travel: `TaskResponse` (aware UTC, `Z`), export and import (old export files
-  without the field import as NULL), undo snapshots and restore, template-to-project creation (new tasks start NULL).
-- Subtasks: not in this round.
-- UI, small only: the task drawer shows "Completed {relative date}" for a completed task with a date; All tasks gains the
-  sort "Recently completed" (completed tasks with a date first, newest first; NULLs last). Nothing else; the Done log and
-  the weekly report are designed later with the owner.
-- Tests: each complete/reopen path sets/clears it; export → import round trip keeps it; migration on a copy of a pre-009 DB
-  leaves existing rows NULL.
-
-### Part 2: old "Planned for today" plans — DONE
-
-Built as specified below (`components/today/PlannedEarlier.tsx`, `plannedLabel` in `utils/date.ts`). Details: the split is done in the browser from `get_today`'s
-`focused` list (a plan counts as "for today" when `focus_date >= today`); "Clear all" and its Undo are client-side (`tasksApi.update` per task; Undo
-restores each previous date; only the ones that were cleared are offered back); the week strip's `planned` list (`calendar_service`) now only holds
-`focus_date >= today`, so old plans are not drawn there. If only old plans exist, no "Nothing planned for today" message is shown.
-
-Problem: `focus_date` never expires, so a task added to Today last week still sits in "Planned for today" with no hint.
-Decision proposed: **never clear plans silently**; show them and let the owner decide in one click.
-
-- `get_today` already returns them in `focused`. The frontend splits that group: `focus_date == today` stays
-  "Planned for today"; `focus_date < today` goes to a small block **"Planned earlier (N)"** under it, each row with a chip
-  "Planned {weekday}" (or "Planned {d MMM}" if older than 6 days), sorted oldest first.
-- Per row: **Keep for today** (sets `focus_date` to today) and **Remove from Today** (clears `focus_date`). Block header:
-  **Clear all (N)** (clears all of them; one toast with Undo that puts each `focus_date` back; use a client-side undo that
-  re-PATCHes, no new server snapshot type needed).
-- The week view strip counts only today's plans for today; old plans are not drawn on past days.
-- Dashboard: nothing new.
-
-### Part 3: timezone-aware datetimes in every response — DONE
-
-Built as specified below: `backend/schemas/base.py` `ApiModel` (a wrap field serializer that makes a naive datetime UTC-aware); every schema in
-`backend/schemas/` inherits it, and **new schemas must too**. `task_service._as_utc` and `meeting_service._utc` are gone. `project_stats_service._utc`
-stays only to compare activity moments of different tables. `backend/tests/test_api_datetimes_utc.py` walks the responses of ~50 endpoints
-right after writes and fails on any datetime string without `Z`/offset (it found two real ones: reference links and subtasks). Request/response
-models defined inside `api/backup.py`, `api/settings.py`, `api/tasks.py` still derive from plain `BaseModel` (they have no datetimes except the
-backup list, which is built from aware values).
-
-Item (Project/Area/Resource) responses still send naive datetimes right after a write. Fix it once, not per field:
-a shared Pydantic base (e.g. `schemas/base.py` `ApiModel`) with a serializer that turns any naive `datetime` into
-UTC-aware before output, and make every response schema inherit it. Then remove `task_service._as_utc` and similar
-per-field patches. Test: create, update and fetch an item, a task and a meeting; every datetime string ends with `Z` or `+00:00`.
-
-### Part 4: small cleanups (one commit) — DONE
-
-Every hook in `hooks/useTasks.ts` (and `useTriage`) now calls the exported `refreshAfterTaskChange(qc)`; the v1 spec files carry an "archived" note. No behaviour change.
-
-- `hooks/useTasks.ts`: the same three `invalidateQueries` lines are repeated in about eight hooks; make every hook use
-  the existing `refreshAfterTaskChange(qc)` helper. No behaviour change.
-- Add a note at the top of `.kiro/specs/para-task-manager/requirements.md` and `design.md`: "v1 spec, archived; current
-  behaviour is in `docs/HANDOVER.md`".
-
-### After this round (do not start without the owner)
-
-Owner will first use the features marked "chosen by me" for about a week (Areas/Resources lists, detail page, Dashboard,
-8-step Weekly Review) and give feedback. Next design candidates: recurring tasks, Done log + weekly report (needs Part 1),
-Inbox "one by one" mode. (Splitting the two big components moved into the code health round below.)
-
-## Code health round (built 2026-11-02, no visible change)
-
-| Part | Result |
-|---|---|
-| 1. Faster frontend tests | `vite.config.ts` test block: `pool: 'vmThreads'`, `maxWorkers: 6`, `testTimeout: 15000` (`isolate` stays on: many files `vi.mock` the same hooks). Full suite about 221 s -> 30-55 s. `npm run test:changed` runs only tests for changed files; use it while working, run the full suite once before committing. |
-| 2. `TaskDrawer` split | `components/tasks/drawer/` has `DrawerHeader`, `TaskFields`, `WaitingForField`, `TagsSection`, `SubtasksSection`, `DescriptionField`, `DrawerFooter` (with `MoveToSelect`). `TaskDrawer.tsx` 736 -> 138 lines: loads data, owns the delete/reset-subtasks confirmations and the layout. Pieces get what they show as props and call their own mutation hooks. |
-| 3. `ItemDetailView` split | `components/items/detail/` has `ItemHeader` (banners, title, complete/reopen, "..." menu, their dialogs and hooks; named `ItemHeader`, not `ItemHeaderActions`), `TasksSection`, `InlineTitle`, `InlineField`, `InlineDeadline`. `ItemDetailView.tsx` 745 -> 171 lines. |
-| 4. Fixed-query task lists | `task_service._tasks_to_responses(session, tasks)`: 4 queries (subtask counts grouped, tags via SQL, meetings `IN`, items `IN`) for any number of tasks; `_task_to_response` is a one-task call. Used by `list_tasks` (item tasks, inbox, reorder), `list_someday`, `get_today`, `filter_service`, `calendar_service`, meeting "create tasks". Review and dashboard do not build task responses. `test_task_response_queries.py` counts statements for 3 vs 20 tasks. |
-| 5. Lazy routes | `router.tsx`: every page except Dashboard and Today is `React.lazy`. `AppShell` wraps its `Outlet` in `Suspense` (`RouteFallback`, a quiet "Loading..."); `/review` has its own. Dev gallery is only imported when `import.meta.env.DEV`. Main chunk 1,073 kB -> 346 kB (gzip 315 -> 105 kB). |
-
-Not done on purpose: splitting `SettingsPage.tsx` (608 lines) and `TemplateDetailPage.tsx` (531): they change rarely.
-Server-side pagination: not needed at this size.
-
-Gotcha: a repo-wide guard test adds 2 tests (no BOM, no literal unicode escapes in JSX) per source file, so new files raise the test count.
 
 ## Running and verifying
 
@@ -209,283 +150,16 @@ Migrations: after starting on the copy, compare row counts of every table before
 - **Browser pane**: when hidden, pointer clicks can fail; keyboard (focus + Enter) or `element.click()` works.
   Toasts last 3 s (Undo toast 8 s), so read them right after the action.
 - **Noise you can ignore**: git "CRLF will be replaced by LF" warnings; Vite "chunks larger than 500 kB" and
-  `INEFFECTIVE_DYNAMIC_IMPORT` (SettingsPage) warnings. `tsc -b` leaves `frontend/tsconfig.tsbuildinfo`; delete it.
+  `INEFFECTIVE_DYNAMIC_IMPORT` warnings if they show up. `tsc -b` leaves `frontend/tsconfig.tsbuildinfo`; delete it.
 
-## Defer + Someday: how it behaves (decided with the owner, 2026-10-29)
+## Backlog (not prioritised yet)
 
-- **Defer** (`defer_until`, local date): the task is hidden from Today (all four lists) until that date.
-  In Project/Area/Inbox/All-tasks lists it stays visible, dimmed, with a "Starts {date}" chip.
-- **Someday** (`is_someday`): parked idea. Hidden from Today, from the Inbox page, the Weekly Review Inbox step and the
-  dashboard inbox count. Listed on `/someday` (open tasks of non-archived items). Still shown dimmed with a "Someday"
-  chip in Project/Area lists and All tasks. Moving it back to active returns it to where it was (an Inbox task is back in the Inbox).
-- **Validation**: `due_date < defer_until` is rejected with 400 (checked against the merged old + new values).
-- Export/import and undo snapshots carry both fields; old undo snapshots without them restore as not deferred/not someday.
-- Not done: no "show deferred" filter, and Someday tasks are not excluded from search or tag filters.
+Ideas the owner liked: recurring tasks; weekly status report generated at the end of Weekly Review; "Done" log; one
+"next action" per project; "+ New project in this area" on the Area page; per-Area dashboard; search inside notes; bulk
+actions in project task lists; duplicate project / save project as template; desktop reminders; backups to a synced
+folder via `CALM_X_BACKUP_DIR`.
 
-## Safety round (done 2026-10-29)
+Known gaps:
 
-Three small fixes from the read-only end-to-end review, one commit each.
-
-- **Duplicate tests**: ten test functions were defined twice in one module (the first copy never ran). The second copies
-  are removed and `tests/test_no_duplicate_tests.py` fails if a module defines the same top-level `test_*` name twice.
-  (The pytest total did not change: shadowed copies were never collected.)
-- **Backups** (`services/backup_service.py`): `main()` starts a daemon thread (`start_periodic_backups`) that runs the
-  "newest regular backup older than 24 h" check every hour. `DELETE /api/items/{id}` takes a `pre-delete` backup first, of the
-  database the session is connected to; if that fails the item is not deleted (500, `BackupFailedError`); unknown ids make no
-  backup. Safety copies (`pre-delete`, `pre-import-replace`) carry their kind in the file name
-  (`calmx_backup_<ts>[_N]_<kind>.db`), keep the 5 newest, and are retained apart from the 7 newest regular backups; they don't
-  count for the daily check. `create_backup` now refuses a missing database file (sqlite would have created and backed up an empty one).
-  `backend/tests/conftest.py` sets `CALM_X_BACKUP_DIR` to a temp dir for every test, because many tests build `Config(port=8080)`
-  with default paths and would otherwise write into the real `data/backups`.
-- **Dashboard "Needs attention"** follows the Today rules: Someday tasks and tasks deferred past today are left out.
-  **Waiting-for tasks stay in**, labelled "Waiting · {who}" (the default from the plan). The owner has not decided this; to
-  exclude them instead, add `Task.waiting_for.is_(None)` to the query in `dashboard_service._get_upcoming_deadlines`
-  and drop the label in `NeedsAttentionRow`.
-
-## Meeting notes (designed with the owner, 2026-10-29)
-
-The owner has 3–5 meetings a week, almost always about one project. Notes are for the owner only (nothing is shared or
-sent). **Parts A and B are built.**
-
-### Decisions already made
-
-- A meeting belongs to exactly **one Project or Area** (not a Resource; not an archived item). No multi-item links.
-- The body is **Markdown** (GitHub-flavoured, incl. task lists). Rendered with `react-markdown` + `remark-gfm` (added in part A):
-  raw HTML is never rendered (shown as text), `javascript:` links are dropped, links open in a new tab with `rel="noopener noreferrer"`.
-- No separate "series" entity: continuity comes from **carrying over** the previous meeting of the same item (part B).
-- Action items for other people only become Waiting-for tasks for the owner. No export/share.
-
-### Part A: how it works (done)
-
-- **Data**: `meetings` (`item_id` CASCADE, `title` ≤200, `held_at` UTC, `attendees` ≤500, `body` ≤50 000, `processed_at`) and
-  `tasks.meeting_id` (ON DELETE SET NULL). Export/import carry both (`meetings` is optional in files, so older exports
-  still import; merge inserts meetings before tasks and remaps `meeting_id`). Replace import wipes `meetings`.
-- **Line syntax** (`services/meeting_parser.py`, one function for the preview and the process endpoint; indentation and a
-  `-`/`*`/`+` list marker are ignored; fenced code blocks and lines without text are ignored):
-  `[ ] text` my action, `@Who: text` someone else's action (Waiting-for task), `? text` question, `! text` decision.
-  Processed lines become `[→] text` / `@→Who: text` and are only counted.
-- **API** (`api/meetings.py`): `GET/POST /api/items/{id}/meetings`, `GET /api/meetings?q=` (title, attendees, notes),
-  `GET/PUT/DELETE /api/meetings/{id}`, `POST /api/meetings/{id}/restore` (Undo), `GET /api/meetings/{id}/actions`,
-  `POST /api/meetings/{id}/process`. Process re-parses the saved notes and refuses (409, nothing created) if a chosen line
-  moved or changed; it is all-or-nothing, respects the 100-task limit, and puts a title longer than 200 chars in the
-  description. Tasks carry `meeting_id`, `meeting_title`, `meeting_held_at`.
-- **Undo** of a deleted meeting (`undo_entries` kind `meeting`, 24 h) re-creates it and re-links its tasks that still exist.
-  Unlike tasks it cannot fall back to the Inbox: if the Project/Area is gone (404) or archived (403) the restore is refused.
-- **Search**: `/api/search` also returns `type: "meeting"` rows; the command palette has a Meetings group.
-- **UI**: `MeetingsSection` on Project/Area pages (+ Meeting creates "{item} meeting" with the template and opens it),
-  `/meetings/:id` (Edit/Preview, autosave ~1 s + on blur + on leaving, "Saved / Unsaved changes / Couldn't save" status,
-  side panel with the parsed lines, Process dialog with due date and priority per line), `/meetings` (search, grouped by
-  week, Monday start), sidebar entry, task drawer link. `hooks/useAutosave.ts` is generic (debounce, merged patches, flush,
-  retry, `beforeunload` warning).
-- **Chosen by me, not by the owner**: an item that has meetings **cannot be converted to a Resource** (400, "delete them
-  first"), because meetings can't live on a Resource and silently deleting notes is worse. Meetings of an archived item are
-  read-only (also not deletable), like its tasks.
-- Not done in A: moving a meeting to another item, a meeting count on the Projects list, natural-language dates in lines.
-
-### Part B: how it works (done)
-
-- **Carry-over**: `GET /api/items/{id}/meetings/carry-over` returns the item's newest meeting (by `held_at`) with its `?` lines and
-  the tasks made from it that are still open (`null` when the item has no meetings). `+ Meeting` always asks for it (the
-  meetings list may still be loading), and `buildMeetingBody` in `utils/meeting.ts` puts a "From last meeting" block above the
-  template: a link to that meeting, its questions as `?` lines (so they stay questions in the new notes), and open tasks as
-  plain `- Task: …` bullets. Tasks have no URL of their own, hence no links; the `Task:` prefix keeps a title like `? x` or
-  `[ ] x` from being read as a meeting line. If the lookup fails the plain template is used.
-- **Weekly Review**: new step "Meetings" after Inbox (`MeetingsStep`, `GET /api/weekly-review/meetings?today=&tz_offset=`):
-  meetings of the last 7 days (today included, client timezone) that still have actions to process, items not archived,
-  newest first. "Process" opens the meeting in a new tab so the review keeps its place; the list refetches when the tab
-  regains focus. Processing happens on the meeting page, not inside the review.
-- Decisions (`! `) and created tasks stay queryable for the future weekly report: `GET /api/meetings/{id}/actions` has the
-  decisions, and `tasks.meeting_id` links tasks to meetings.
-- Not done: processing from inside the review step; counting meetings in the review summary.
-
-## Week view on the Today page (built 2026-10-29, designed with the owner)
-
-`/today` now starts with a 7-column week strip (Monday first, weekends dimmed, today outlined); the existing Today lists
-stay below it. Only meetings have a time; everything else is date-only, so it is not an hourly calendar.
-
-- **API**: `GET /api/calendar/week?start=<Monday>&today=&tz_offset=` (`api/calendar.py`, `services/calendar_service.py`) returns
-  seven days of `{date, meetings, due, planned, deadlines, starts}`; `start` must be a Monday (400 otherwise). Rules: open,
-  non-Someday tasks outside archived items; meetings of archived items left out; meetings bucketed by the client's local
-  date (`tz_offset`); `planned` (`focus_date`) only in today's column and only when the visible week contains today, left out
-  when the task is also due that week or deferred past today; `deadlines` are active, unarchived projects; `starts` are
-  tasks by `defer_until`. Waiting-for tasks keep their `waiting_for`. Not included: overdue tasks from before the visible
-  week (they stay in the Today list's Overdue section).
-- **UI** (`components/today/WeekStrip.tsx`, `pages/TodayPage.tsx`, `hooks/useCalendar.ts`, `utils/week.ts`): ‹ / This week / › in
-  the URL (`?week=<any date, snapped to its Monday>&day=<date>`; bad values fall back to the current week/day). Entries per day in
-  the order meetings, due, planned, deadlines, starts; max 4 then "+N more" (selects the day). Selecting today keeps the old
-  Today sections and adds a Meetings section on top; another day lists its meetings, tasks due, project deadlines and starts.
-  Below 768 px the strip is a vertical agenda. Opening the task drawer keeps `week`/`day` in the URL.
-- **Drag**: tasks (due, planned, starts entries) can be dropped on today or a later day: `PUT /api/tasks/{id}` with
-  `due_date`, optimistic update, rollback + the server message on error, toast "Due date moved to Fri 30 Oct" with
-  Undo (restores the old due date, or clears it). Past days are not drop targets; meetings and deadlines are not draggable.
-  Keyboard users change the date in the task drawer (no keyboard drag).
-- **Chosen by me**: the design's "violet" and "orange" tints do not exist as tokens, so meetings use accent-soft, due tasks
-  warn, overdue danger, deadlines a bordered chip with a flag icon, starts muted.
-- Not done: dragging with the keyboard, showing overdue tasks of earlier weeks in the strip.
-
-## Richer Projects and All tasks lists (designed with the owner, 2026-10-29)
-
-The owner found the list pages static. **Projects, All tasks, Areas and Resources are built**, all with the same toolbar
-(`components/lists/ListToolbar.tsx`).
-
-### Projects: how it works (done)
-
-- **API**: `GET /api/items?type=project&today=YYYY-MM-DD` adds `stats` to each project (`services/project_stats_service.py`,
-  one grouped query per aggregate for the whole list, test asserts the query count stays flat): `open_task_count` and
-  `overdue_task_count` / `waiting_task_count` (open = not complete and not Someday), `next_task` (earliest due date, else
-  first by sort order; not Someday, not deferred past today), `next_meeting_at` / `last_meeting_at`, `linked_resource_count`
-  (active resources only), `last_activity_at` (latest of the project, its tasks and its meetings). No `today` = no `stats`.
-- **UI**: `pages/ProjectsPage.tsx` (replaces `ItemListView` for projects), `components/lists/ListToolbar.tsx` (reusable: search
-  with 250 ms debounce, sort, toggle/select chips, view toggle, Clear filters), `components/projects/ProjectCard.tsx` and
-  `ProjectList.tsx`, `utils/projectList.ts` (filter + sort, pure), `utils/projectFacts.ts` (meeting and activity labels),
-  hooks `useUrlParams` and `useViewMode`. Filtering and sorting happen in the browser on the full list. URL params:
-  `sort` (omitted = deadline), `q`, `active=0`, `completed=1`, `area` (id or `none`), `deadline` (overdue/week/30days/none),
-  `overdue=1`, `stale=1`. The card/list choice is in `localStorage` (`calmx.view.projects`), not in the URL.
-- **Chosen by me**: Active/Completed are two toggle chips (both off shows nothing); "this week" means up to Sunday;
-  a completed project is never "overdue"; the meeting chip shows the next meeting, else "Last meeting …"; Someday and
-  not-yet-started tasks are left out of the open count and the Next line.
-- Not done: server-side sorting (not needed at this size).
-
-### Areas and Resources: how it works (done; not designed with the owner, chosen by me)
-
-- **API**: `GET /api/items?type=area|resource&today=` adds `stats` (same `today` rule as Projects). Areas get the Project stats
-  (`ProjectStats`) computed for the Area's **own** tasks, plus `project_count` (active projects in the Area) and a last activity
-  that also counts its projects' updates. Resources get `ResourceStats`: `reference_link_count` (URLs) and `linked_item_count`
-  (active Projects/Areas it is linked to). Both are grouped queries, with a flat-query-count test
-  (`services/project_stats_service.py`: `get_project_stats`, `get_resource_stats`).
-- **UI**: `pages/AreasPage.tsx`, `pages/ResourcesPage.tsx`, `components/areas/AreaViews.tsx`, `components/resources/ResourceViews.tsx`,
-  `utils/areaResourceList.ts`; `ItemListView` is gone. Areas: sort Name (default) / Last activity / Most overdue / Most projects /
-  Most open tasks; chips Has overdue, Stale 30+ days, No projects. Resources: sort Name (default) / Recently updated / Most used;
-  chips Not linked, No links, Stale 90+ days. Card/list toggle remembered per page (`calmx.view.areas`, `calmx.view.resources`).
-  Search covers title and description; state is in the URL like on Projects.
-- **Chosen by me**: an Area card's task numbers are the Area's own tasks, not its projects' (the project count is shown beside
-  them); "stale" for Areas is 30 days like Projects and 90 days for Resources; an Area with no open tasks shows no "add a next step" hint.
-- Not done: counting an Area's projects' tasks in its numbers, a per-Area dashboard (backlog).
-
-### All tasks: how it works (done)
-
-- **API** (`GET /api/tasks`, handled by `services/filter_service.filter_tasks` once any filter is present): new params `q` (title,
-  description, notes; LIKE wildcards escaped), `status` (`open|completed|all`, replaces `include_complete`), tri-state
-  `waiting`, `someday`, `deferred`, `from_meeting` (true = only those, false = leave them out; `deferred` means
-  `defer_until` after `today`, and needs `today`), `sort` (`due|priority|project|created|updated`) with `order`. No-value-last
-  for due date, ties by id, Inbox sorts as an empty project name. Unknown values give 400. Calls without the new params behave as before.
-- **UI**: `pages/AllTasksPage.tsx`, `components/tasks/TaskCompactList.tsx`, `utils/taskList.ts` (grouping), `hooks/useFilterTasks.ts`
-  (`hideParked` sends `someday=false&deferred=false`). The old FilterPanel (tags, priority, due range, category) stays below the toolbar.
-  URL params: `q`, `status` (omitted = open), `sort` (omitted = due), `group` (none/project/due/priority), `waiting`, `deferred`,
-  `someday`, `meeting` (=1), plus the FilterPanel's `tags`, `priorities`, `due_start`, `due_end`, `category` and the drawer's
-  `task`. Grouping is done in the browser; group headers show counts and collapse. "Clear filters" resets search, status, chips and
-  the panel but keeps sort and group. View choice: `localStorage` (`calmx.view.tasks`).
-- **Chosen by me**: Someday and not-yet-started tasks are hidden unless their chip is on (the Today rules); chips combine with AND;
-  the old separate "Completed (n)" block is gone (use the Status select); completed tasks due earlier go in an "Earlier (completed)"
-  group instead of "Overdue"; the compact list repeats its header row in every group.
-- Not done: ascending/descending toggle in the UI (the API has `order`), server-side grouping, the toolbar for Areas/Resources.
-
-## Project and Area detail page (reviewed and reworked 2026-10-30, not designed with the owner)
-
-`components/items/ItemDetailView.tsx` (also used for Resources). Found in a read-only review, then fixed:
-
-- **Drag-reorder of tasks did nothing**: the hook, API and `TaskList` support existed but `TasksSection` never passed `onReorder`.
-  Now wired; `useReorderTasks` (in `hooks/useTasks.ts`) updates the list at once, keeps completed tasks in their slots, and
-  puts the old order back with an error toast if the server refuses. It also refreshes the item (its "Next task" can change).
-- **Quick add**: "+ Add task" (which created a task called "New task" and opened the drawer) is replaced by a text field:
-  type a title, Enter, the task is created and the field stays ready; a failed create keeps the text; disabled at 100 tasks.
-- **Summary strip** (`components/items/ItemSummary.tsx`) under the progress bar, for Projects and Areas: open, overdue, waiting
-  (only if any), next task (a link that opens its drawer) and the next/last meeting; Areas also show their project count.
-  Data: `GET /api/items/{id}?today=YYYY-MM-DD` now adds `stats` like the list does (`useItem` always sends today).
-  For an Area the task numbers are the Area's own tasks, as on the Areas list.
-- **Order and width**: title and header, deadline, area, goal, progress, summary, description, (Area: its projects), **tasks, meetings**,
-  (Area: maintenance notes), notes, reference links, linked resources. Width `max-w-4xl` (was `max-w-2xl`).
-- The delete confirmation now says "and meeting notes" for Projects and Areas.
-- Test gotcha: detail-page tests that mock `../hooks/useTasks` must include `useReorderTasks` (added to `ItemDetailView.test.tsx` and `ProjectDeadline.test.tsx`).
-- Not done: the Area page still shows its own tasks and its projects separately (no combined task list), and `AreaProjectsSection` was not reviewed.
-
-## Dashboard vs Today (reworked 2026-10-30, chosen by me after the owner found the Dashboard not useful)
-
-Split of roles: **Today = what to do now** (due, planned, waiting, meetings of the day, the week strip). **Dashboard = what is
-getting unhealthy**, only exceptions, and it is empty when all is fine. Nothing about due dates is shown on the Dashboard any more.
-
-- **Removed**: the "Needs attention" list (it repeated Today's overdue/due-today/waiting plus the week strip), the Active projects
-  list with progress bars (the Projects page does that better), Overall progress (an average of per-project percentages: meaningless),
-  and the Projects/Areas/Resources/Archives summary cards. Fixed with it: task rows linked to `/${item_id}`, a route that does not exist.
-- **API** (`GET /api/dashboard?today=&tz_offset=`, `services/dashboard_service.py`) now returns: `inbox_count`; `last_review_date`
-  and `days_since_review`; `meetings_to_process` (the Weekly Review meetings rule: last 7 days, actions left, archived items out);
-  `stale_waiting` (open waiting-for tasks waiting 7+ days, longest first, capped at 10, plus `stale_waiting_total`; tasks without
-  `waiting_since` are skipped); `attention_projects`; `counts` (active projects, areas, resources, archived, Someday).
-- **Projects needing attention** are active projects with any of: `overdue_tasks`, `deadline_passed`, `deadline_soon` (deadline within
-  14 days and progress under 50 %), `stale` (no activity for 30 days, counting tasks and meetings), `no_open_tasks`. Most reasons first,
-  then most overdue, then title. The thresholds are constants at the top of the service.
-- **UI** (`pages/DashboardPage.tsx`): "To process" (Inbox, Meetings with the list of meetings, Weekly review with how long ago and a
-  highlighted button when a week or more has passed or there never was one), "Waiting too long", "Projects needing attention"
-  (first 8, then a link), an "all clear" empty state, and one line of shortcut counts.
-- **Today**: a waiting task's chip now shows the age, "Waiting · Budi · 9 days" (from `waiting_since`).
-- Not done: tasks completed this week (no `completed_at` column), an Areas health section.
-
-## Weekly Review: Waiting for and Someday steps (built 2026-10-30, chosen by me; the review stays one continuous session)
-
-Order is now Inbox, Meetings, **Waiting for**, Projects, Areas, Resources, **Someday**, Summary.
-
-- **Waiting for** (`components/review/WaitingStep.tsx`, `GET /api/weekly-review/waiting?today=&tz_offset=`): every open waiting-for task
-  (not Someday, not in an archived item or completed project, with a `waiting_since`), longest wait first, with who, where, due date and
-  the days waited. Per task: **Followed up** (`POST /api/tasks/{id}/follow-up` sets `waiting_since` to now, so `waiting_since` means
-  "start of the wait or last follow-up" and the Dashboard's "waiting too long" restarts too), **Received, done** (completes it) or
-  **Not waiting anymore** (clears `waiting_for`). After an action the row stays, dimmed, with the outcome; the list is not refetched mid-step.
-- **Someday** (`components/review/SomedayStep.tsx`, uses `GET /api/tasks/someday`): parked ideas oldest first with where they live and how
-  long they have been parked. **Start it** (`is_someday` off), **Keep parked** (nothing changes) or **Drop** (deletes, with the usual Undo toast).
-- **Summary** has three new counters: waiting tasks followed up or closed, Someday ideas started, dropped.
-- Shared pieces: `ReviewTaskRow.tsx`; hooks `useReviewWaiting`, `useFollowUpTask`, `usePatchTask` (any task by id).
-  `dashboard_service.get_waiting_tasks(..., min_days)` serves both the Dashboard (7+ days) and the review (all); waiting days are never negative.
-- The step bar is wider (`max-w-[1160px]`) so eight labels fit on one line.
-- **Old steps reviewed and fixed in the same change** (found by reading them, not reported by the owner):
-  - Resources: "Update" navigated to the resource inside the same tab and so left the review, losing its position and the Summary counts. It is now a link that opens in a new tab.
-  - Inbox: a second keypress/click while an action was still saving acted on the same task again; actions now run one at a time and a failed save leaves the task where it is. A completed project is no longer offered as a destination. "Someday [M]" shows an error message when it fails.
-  - Projects: every project can get a next step right in the review ("Add a next step…", counted in the Summary as "Next steps added"; the Areas step counts too); a project with no open tasks shows a warning; Someday tasks are no longer listed (they have their own step); failed complete/archive no longer throw unhandled errors.
-  - A wait with no recorded `waiting_since` (old data) is still listed in the Waiting for step (as 0 days) but never counts as "waiting too long".
-- Seen but left as it was: the Inbox step still pre-selects the first project/area in its dropdowns, so one press of [P] files the task there without choosing; there is no "Waiting for" action in the Inbox step.
-- Not done: saving progress to continue a review later.
-
-## Smart capture and Inbox triage (built 2026-10-30; the owner asked for ideas 1-3 of my Inbox list)
-
-- **Capture syntax** (`utils/capture.ts`, pure and tested): `!high|!medium|!low` (also `!h/!m/!l`, `!tinggi/!sedang/!rendah`), `#tag`,
-  `@name` or `@"two words"` for a project or area, and a due date as `today/hari ini`, `tomorrow/besok`, `lusa`, a weekday in English or
-  Indonesian (the next one after today, never today itself), `+3d`/`+2w` or `2026-11-05`. A backslash keeps a word plain (`\besok` stays `besok`). Only the
-  first date and priority count. A marker that matches nothing stays in the title, and an `@name` that matches several projects is not guessed
-  (exact title, else a whole word of exactly one title, else a part of exactly one). A line made only of markers keeps the whole line as the title.
-  Completed projects are not offered.
-- **`components/capture/CaptureBox.tsx`** (used by the Inbox page and the Q dialog): a text box where Enter adds and Shift+Enter starts a new
-  line, so a pasted list becomes one task per line (bullets, numbers and `[ ]` are dropped; at most 50 lines at once). A preview lists how each
-  line was read (date, priority, tags, project, unmatched markers) whenever a marker was read or there are several lines. Lines are created one by
-  one with `tasksApi.create`; lines that fail stay in the box as typed. The toast names where tasks went ("Added to Inbox", "Added 3 tasks to X").
-  Only the Inbox page and Q dialog use it; the project quick-add field (detail page) and the Areas review step still take a plain title.
-- **Inbox row menu** (⋯): Add to Today, Set due date…, Waiting for… (asks who), Move to Someday, Delete (with confirmation and Undo).
-  **Bulk bar** for the selection: Move to…, Priority…, Today, Due date…, Waiting for…, Add tag… (adds to each task's own tags), Someday,
-  Delete (one Undo restores all). `hooks/useTriage.ts` tries every task, then reports how many worked and the first reason for any that did not.
-- Not done: a "process one by one" mode on the Inbox page, showing how old each Inbox task is, a description field at capture time.
-
-## Searchable project/area picker (built 2026-10-30; the owner pointed out a native dropdown does not scale to 100+ projects)
-
-`components/common/ItemPicker.tsx` (cmdk, no new dependency): a button that opens a list with a search box. Typing narrows it by the
-project's title or its area's name (a title that starts with the text comes first), arrows and Enter choose, Escape or a click outside closes,
-and the last five destinations used are listed first under "Recent" (`localStorage` key `calmx.recentDestinations`, works without storage).
-It opens upwards when there is more room above and lines up with the right edge when it would run off the screen. `allowInbox` adds an
-"Inbox" entry that selects `null`.
-
-- Used for: the Inbox row "Move to…" and the bulk bar's "Move to…", the task drawer's "Move to…", the Inbox step of the Weekly Review (project and
-  area), and "Link to…" on a Resource page.
-- Still native selects with a few items: the area of a project, the Projects page area filter, the new item dialog. If a list there ever grows, use `ItemPicker`.
-- `test-setup.ts` now stubs `ResizeObserver` and `scrollIntoView` (cmdk needs them under jsdom).
-- Not done: `LinkedResourcesSection` ("link a resource") still uses a native select over resources; do the same when the number of resources grows.
-
-## Other ideas the owner liked (backlog, not prioritised yet)
-
-Recurring tasks; weekly status report generated at the end of Weekly Review; one "next action" per project;
-"+ New project in this area" on the Area page; per-Area dashboard; search inside notes; "Done" log; bulk actions in
-project task lists; duplicate project / save project as template; desktop reminders; backups to a synced folder via `CALM_X_BACKUP_DIR`.
-
-Also from the 2026-10-29 review, after the safety round:
-
-- **Weekly Review steps for Waiting for and Someday** (follow up waits, promote or drop parked ideas). Highest value;
-  design it with the owner first.
-- Search and tag filters ignore Someday/Defer: label them in results or hide by default with a toggle.
-- `requirements.md` / `design.md` don't describe the features built after v1 (they now say so at the top); `HANDOVER.md` is the source of truth.
-- Performance later: 3–4 queries per task in list responses (subtask counts, tags, item); frontend tests take
-  5–10 min because jsdom is created per file (vitest pool/isolation settings); 811 kB bundle could use route lazy loading.
+- Search and tag filters ignore Someday/Defer: label them in results or hide them by default with a toggle.
+- Smaller "Not done" notes are kept at the end of each feature file.
