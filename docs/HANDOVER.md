@@ -1,6 +1,9 @@
 # Calm-X handover
 
-Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` first for the hard rules.
+Last updated 2026-11-02. Written for the next coding session; read `CLAUDE.md` first for the hard rules.
+
+**Next to build: the foundation round** (section "Next up: foundation round" below), chosen by the owner on 2026-11-02
+before any new feature.
 
 ## Where things stand
 
@@ -36,6 +39,64 @@ Last updated 2026-10-29. Written for the next coding session; read `CLAUDE.md` f
 | `539e016` | "Linked resources" on Project/Area pages (`GET /api/items/{id}/linked-resources`) |
 | `b66df4e` | No deadline badges on archived projects or their tasks (R7.8) |
 | `d8d9c5d` | Project deadline: set at creation and edit inline |
+
+## Next up: foundation round (chosen by the owner 2026-11-02; details proposed in the brainstorming session)
+
+Why: the next features the owner wants (Done log, weekly status report, recurring tasks) all need to know *when* a task
+was completed, and a few small data issues are felt daily. Build in this order, **one commit per part**, each verified with
+the recipe below. No new pages in this round.
+
+### Part 1: `tasks.completed_at` (migration 009)
+
+- Migration `009_task_completed_at.py`: `ALTER TABLE tasks ADD COLUMN completed_at DATETIME` (plain ADD COLUMN, never
+  `batch_alter_table`). **No backfill**: tasks completed before 009 keep NULL ("completed, date unknown"). Do not guess it
+  from `updated_at`. Pin the revision in the migration test like 004/005 do.
+- Set it to `now_utc()` on every path that turns a task complete, and back to NULL on every path that reopens one:
+  `task_service.mark_complete` / `mark_incomplete`, and the auto-complete / auto-reopen in `subtask_service` (lines ~44, ~91, ~163).
+  Grep `is_complete = ` before finishing; a path that is missed makes the Done log lie. Completing an already complete task
+  keeps the first `completed_at`.
+- Carry it everywhere a task's columns travel: `TaskResponse` (aware UTC, `Z`), export and import (old export files
+  without the field import as NULL), undo snapshots and restore, template-to-project creation (new tasks start NULL).
+- Subtasks: not in this round.
+- UI, small only: the task drawer shows "Completed {relative date}" for a completed task with a date; All tasks gains the
+  sort "Recently completed" (completed tasks with a date first, newest first; NULLs last). Nothing else; the Done log and
+  the weekly report are designed later with the owner.
+- Tests: each complete/reopen path sets/clears it; export → import round trip keeps it; migration on a copy of a pre-009 DB
+  leaves existing rows NULL.
+
+### Part 2: old "Planned for today" plans
+
+Problem: `focus_date` never expires, so a task added to Today last week still sits in "Planned for today" with no hint.
+Decision proposed: **never clear plans silently**; show them and let the owner decide in one click.
+
+- `get_today` already returns them in `focused`. The frontend splits that group: `focus_date == today` stays
+  "Planned for today"; `focus_date < today` goes to a small block **"Planned earlier (N)"** under it, each row with a chip
+  "Planned {weekday}" (or "Planned {d MMM}" if older than 6 days), sorted oldest first.
+- Per row: **Keep for today** (sets `focus_date` to today) and **Remove from Today** (clears `focus_date`). Block header:
+  **Clear all (N)** (clears all of them; one toast with Undo that puts each `focus_date` back; use a client-side undo that
+  re-PATCHes, no new server snapshot type needed).
+- The week view strip counts only today's plans for today; old plans are not drawn on past days.
+- Dashboard: nothing new.
+
+### Part 3: timezone-aware datetimes in every response
+
+Item (Project/Area/Resource) responses still send naive datetimes right after a write. Fix it once, not per field:
+a shared Pydantic base (e.g. `schemas/base.py` `ApiModel`) with a serializer that turns any naive `datetime` into
+UTC-aware before output, and make every response schema inherit it. Then remove `task_service._as_utc` and similar
+per-field patches. Test: create, update and fetch an item, a task and a meeting; every datetime string ends with `Z` or `+00:00`.
+
+### Part 4: small cleanups (one commit)
+
+- `hooks/useTasks.ts`: the same three `invalidateQueries` lines are repeated in about eight hooks; make every hook use
+  the existing `refreshAfterTaskChange(qc)` helper. No behaviour change.
+- Add a note at the top of `.kiro/specs/para-task-manager/requirements.md` and `design.md`: "v1 spec, archived; current
+  behaviour is in `docs/HANDOVER.md`".
+
+### After this round (do not start without the owner)
+
+Owner will first use the features marked "chosen by me" for about a week (Areas/Resources lists, detail page, Dashboard,
+8-step Weekly Review) and give feedback. Next design candidates: recurring tasks, Done log + weekly report (needs Part 1),
+Inbox "one by one" mode, splitting `ItemDetailView.tsx` (745 lines) and `TaskDrawer.tsx` (736 lines) before they grow more.
 
 ## Running and verifying
 
