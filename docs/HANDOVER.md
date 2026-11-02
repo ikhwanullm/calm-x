@@ -7,16 +7,17 @@ before any new feature.
 
 ## Where things stand
 
-- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`.
+- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. Foundation round part 1 (`ec8ef37`, completed_at) is committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
-- Schema head: **migration 008** (part B added no migration). The owner's real DB was already at 008 when last checked (2026-10-29).
-- Tests at the last commit: backend 606 passed, frontend 1076 passed (83 files), `tsc -b` clean.
+- Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and upgrades to 009 on the next app start.
+- Tests at the last commit: backend 622 passed, frontend 1081 passed (83 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
+| `ec8ef37` | Foundation part 1: `tasks.completed_at` (migration 009), "Completed …" in the task drawer, All tasks sort "Recently completed" |
 | `be2fc2d` | Searchable project/area picker (`ItemPicker`) replaces long dropdowns |
 | `319ed78` | Smart capture (due date, priority, tags, project from the text; several lines at once) and Inbox row/bulk triage actions |
 | `5ce1e21`, `52f7ef4` | Weekly Review: new "Waiting for" and "Someday" steps (8 steps now), `POST /api/tasks/{id}/follow-up`, `GET /api/weekly-review/waiting` |
@@ -46,7 +47,12 @@ Why: the next features the owner wants (Done log, weekly status report, recurrin
 was completed, and a few small data issues are felt daily. Build in this order, **one commit per part**, each verified with
 the recipe below. No new pages in this round.
 
-### Part 1: `tasks.completed_at` (migration 009)
+### Part 1: `tasks.completed_at` (migration 009) — DONE
+
+Built as specified below. Notes from the build: completing an already complete task changes nothing (a task completed before 009 keeps NULL even if
+"completed" again); the auto-complete/reopen paths in `subtask_service` (`_reevaluate_task_status`, `create_subtask`, `mark_subtask_incomplete`) set/clear it
+like `mark_complete`/`mark_incomplete`; `PUT /api/tasks/{id}` cannot set it; the filter API has `sort=completed` (with `order=desc` newest first,
+NULLs always last) and the UI sends `desc`. Checked on a copy of the real DB: its 12 completed tasks stayed NULL, row counts and foreign keys unchanged.
 
 - Migration `009_task_completed_at.py`: `ALTER TABLE tasks ADD COLUMN completed_at DATETIME` (plain ADD COLUMN, never
   `batch_alter_table`). **No backfill**: tasks completed before 009 keep NULL ("completed, date unknown"). Do not guess it
@@ -407,7 +413,7 @@ Order is now Inbox, Meetings, **Waiting for**, Projects, Areas, Resources, **Som
 
 - **Capture syntax** (`utils/capture.ts`, pure and tested): `!high|!medium|!low` (also `!h/!m/!l`, `!tinggi/!sedang/!rendah`), `#tag`,
   `@name` or `@"two words"` for a project or area, and a due date as `today/hari ini`, `tomorrow/besok`, `lusa`, a weekday in English or
-  Indonesian (the next one after today, never today itself), `+3d`/`+2w` or `2026-11-05`. A backslash keeps a word plain (`esok`). Only the
+  Indonesian (the next one after today, never today itself), `+3d`/`+2w` or `2026-11-05`. A backslash keeps a word plain (`esok` stays `besok`). Only the
   first date and priority count. A marker that matches nothing stays in the title, and an `@name` that matches several projects is not guessed
   (exact title, else a whole word of exactly one title, else a part of exactly one). A line made only of markers keeps the whole line as the title.
   Completed projects are not offered.
