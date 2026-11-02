@@ -6,6 +6,7 @@ import { useRescheduleTask, useWeek } from "@/hooks/useCalendar"
 import { TaskDrawer } from "@/components/tasks/TaskDrawer"
 import { TaskRow } from "@/components/tasks/TaskRow"
 import { WeekStrip } from "@/components/today/WeekStrip"
+import { PlannedEarlier } from "@/components/today/PlannedEarlier"
 import { Button, EmptyState, Skeleton } from "@/components/common"
 import { formatAbsoluteDate, getLocalToday } from "@/utils/date"
 import { addDays, dayLabel, isValidDate, meetingTime, mondayOf, weekRangeLabel } from "@/utils/week"
@@ -91,9 +92,12 @@ export default function TodayPage() {
 
   const overdue = data?.overdue ?? []
   const dueToday = data?.due_today ?? []
-  const focused = data?.focused ?? []
+  // A plan is "for today" only if it was made today; older ones are listed apart so the owner can decide
+  const focusedAll = data?.focused ?? []
+  const focused = focusedAll.filter((t) => !t.focus_date || t.focus_date >= today)
+  const plannedEarlier = focusedAll.filter((t) => !!t.focus_date && t.focus_date < today)
   const waiting = data?.waiting ?? []
-  const workCount = overdue.length + dueToday.length + focused.length
+  const workCount = overdue.length + dueToday.length + focused.length + plannedEarlier.length
 
   function renderSection(title: string, tasks: Task[], id: string) {
     if (tasks.length === 0) return null
@@ -230,6 +234,14 @@ export default function TodayPage() {
               {renderSection("Planned for today", focused, "today-focused")}
             </>
           )}
+
+          <PlannedEarlier
+            tasks={plannedEarlier}
+            today={today}
+            selectedTaskId={selectedTaskId}
+            onOpenDrawer={openDrawer}
+            onToggleComplete={handleToggleComplete}
+          />
 
           {waiting.length > 0 && (
             <section aria-labelledby="today-waiting" className="mt-8 border-t border-border pt-4">

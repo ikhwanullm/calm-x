@@ -7,16 +7,17 @@ before any new feature.
 
 ## Where things stand
 
-- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. Foundation round part 1 (`ec8ef37`, completed_at) is committed locally, not pushed.
+- Everything up to the searchable project/area picker (`be2fc2d`) is pushed to `origin/main`. Foundation round parts 1 (`ec8ef37`, completed_at) and 2 (old plans) are committed locally, not pushed.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and upgrades to 009 on the next app start.
-- Tests at the last commit: backend 622 passed, frontend 1081 passed (83 files), `tsc -b` clean.
+- Tests at the last commit: backend 623 passed, frontend 1094 passed (84 files), `tsc -b` clean.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
+| (newest) | Foundation part 2: "Planned earlier" block on Today (Keep for today / Remove from Today / Clear all with Undo) |
 | `ec8ef37` | Foundation part 1: `tasks.completed_at` (migration 009), "Completed …" in the task drawer, All tasks sort "Recently completed" |
 | `be2fc2d` | Searchable project/area picker (`ItemPicker`) replaces long dropdowns |
 | `319ed78` | Smart capture (due date, priority, tags, project from the text; several lines at once) and Inbox row/bulk triage actions |
@@ -70,7 +71,12 @@ NULLs always last) and the UI sends `desc`. Checked on a copy of the real DB: it
 - Tests: each complete/reopen path sets/clears it; export → import round trip keeps it; migration on a copy of a pre-009 DB
   leaves existing rows NULL.
 
-### Part 2: old "Planned for today" plans
+### Part 2: old "Planned for today" plans — DONE
+
+Built as specified below (`components/today/PlannedEarlier.tsx`, `plannedLabel` in `utils/date.ts`). Details: the split is done in the browser from `get_today`'s
+`focused` list (a plan counts as "for today" when `focus_date >= today`); "Clear all" and its Undo are client-side (`tasksApi.update` per task; Undo
+restores each previous date; only the ones that were cleared are offered back); the week strip's `planned` list (`calendar_service`) now only holds
+`focus_date >= today`, so old plans are not drawn there. If only old plans exist, no "Nothing planned for today" message is shown.
 
 Problem: `focus_date` never expires, so a task added to Today last week still sits in "Planned for today" with no hint.
 Decision proposed: **never clear plans silently**; show them and let the owner decide in one click.

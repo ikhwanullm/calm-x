@@ -58,13 +58,14 @@ def get_week(
         due_by_day[t.due_date].append(t)
     due_ids = {t.id for t in due_tasks}
 
-    # Planned for today: only in today's column, and not twice when the task is also due this week
+    # Planned for today: only in today's column, and not twice when the task is also due this week.
+    # Plans made on an earlier day are not drawn here (the Today page lists them under "Planned earlier").
     planned: list[Task] = []
     if start <= client_today <= end:
         planned = [
             t for t in session.execute(
                 _open_task_query().where(
-                    Task.focus_date.isnot(None),
+                    Task.focus_date >= client_today,
                     (Task.defer_until.is_(None)) | (Task.defer_until <= client_today),
                 )
             ).scalars().all()

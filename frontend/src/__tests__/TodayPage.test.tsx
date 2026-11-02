@@ -45,7 +45,7 @@ describe('TodayPage', () => {
     vi.mocked(tasksApi.today).mockResolvedValue({
       overdue: [task(1, 'Late report', { due_date: '2026-10-20', item_title: 'Migrate CML' })],
       due_today: [task(2, 'Standup notes')],
-      focused: [task(3, 'Review PR', { focus_date: '2026-10-28', item_title: 'Analytics' })],
+      focused: [task(3, 'Review PR', { focus_date: getLocalToday(), item_title: 'Analytics' })],
       waiting: [task(4, 'Firewall rule', { waiting_for: 'Security team' })],
     })
     renderPage()

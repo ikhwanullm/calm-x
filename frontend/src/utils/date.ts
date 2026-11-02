@@ -107,3 +107,14 @@ export function formatLocalDateTime(isoDatetime: string): string {
   const d = new Date(isoDatetime)
   return format(d, 'EEE, d MMM yyyy HH:mm')
 }
+
+/**
+ * "Planned Tue" for a plan made 1-6 days ago, else "Planned 14 Oct" (with the year when it is another year).
+ * `focusDate` is the local date the task was put on Today.
+ */
+export function plannedLabel(focusDate: string, today: string): string {
+  const days = differenceInCalendarDays(parseISO(today), parseISO(focusDate))
+  const d = parseISO(focusDate)
+  if (days >= 1 && days <= 6) return `Planned ${format(d, 'EEE')}`
+  return `Planned ${format(d, d.getFullYear() === parseISO(today).getFullYear() ? 'd MMM' : 'd MMM yyyy')}`
+}

@@ -137,7 +137,8 @@ export function useDeleteTask() {
   })
 }
 
-function refreshAfterTaskChange(qc: ReturnType<typeof useQueryClient>) {
+/** Refresh everything that shows tasks (lists, item numbers, the Dashboard) after tasks changed. */
+export function refreshAfterTaskChange(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: taskKeys.all })
   qc.invalidateQueries({ queryKey: itemKeys.all })
   qc.invalidateQueries({ queryKey: dashboardKeys.all })

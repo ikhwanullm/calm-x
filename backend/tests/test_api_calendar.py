@@ -116,3 +116,12 @@ def test_meetings_outside_the_week_or_of_archived_items_are_left_out(client):
     _meeting(client, gone, title="Archived item", held_at="2026-10-28T03:00:00Z", body="x\n")
     client.post(f"/api/items/{gone}/archive", headers=HEADERS)
     assert all(d["meetings"] == [] for d in _week(client)["days"])
+
+
+def test_plans_from_an_earlier_day_are_not_drawn_in_the_strip(client):
+    _task(client, "planned today", focus_date=TODAY)
+    _task(client, "planned last week", focus_date="2026-10-22")
+    week = _week(client)
+    assert [t["title"] for t in _day(week, TODAY)["planned"]] == ["planned today"]
+    assert all(d["planned"] == [] for d in week["days"] if d["date"] != TODAY)
+    assert all("planned last week" not in [t["title"] for t in d["planned"]] for d in week["days"])
