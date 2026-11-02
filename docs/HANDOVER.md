@@ -2,8 +2,8 @@
 
 Last updated 2026-11-02. Written for the next coding session; read `CLAUDE.md` first for the hard rules.
 
-**Next to build: the code health round** (section "Next up: code health round" below), chosen by the owner on 2026-11-02.
-The foundation round before it is built. **No behaviour changes in this round**: the owner should not notice anything except speed.
+**Nothing is queued.** The foundation round and the code health round (2026-11-02) are built. Wait for the owner's feedback
+on the features marked "chosen by me" before starting new features (see "After this round").
 
 ## Where things stand
 
@@ -11,13 +11,15 @@ The foundation round before it is built. **No behaviour changes in this round**:
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built.
   Everything after that was added on top, directly in code (no spec files were updated for it).
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and upgrades to 009 on the next app start.
-- Tests at the last commit: backend 628 passed, frontend 1094 passed (84 files), `tsc -b` clean.
+- Tests at the last commit: backend 632 passed, frontend 1120 passed (84 files, about 35-55 s), `tsc -b` clean.
+- The code health round (5 commits after `1bd2a03`) is committed locally and not pushed until the owner asks.
 
 ### Built after the v1 spec (newest first)
 
 | Commit | What |
 |---|---|
-| (newest) | Foundation part 4: one refresh helper for task hooks, v1 spec files marked archived |
+| (newest) | Code health round, parts 1-5 (see "Code health round" below): faster tests, `TaskDrawer` and `ItemDetailView` split, task lists in fixed queries, lazy routes |
+| `a868009` | Foundation part 4: one refresh helper for task hooks, v1 spec files marked archived |
 | `155e2a9` | Foundation part 3: every API datetime is timezone-aware (`schemas/base.py` `ApiModel`) |
 | `a0825af` | Foundation part 2: "Planned earlier" block on Today (Keep for today / Remove from Today / Clear all with Undo) |
 | `ec8ef37` | Foundation part 1: `tasks.completed_at` (migration 009), "Completed …" in the task drawer, All tasks sort "Recently completed" |
@@ -121,70 +123,20 @@ Owner will first use the features marked "chosen by me" for about a week (Areas/
 8-step Weekly Review) and give feedback. Next design candidates: recurring tasks, Done log + weekly report (needs Part 1),
 Inbox "one by one" mode. (Splitting the two big components moved into the code health round below.)
 
-## Next up: code health round (chosen by the owner 2026-11-02; details proposed in the brainstorming session)
+## Code health round (built 2026-11-02, no visible change)
 
-Why: features were added fast; the two biggest components are hard to change safely, the frontend tests slow every
-session down, and task lists cost several queries per task. Measured 2026-11-02: `ItemDetailView.tsx` 745 lines,
-`TaskDrawer.tsx` 736, frontend tests 5-10 min (84 files, jsdom), main bundle 1.07 MB in one file (was 811 kB),
-`_task_to_response` runs about 5 queries per task (2 subtask counts, tags, meeting, lazy item). The owner's real data is
-still small (about 30 tasks), so part 4 is for later growth, not a felt problem.
+| Part | Result |
+|---|---|
+| 1. Faster frontend tests | `vite.config.ts` test block: `pool: 'vmThreads'`, `maxWorkers: 6`, `testTimeout: 15000` (`isolate` stays on: many files `vi.mock` the same hooks). Full suite about 221 s -> 30-55 s. `npm run test:changed` runs only tests for changed files; use it while working, run the full suite once before committing. |
+| 2. `TaskDrawer` split | `components/tasks/drawer/` has `DrawerHeader`, `TaskFields`, `WaitingForField`, `TagsSection`, `SubtasksSection`, `DescriptionField`, `DrawerFooter` (with `MoveToSelect`). `TaskDrawer.tsx` 736 -> 138 lines: loads data, owns the delete/reset-subtasks confirmations and the layout. Pieces get what they show as props and call their own mutation hooks. |
+| 3. `ItemDetailView` split | `components/items/detail/` has `ItemHeader` (banners, title, complete/reopen, "..." menu, their dialogs and hooks; named `ItemHeader`, not `ItemHeaderActions`), `TasksSection`, `InlineTitle`, `InlineField`, `InlineDeadline`. `ItemDetailView.tsx` 745 -> 171 lines. |
+| 4. Fixed-query task lists | `task_service._tasks_to_responses(session, tasks)`: 4 queries (subtask counts grouped, tags via SQL, meetings `IN`, items `IN`) for any number of tasks; `_task_to_response` is a one-task call. Used by `list_tasks` (item tasks, inbox, reorder), `list_someday`, `get_today`, `filter_service`, `calendar_service`, meeting "create tasks". Review and dashboard do not build task responses. `test_task_response_queries.py` counts statements for 3 vs 20 tasks. |
+| 5. Lazy routes | `router.tsx`: every page except Dashboard and Today is `React.lazy`. `AppShell` wraps its `Outlet` in `Suspense` (`RouteFallback`, a quiet "Loading..."); `/review` has its own. Dev gallery is only imported when `import.meta.env.DEV`. Main chunk 1,073 kB -> 346 kB (gzip 315 -> 105 kB). |
 
-Rules for the whole round: **pure refactors, no visible change** (same text, same layout, same API responses). One commit
-per part. Every existing test must pass unchanged, except imports that point at a moved file. If a test has to change in
-any other way, stop and say why in the commit body. Verify in the browser with the usual recipe after parts 2 and 3.
+Not done on purpose: splitting `SettingsPage.tsx` (608 lines) and `TemplateDetailPage.tsx` (531): they change rarely.
+Server-side pagination: not needed at this size.
 
-### Part 1: faster frontend tests (do first; it speeds up the rest)
-
-- Measure first, then change one setting at a time, and keep a setting only if all tests still pass and the time drops.
-  Write the before/after times in the commit body.
-- Baseline: `npx vitest run` wall time, and the slowest 10 files (`--reporter=verbose` or the JSON reporter).
-- Try, in this order: `pool: 'threads'` (instead of the default forks); `css: false` if any CSS is processed;
-  `poolOptions.threads.maxThreads` near the core count. Do **not** turn off `isolate`: many files use `vi.mock` on the same
-  hooks and would leak mocks into each other.
-- If the slowest files are slow because they render whole pages, leave them; this part is settings only.
-- Add `"test:changed": "vitest related --run"` (or `vitest run --changed`) to `package.json` and mention it in `CLAUDE.md`
-  Commands, so a session can run the tests for what it touched first and the full suite once before committing.
-
-### Part 2: split `TaskDrawer.tsx`
-
-- New folder `components/tasks/drawer/`. Move the inner components out as they are: `MoveToSelect`, `WaitingForField`,
-  `TagsSection`, and the subtask list with its add form (`SubtasksSection`), plus the header actions (complete, delete,
-  Defer/Someday) if they form a clear block. `TaskDrawer.tsx` keeps the open/close shell, data loading and layout, aim
-  for under 250 lines.
-- `TaskDrawer` keeps its export, name and props, so no caller changes. Each piece gets the task and the mutations it needs
-  as props or calls the hooks itself; pick one style and use it for all pieces.
-- Gotcha: tests mock `../hooks/useTasks` and friends by path. Moving components does not change hook paths, so mocks keep working.
-
-### Part 3: split `ItemDetailView.tsx`
-
-- New folder `components/items/detail/`. Move out: `TasksSection` (with quick add and reorder), `InlineTitle`,
-  `InlineField`, `InlineDeadline` (the inline editors may go to `components/common/` if another page could use them),
-  and the header actions (complete/reopen, archive, delete, convert, with their dialogs) as `ItemHeaderActions`.
-  `ItemDetailView.tsx` keeps the page order and the Project/Area/Resource differences, aim for under 250 lines.
-- Same rules: same export and props, no visible change. `ItemDetailView.test.tsx` and `ProjectDeadline.test.tsx` must pass as they are.
-
-### Part 4: task responses in a fixed number of queries
-
-- Add `_tasks_to_responses(session, tasks)` in `task_service.py` that loads, for all given tasks at once: subtask counts
-  (one grouped query), tag names (one query), meetings (one `IN` query) and items (one `IN` query or `selectinload`).
-  `_task_to_response(session, task)` becomes a call with a one-task list.
-- Use it in every place that builds a list: `get_today`, inbox, someday, item tasks, `filter_service`, calendar, review and
-  dashboard where they map tasks. Keep the existing comment's reason in mind: tags are read with SQL, not the ORM
-  relation, because of stale identity-map data after a flush; keep reading them with SQL.
-- Test: a test that counts SQL statements (SQLAlchemy `before_cursor_execute` event) for a list of 20 tasks, and asserts
-  the count does not grow with the number of tasks. Response JSON for existing tests must be identical.
-
-### Part 5: route lazy loading (small)
-
-- In `router.tsx`, load pages with `React.lazy` and a `Suspense` fallback (a quiet "Loading…" in the content area, not a
-  full-page spinner), except Today and Dashboard, which stay eager. Keep the dev-only components route dev-only.
-- Check after build (to a scratch folder): the main chunk is smaller and every route still opens, including a direct
-  load of `/projects/1` and `/review`.
-
-### Not in this round
-
-Splitting `SettingsPage.tsx` (608) and `TemplateDetailPage.tsx` (531): they change rarely. Server-side pagination: not
-needed at this size.
+Gotcha: a repo-wide guard test adds 2 tests (no BOM, no literal unicode escapes in JSX) per source file, so new files raise the test count.
 
 ## Running and verifying
 
