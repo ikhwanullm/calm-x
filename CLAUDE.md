@@ -33,6 +33,7 @@ The owner talks in **Indonesian**; reply in Indonesian, keep code, commits and d
 
 ```bash
 python -m pytest -q                       # backend, from repo root (~1–2 min)
-cd frontend && npx vitest run             # frontend (slow: 5–10 min, run in background)
+cd frontend && npx vitest run             # frontend, all tests (~35 s)
+cd frontend && npm run test:changed       # only the tests related to uncommitted changes; run the full suite once before committing
 cd frontend && npx tsc -b                 # type check; then delete frontend/tsconfig.tsbuildinfo
 ```

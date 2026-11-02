@@ -7,7 +7,9 @@
     "dev": "vite",
     "dev:full": "concurrently \"npm run dev\" \"cd .. && python -m backend.main\" --names \"frontend,backend\" --prefix-colors \"cyan,yellow\"",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:changed": "vitest run --changed"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
