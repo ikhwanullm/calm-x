@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { NavLink, Outlet, useNavigate } from "react-router-dom"
+import { RouteFallback } from "./RouteFallback"
 import {
   LayoutDashboard,
   Sun,
@@ -252,7 +253,9 @@ export function AppShell() {
         {/* Scrollable main content */}
         <main className="flex-1 overflow-y-auto p-8">
           <div className="mx-auto max-w-[1240px]">
-            <Outlet />
+            <Suspense fallback={<RouteFallback />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
       </div>

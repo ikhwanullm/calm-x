@@ -1,28 +1,33 @@
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
+import { RouteFallback } from './components/layout/RouteFallback'
+// The two pages people land on stay in the main bundle; every other page loads when it is first opened.
 import DashboardPage from './pages/DashboardPage'
 import TodayPage from './pages/TodayPage'
-import AllTasksPage from './pages/AllTasksPage'
-import InboxPage from './pages/InboxPage'
-import SomedayPage from './pages/SomedayPage'
-import MeetingsPage from './pages/MeetingsPage'
-import MeetingPage from './pages/MeetingPage'
-import ProjectsPage from './pages/ProjectsPage'
-import ProjectDetailPage from './pages/ProjectDetailPage'
-import AreasPage from './pages/AreasPage'
-import AreaDetailPage from './pages/AreaDetailPage'
-import ResourcesPage from './pages/ResourcesPage'
-import ResourceDetailPage from './pages/ResourceDetailPage'
-import ArchivePage from './pages/ArchivePage'
-import TemplatesPage from './pages/TemplatesPage'
-import TemplateDetailPage from './pages/TemplateDetailPage'
-import WeeklyReviewPage from './pages/WeeklyReviewPage'
-import SettingsPage from './pages/SettingsPage'
-// DEV-only component gallery for visual verification
-import DevComponentsPage from './pages/DevComponentsPage'
+
+const AllTasksPage = lazy(() => import('./pages/AllTasksPage'))
+const InboxPage = lazy(() => import('./pages/InboxPage'))
+const SomedayPage = lazy(() => import('./pages/SomedayPage'))
+const MeetingsPage = lazy(() => import('./pages/MeetingsPage'))
+const MeetingPage = lazy(() => import('./pages/MeetingPage'))
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
+const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'))
+const AreasPage = lazy(() => import('./pages/AreasPage'))
+const AreaDetailPage = lazy(() => import('./pages/AreaDetailPage'))
+const ResourcesPage = lazy(() => import('./pages/ResourcesPage'))
+const ResourceDetailPage = lazy(() => import('./pages/ResourceDetailPage'))
+const ArchivePage = lazy(() => import('./pages/ArchivePage'))
+const TemplatesPage = lazy(() => import('./pages/TemplatesPage'))
+const TemplateDetailPage = lazy(() => import('./pages/TemplateDetailPage'))
+const WeeklyReviewPage = lazy(() => import('./pages/WeeklyReviewPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+// DEV-only component gallery for visual verification; the condition keeps it out of the production build
+const DevComponentsPage = import.meta.env.DEV ? lazy(() => import('./pages/DevComponentsPage')) : null
 
 export const router = createBrowserRouter([
   {
+    // AppShell wraps its <Outlet /> in a Suspense, so the sidebar stays put while a page loads
     element: <AppShell />,
     children: [
       { path: '/', element: <DashboardPage /> },
@@ -42,10 +47,17 @@ export const router = createBrowserRouter([
       { path: '/templates', element: <TemplatesPage /> },
       { path: '/templates/:id', element: <TemplateDetailPage /> },
       { path: '/settings', element: <SettingsPage /> },
-    ...(import.meta.env.DEV ? [{ path: '/dev/components', element: <DevComponentsPage /> }] : []),
+      ...(DevComponentsPage ? [{ path: '/dev/components', element: <DevComponentsPage /> }] : []),
     ],
   },
   // Weekly review uses a focused full-page layout (no sidebar) — route is
   // outside AppShell per tasks.md Phase 9 note.
-  { path: '/review', element: <WeeklyReviewPage /> },
+  {
+    path: '/review',
+    element: (
+      <Suspense fallback={<RouteFallback />}>
+        <WeeklyReviewPage />
+      </Suspense>
+    ),
+  },
 ])
