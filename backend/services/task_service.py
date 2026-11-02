@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
+from typing import Optional, Sequence
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -27,51 +27,90 @@ def _guard_not_resource(item: Item | None) -> None:
         )
 
 
+def _tasks_to_responses(session: Session, tasks: Sequence[Task]) -> list[TaskResponse]:
+    """Convert Task ORM objects to TaskResponses, in the same order.
+
+    Always four queries or fewer, however many tasks there are: one grouped query for the subtask counts,
+    one for the tags, one for the meetings and one for the Items. Lists of tasks must go through here;
+    calling it per task brings back the one-query-per-task cost.
+    """
+    if not tasks:
+        return []
+    task_ids = [t.id for t in tasks]
+
+    subtask_counts = {
+        task_id: (total, done or 0)
+        for task_id, total, done in session.execute(
+            select(Subtask.task_id, func.count(), func.sum(Subtask.is_complete))
+            .where(Subtask.task_id.in_(task_ids))
+            .group_by(Subtask.task_id)
+        ).all()
+    }
+
+    # Tag names come straight from SQL, not from task.tags, to avoid a stale identity map after a flush
+    tags_by_task: dict[int, list[str]] = {}
+    for task_id, name in session.execute(
+        select(TaskTag.task_id, Tag.name)
+        .join(Tag, TaskTag.tag_id == Tag.id)
+        .where(TaskTag.task_id.in_(task_ids))
+        .order_by(Tag.name)
+    ).all():
+        tags_by_task.setdefault(task_id, []).append(name)
+
+    meeting_ids = {t.meeting_id for t in tasks if t.meeting_id is not None}
+    meetings = {
+        m_id: (title, held_at)
+        for m_id, title, held_at in session.execute(
+            select(Meeting.id, Meeting.title, Meeting.held_at).where(Meeting.id.in_(meeting_ids))
+        ).all()
+    } if meeting_ids else {}
+
+    item_ids = {t.item_id for t in tasks if t.item_id is not None}
+    items = {
+        i_id: (title, item_type)
+        for i_id, title, item_type in session.execute(
+            select(Item.id, Item.title, Item.type).where(Item.id.in_(item_ids))
+        ).all()
+    } if item_ids else {}
+
+    responses = []
+    for task in tasks:
+        total_subs, done_subs = subtask_counts.get(task.id, (0, 0))
+        meeting = meetings.get(task.meeting_id)
+        item = items.get(task.item_id)
+        responses.append(TaskResponse(
+            id=task.id,
+            item_id=task.item_id,
+            title=task.title,
+            description=task.description,
+            notes=task.notes,
+            due_date=task.due_date,
+            priority=task.priority,
+            is_complete=bool(task.is_complete),
+            sort_order=task.sort_order,
+            created_at=task.created_at,
+            updated_at=task.updated_at,
+            subtask_count=total_subs,
+            completed_subtask_count=done_subs,
+            tags=tags_by_task.get(task.id, []),
+            focus_date=task.focus_date,
+            waiting_for=task.waiting_for,
+            waiting_since=task.waiting_since,
+            completed_at=task.completed_at,
+            defer_until=task.defer_until,
+            is_someday=bool(task.is_someday),
+            item_title=item[0] if item is not None else None,
+            item_type=item[1] if item is not None else None,
+            meeting_id=task.meeting_id,
+            meeting_title=meeting[0] if meeting is not None else None,
+            meeting_held_at=meeting[1] if meeting is not None else None,
+        ))
+    return responses
+
+
 def _task_to_response(session: Session, task: Task) -> TaskResponse:
-    """Convert a Task ORM object to TaskResponse (with subtask counts and tags)."""
-    total_subs = session.execute(
-        select(func.count()).where(Subtask.task_id == task.id)
-    ).scalar_one()
-    done_subs = session.execute(
-        select(func.count()).where(Subtask.task_id == task.id, Subtask.is_complete == 1)
-    ).scalar_one()
-    # Query tag names directly via SQL to avoid stale ORM identity-map after flush
-    tag_names = list(
-        session.execute(
-            select(Tag.name)
-            .join(TaskTag, TaskTag.tag_id == Tag.id)
-            .where(TaskTag.task_id == task.id)
-            .order_by(Tag.name)
-        ).scalars().all()
-    )
-    meeting = session.get(Meeting, task.meeting_id) if task.meeting_id is not None else None
-    return TaskResponse(
-        id=task.id,
-        item_id=task.item_id,
-        title=task.title,
-        description=task.description,
-        notes=task.notes,
-        due_date=task.due_date,
-        priority=task.priority,
-        is_complete=bool(task.is_complete),
-        sort_order=task.sort_order,
-        created_at=task.created_at,
-        updated_at=task.updated_at,
-        subtask_count=total_subs,
-        completed_subtask_count=done_subs,
-        tags=tag_names,
-        focus_date=task.focus_date,
-        waiting_for=task.waiting_for,
-        waiting_since=task.waiting_since,
-        completed_at=task.completed_at,
-        defer_until=task.defer_until,
-        is_someday=bool(task.is_someday),
-        item_title=task.item.title if task.item is not None else None,
-        item_type=task.item.type if task.item is not None else None,
-        meeting_id=task.meeting_id,
-        meeting_title=meeting.title if meeting is not None else None,
-        meeting_held_at=meeting.held_at if meeting is not None else None,
-    )
+    """Convert one Task ORM object to a TaskResponse (with subtask counts and tags)."""
+    return _tasks_to_responses(session, [task])[0]
 
 
 def _count_item_tasks(session: Session, item_id: Optional[int]) -> int:
@@ -99,7 +138,7 @@ def list_tasks(
         stmt = stmt.where(Task.is_complete == 0)
     stmt = stmt.order_by(Task.sort_order, Task.id)
     tasks = session.execute(stmt).scalars().all()
-    return [_task_to_response(session, t) for t in tasks]
+    return _tasks_to_responses(session, tasks)
 
 
 def get_inbox_tasks(session: Session) -> list[TaskResponse]:
@@ -391,7 +430,7 @@ def list_someday(session: Session) -> list[TaskResponse]:
         )
         .order_by(Task.updated_at.desc(), Task.id.desc())
     ).scalars().all()
-    return [_task_to_response(session, t) for t in tasks]
+    return _tasks_to_responses(session, tasks)
 
 
 def get_today(session: Session, client_today: date) -> TodayResponse:
@@ -434,12 +473,14 @@ def get_today(session: Session, client_today: date) -> TodayResponse:
     focused.sort(key=by_priority)
     waiting.sort(key=lambda t: (t.waiting_since is None, t.waiting_since, t.id))
 
-    def to_responses(group: list[Task]) -> list[TaskResponse]:
-        return [_task_to_response(session, t) for t in group]
+    # One conversion for all four lists, then cut it back into them
+    groups = [overdue, due_today, focused, waiting]
+    responses = iter(_tasks_to_responses(session, [t for group in groups for t in group]))
+    overdue_r, due_today_r, focused_r, waiting_r = ([next(responses) for _ in group] for group in groups)
 
     return TodayResponse(
-        overdue=to_responses(overdue),
-        due_today=to_responses(due_today),
-        focused=to_responses(focused),
-        waiting=to_responses(waiting),
+        overdue=overdue_r,
+        due_today=due_today_r,
+        focused=focused_r,
+        waiting=waiting_r,
     )

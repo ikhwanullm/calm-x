@@ -224,7 +224,7 @@ def process_meeting(session: Session, meeting_id: int, payload: ProcessPayload) 
     item.updated_at = now
     session.flush()
     return ProcessResponse(
-        created=[task_service.get_task(session, tid) for tid in created_ids],
+        created=task_service._tasks_to_responses(session, [session.get(Task, tid) for tid in created_ids]),
         meeting=to_response(session, meeting),
     )
 

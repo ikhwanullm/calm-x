@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from backend.exceptions import ValidationError
 from backend.models.item import Item, Tag, Task, TaskTag
 from backend.schemas.task import TaskResponse
-from backend.services.task_service import _task_to_response
+from backend.services.task_service import _tasks_to_responses
 
 VALID_PRIORITIES = {"high", "medium", "low"}
 VALID_CATEGORIES = {"project", "area", "inbox"}
@@ -171,4 +171,4 @@ def filter_tasks(
     tasks = list(session.execute(stmt).scalars().unique().all())
     if sort is not None:
         tasks = _sort_tasks(tasks, sort, order)
-    return [_task_to_response(session, t) for t in tasks]
+    return _tasks_to_responses(session, tasks)

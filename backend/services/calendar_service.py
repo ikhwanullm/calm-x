@@ -88,7 +88,7 @@ def get_week(
         deadlines_by_day[item.project_deadline].append(DeadlineEntry(id=item.id, title=item.title))
 
     def to_responses(tasks: list[Task]):
-        return [task_service._task_to_response(session, t) for t in sorted(tasks, key=by_priority)]
+        return task_service._tasks_to_responses(session, sorted(tasks, key=by_priority))
 
     return CalendarWeekResponse(days=[
         CalendarDay(
