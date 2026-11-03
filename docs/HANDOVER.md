@@ -107,6 +107,7 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
+| `e7d8c32`, `f2de554` | Icon and soft color per Project and Area: migration 010 (`items.icon`, `items.color`), `item_icon`/`item_color` on tasks, `ItemIcon`, picker popover on the detail page, shown on cards, rows, task item links, ItemPicker and the Dashboard |
 | `68970eb` | Week strip: titles on two lines, meeting time on its own line, tooltip (Radix) with kind, project/area and waiting-for |
 | `7a868ef` | Today greeting by hour, one-line day summary (to do, meetings, waiting) and an all-clear block that fades in |
 | `6a1e191` | Undo after completing a task: "Task completed" toast, `POST /api/tasks/{id}/undo-complete` (restores subtask states, 409 if the task changed since), quiet in the Weekly Review steps |
