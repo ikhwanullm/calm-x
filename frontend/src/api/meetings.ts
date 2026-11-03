@@ -38,6 +38,12 @@ export const meetingsApi = {
   actions: (id: number) =>
     apiClient.get<MeetingActions>(`/meetings/${id}/actions`).then(r => r.data),
 
+  closeActions: (id: number) =>
+    apiClient.post<Meeting>(`/meetings/${id}/close-actions`).then(r => r.data),
+
+  reopenActions: (id: number) =>
+    apiClient.post<Meeting>(`/meetings/${id}/reopen-actions`).then(r => r.data),
+
   closeLines: (id: number, lines: { line: number; text: string }[]) =>
     apiClient.post<Meeting>(`/meetings/${id}/close-lines`, { lines }).then(r => r.data),
 

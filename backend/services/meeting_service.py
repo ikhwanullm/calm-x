@@ -46,8 +46,9 @@ def _get_or_404(session: Session, meeting_id: int) -> Meeting:
     return meeting
 
 
-def _open_action_count(parsed: ParsedMeeting) -> int:
-    return len(parsed.actions)
+def _open_action_count(parsed: ParsedMeeting, closed: bool = False) -> int:
+    """Actions still to turn into tasks; none for a meeting whose owner said there is nothing more to process."""
+    return 0 if closed else len(parsed.actions)
 
 
 def _summary_fields(session: Session, m: Meeting) -> dict:
@@ -56,8 +57,8 @@ def _summary_fields(session: Session, m: Meeting) -> dict:
         id=m.id, item_id=m.item_id, item_title=item.title, item_type=item.type,
         item_archived=item.archived_at is not None,
         title=m.title, held_at=m.held_at, attendees=m.attendees,
-        processed_at=m.processed_at, updated_at=m.updated_at,
-        open_action_count=_open_action_count(parse_meeting(m.body)),
+        processed_at=m.processed_at, actions_closed_at=m.actions_closed_at, updated_at=m.updated_at,
+        open_action_count=_open_action_count(parse_meeting(m.body), m.actions_closed_at is not None),
     )
 
 
@@ -257,6 +258,15 @@ def process_meeting(session: Session, meeting_id: int, payload: ProcessPayload) 
         created=task_service._tasks_to_responses(session, [session.get(Task, tid) for tid in created_ids]),
         meeting=to_response(session, meeting),
     )
+
+
+def set_actions_closed(session: Session, meeting_id: int, closed: bool) -> MeetingResponse:
+    """"Nothing more to process" (or reopen). The lines stay in the notes as written."""
+    meeting = _get_or_404(session, meeting_id)
+    _guard_meeting_writable(session, meeting)
+    meeting.actions_closed_at = now_utc() if closed else None
+    session.flush()
+    return to_response(session, meeting)
 
 
 # ── Continuity and review ────────────────────────────────────────────────────

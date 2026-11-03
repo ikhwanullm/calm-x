@@ -7,6 +7,7 @@ import {
   useMeeting,
   useMeetingActions,
   useProcessMeeting,
+  useSetActionsClosed,
   useUpdateMeeting,
 } from '@/hooks/useMeetings'
 import { useAutosave } from '@/hooks/useAutosave'
@@ -15,6 +16,7 @@ import { MarkdownView } from '@/components/meetings/MarkdownView'
 import { ProcessActionsDialog } from '@/components/meetings/ProcessActionsDialog'
 import { cn } from '@/lib/utils'
 import { joinLocalDateTime, splitLocalDateTime } from '@/utils/meeting'
+import { formatRelativeDate, getLocalToday, isoToLocalDateStr } from '@/utils/date'
 import type { Meeting, MeetingUpdatePayload } from '@/types/models'
 
 const STATUS_TEXT = {
@@ -61,6 +63,7 @@ function MeetingEditor({ meeting }: { meeting: Meeting }) {
   const deleteMeeting = useDeleteMeeting()
   const processMeeting = useProcessMeeting(meeting.id)
   const closeLines = useCloseMeetingLines(meeting.id)
+  const setActionsClosed = useSetActionsClosed(meeting.id)
   const { data: parsed, refetch: refetchActions } = useMeetingActions(meeting.id)
 
   // Drafts live here; server refetches never overwrite what is being typed.
@@ -122,6 +125,7 @@ function MeetingEditor({ meeting }: { meeting: Meeting }) {
   }
 
   const openActions = parsed?.actions ?? []
+  const actionsClosed = !!meeting.actions_closed_at
 
   return (
     <div className="max-w-5xl">
@@ -238,10 +242,31 @@ function MeetingEditor({ meeting }: { meeting: Meeting }) {
             <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">
               Actions <span className="font-normal tabular-nums">{openActions.length || ''}</span>
             </h2>
+            {actionsClosed && (
+              <p className="text-xs text-muted">
+                Actions closed {formatRelativeDate(isoToLocalDateStr(meeting.actions_closed_at!), getLocalToday()).toLowerCase()}
+                {!readOnly && (
+                  <>
+                    {' · '}
+                    <button
+                      type="button"
+                      onClick={() => setActionsClosed.mutate(false)}
+                      disabled={setActionsClosed.isPending}
+                      className="underline hover:text-text disabled:opacity-50"
+                    >
+                      Reopen
+                    </button>
+                  </>
+                )}
+              </p>
+            )}
+            {actionsClosed && openActions.length > 0 && (
+              <p className="text-xs text-muted">Not turned into tasks:</p>
+            )}
             {openActions.length === 0 ? (
               <p className="text-sm text-muted">No open action lines.</p>
             ) : (
-              <ul className="space-y-1.5 text-sm text-text">
+              <ul className={cn('space-y-1.5 text-sm', actionsClosed ? 'text-muted' : 'text-text')}>
                 {openActions.map((a) => (
                   <li key={a.line} className="flex items-start justify-between gap-2">
                     <span className="min-w-0 break-words">
@@ -278,6 +303,16 @@ function MeetingEditor({ meeting }: { meeting: Meeting }) {
             >
               Process actions
             </Button>
+            {!actionsClosed && openActions.length > 0 && !readOnly && (
+              <button
+                type="button"
+                onClick={() => setActionsClosed.mutate(true)}
+                disabled={setActionsClosed.isPending}
+                className="block text-xs text-muted hover:text-text underline disabled:opacity-50"
+              >
+                Nothing more to process
+              </button>
+            )}
           </div>
 
           {(parsed?.decisions.length ?? 0) > 0 && (

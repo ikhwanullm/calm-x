@@ -219,6 +219,7 @@ def record_meeting_deletion(session: Session, meeting: Meeting, linked_task_ids:
         "id": meeting.id, "item_id": meeting.item_id, "title": meeting.title,
         "held_at": _iso(meeting.held_at), "attendees": meeting.attendees, "body": meeting.body,
         "processed_at": _iso(meeting.processed_at), "created_at": _iso(meeting.created_at),
+        "actions_closed_at": _iso(meeting.actions_closed_at),
         "linked_task_ids": linked_task_ids,
     })
 
@@ -251,6 +252,7 @@ def restore_meeting(session: Session, meeting_id: int):
     meeting = Meeting(
         item_id=item.id, title=snap["title"], held_at=_dt(snap["held_at"]), attendees=snap["attendees"],
         body=snap["body"], processed_at=_dt(snap["processed_at"]),
+        actions_closed_at=_dt(snap.get("actions_closed_at")),  # .get: snapshots from before migration 011
         created_at=_dt(snap["created_at"]) or now, updated_at=now,
     )
     if session.get(Meeting, snap["id"]) is None:

@@ -9,8 +9,8 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
 - Everything up to the week strip and icons round (`a003fb1`) is pushed to `origin/main`.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built and archived.
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
-- Schema head: **migration 010** (`items.icon`, `items.color`). The owner's real DB was at 009 when last checked (2026-11-03) and
-  upgrades to 010 on the next app start.
+- Schema head: **migration 011** (`meetings.actions_closed_at`; 010 is `items.icon`/`items.color`). The owner's real DB was at 009 when
+  last checked (2026-11-03) and upgrades to 011 on the next app start.
 - Tests at the last code commit: backend 663 passed, frontend 1200 passed (90 files, about 35-55 s), `tsc -b` clean.
 
 ## Next up

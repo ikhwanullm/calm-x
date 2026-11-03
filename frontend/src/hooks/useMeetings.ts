@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { meetingsApi } from '../api/meetings'
 import { itemKeys } from './useItems'
 import { dashboardKeys } from './useDashboard'
+import { reviewKeys } from './useReview'
 import { taskKeys, UNDO_TOAST_MS } from './useTasks'
 import { notify } from '../lib/toast'
 import type {
@@ -108,6 +109,21 @@ export function useDeleteMeeting() {
       })
     },
     onError: (err: Error) => notify.error("Couldn't delete the meeting. Try again.", err.message),
+  })
+}
+
+/** "Nothing more to process" (or reopen): the meeting stops counting as to process. The lines stay in the notes. */
+export function useSetActionsClosed(id: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (closed: boolean) => (closed ? meetingsApi.closeActions(id) : meetingsApi.reopenActions(id)),
+    onSuccess: (meeting) => {
+      qc.setQueryData<Meeting>(meetingKeys.detail(id), meeting)
+      qc.invalidateQueries({ queryKey: meetingKeys.all })
+      qc.invalidateQueries({ queryKey: reviewKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+    },
+    onError: (err: Error) => notify.error("Couldn't save that. Try again.", err.message),
   })
 }
 

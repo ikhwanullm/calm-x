@@ -82,6 +82,21 @@ def get_actions(meeting_id: int, session: SessionDep):
     return meeting_service.get_actions(session, meeting_id)
 
 
+@router.post("/meetings/{meeting_id}/close-actions", response_model=MeetingResponse)
+def close_actions(meeting_id: int, session: SessionDep):
+    """Say there is nothing more to process: the meeting stops counting as 'to process'."""
+    result = meeting_service.set_actions_closed(session, meeting_id, True)
+    session.commit()
+    return result
+
+
+@router.post("/meetings/{meeting_id}/reopen-actions", response_model=MeetingResponse)
+def reopen_actions(meeting_id: int, session: SessionDep):
+    result = meeting_service.set_actions_closed(session, meeting_id, False)
+    session.commit()
+    return result
+
+
 @router.post("/meetings/{meeting_id}/close-lines", response_model=MeetingResponse)
 def close_lines(meeting_id: int, payload: CloseLinePayload, session: SessionDep):
     """Mark the chosen action lines `[x]`: handled without a task (all or nothing)."""

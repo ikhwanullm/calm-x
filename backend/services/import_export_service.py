@@ -93,6 +93,7 @@ def export_data(session: Session) -> dict[str, Any]:
             "id": m.id, "item_id": m.item_id, "title": m.title,
             "held_at": _dt_to_iso(m.held_at), "attendees": m.attendees, "body": m.body,
             "processed_at": _dt_to_iso(m.processed_at),
+            "actions_closed_at": _dt_to_iso(m.actions_closed_at),
             "created_at": _dt_to_iso(m.created_at), "updated_at": _dt_to_iso(m.updated_at),
         }
 
@@ -537,6 +538,7 @@ def _import_merge(session: Session, data: dict) -> dict[str, int]:
             item_id=item_id_map[r["item_id"]], title=r["title"],
             held_at=_iso_to_dt(r["held_at"]), attendees=r.get("attendees", ""), body=r.get("body", ""),
             processed_at=_iso_to_dt(r.get("processed_at")),
+            actions_closed_at=_iso_to_dt(r.get("actions_closed_at")),
             created_at=_iso_to_dt(r.get("created_at")) or now,
             updated_at=_iso_to_dt(r.get("updated_at")) or now,
         )

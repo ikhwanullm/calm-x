@@ -62,8 +62,9 @@ class MeetingSummary(ApiModel):
     held_at: datetime
     attendees: str
     processed_at: Optional[datetime] = None
+    actions_closed_at: Optional[datetime] = None
     updated_at: datetime
-    open_action_count: int = 0
+    open_action_count: int = 0  # 0 for a meeting whose actions are closed
 
 
 class MeetingResponse(MeetingSummary):

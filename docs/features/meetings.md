@@ -30,6 +30,12 @@ sent). **Parts A and B are built.**
   `@Who: text` to `[x] @Who: text` in the saved notes, with the same stale check as `process` (409 and no change when a line moved or
   changed; all or nothing; a line chosen twice is 400; archived item 403). The page saves typing first and shows the new body.
   `GET /api/meetings/{id}/actions` returns `closed`, shown as "N done without a task".
+  **Nothing more to process** (migration 011, `meetings.actions_closed_at`): `POST /api/meetings/{id}/close-actions` sets it and
+  `POST /api/meetings/{id}/reopen-actions` clears it (archived item: 403). A closed meeting is never "to process": its
+  `open_action_count` is 0 everywhere (lists, review step), so `get_review_meetings` leaves it out. The lines stay in the notes; new lines
+  typed later do not reopen it; `process` still works and does not change the flag. In `MeetingSummary`/`MeetingResponse`, export/import
+  (optional in files) and the meeting undo snapshot. Meeting page: a quiet "Nothing more to process" under Process actions when there
+  are open actions; when closed the panel says "Actions closed {when} · Reopen" and lists the remaining lines muted as "Not turned into tasks".
 - **API** (`api/meetings.py`): `GET/POST /api/items/{id}/meetings`, `GET /api/meetings?q=` (title, attendees, notes),
   `GET/PUT/DELETE /api/meetings/{id}`, `POST /api/meetings/{id}/restore` (Undo), `GET /api/meetings/{id}/actions`,
   `POST /api/meetings/{id}/process`. Process re-parses the saved notes and refuses (409, nothing created) if a chosen line

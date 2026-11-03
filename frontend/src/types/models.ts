@@ -368,6 +368,7 @@ export interface MeetingSummary {
   held_at: string                // ISO datetime (UTC)
   attendees: string
   processed_at: string | null
+  actions_closed_at?: string | null  // the owner said there is nothing more to process
   updated_at: string
   open_action_count: number      // `[ ]` and `@Who:` lines not yet turned into tasks
 }

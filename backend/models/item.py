@@ -277,6 +277,8 @@ class Meeting(Base):
     attendees: Mapped[str] = mapped_column(Text, nullable=False, default="")
     body: Mapped[str] = mapped_column(Text, nullable=False, default="")
     processed_at: Mapped[UTCDateTime | None] = mapped_column(UTCDateTime, nullable=True)
+    # Set when the owner says there is nothing more to process; the meeting is then never "to process"
+    actions_closed_at: Mapped[UTCDateTime | None] = mapped_column(UTCDateTime, nullable=True)
     created_at: Mapped[UTCDateTime] = mapped_column(UTCDateTime, nullable=False)
     updated_at: Mapped[UTCDateTime] = mapped_column(UTCDateTime, nullable=False)
 
