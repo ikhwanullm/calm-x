@@ -154,7 +154,7 @@ def _get_attention_projects(session: Session, client_today: date) -> list[Attent
                 id=p.id, title=p.title, reasons=reasons, overdue_task_count=s.overdue_task_count,
                 open_task_count=s.open_task_count, progress_percentage=progress,
                 project_deadline=str(p.project_deadline) if p.project_deadline else None,
-                days_inactive=days_inactive,
+                days_inactive=days_inactive, icon=p.icon, color=p.color,
             ))
     return sorted(found, key=lambda a: (-len(a.reasons), -a.overdue_task_count, a.title.lower(), a.id))
 

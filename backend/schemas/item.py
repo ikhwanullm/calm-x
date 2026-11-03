@@ -13,6 +13,10 @@ from backend.schemas.base import ApiModel
 # Helpers
 # ---------------------------------------------------------------------------
 
+ItemColor = Literal["purple", "blue", "teal", "pink", "slate"]
+ICON_PATTERN = r"^[a-z0-9-]{1,40}$"
+
+
 def _calculate_progress(completed: int, total: int) -> int:
     """Round-half-up progress percentage: (200*m + n) // (2*n)."""
     if total == 0:
@@ -32,6 +36,8 @@ class ProjectCreate(ApiModel):
     project_goal: Optional[str] = Field(default=None, max_length=500)
     project_deadline: Optional[date] = None
     area_id: Optional[int] = None
+    icon: Optional[str] = Field(default=None, pattern=ICON_PATTERN)
+    color: Optional[ItemColor] = None
 
     @field_validator("title", mode="before")
     @classmethod
@@ -45,6 +51,8 @@ class AreaCreate(ApiModel):
     description: str = Field(default="", max_length=5000)
     notes: str = Field(default="", max_length=10000)
     area_maintenance_notes: Optional[str] = Field(default=None, max_length=1000)
+    icon: Optional[str] = Field(default=None, pattern=ICON_PATTERN)
+    color: Optional[ItemColor] = None
 
     @field_validator("title", mode="before")
     @classmethod
@@ -57,6 +65,8 @@ class ResourceCreate(ApiModel):
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(default="", max_length=5000)
     notes: str = Field(default="", max_length=10000)
+    icon: Optional[str] = Field(default=None, pattern=ICON_PATTERN)
+    color: Optional[ItemColor] = None
 
     @field_validator("title", mode="before")
     @classmethod
@@ -85,6 +95,8 @@ class ItemUpdate(ApiModel):
     project_deadline: Optional[date] = None
     area_maintenance_notes: Optional[str] = Field(default=None, max_length=1000)
     area_id: Optional[int] = None
+    icon: Optional[str] = Field(default=None, pattern=ICON_PATTERN)  # an explicit null removes it
+    color: Optional[ItemColor] = None  # an explicit null removes it
 
     @field_validator("title", mode="before")
     @classmethod
@@ -128,6 +140,8 @@ class ProjectResponse(ApiModel):
     title: str
     description: str
     notes: str
+    icon: Optional[str] = None
+    color: Optional[str] = None
     archived_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -154,6 +168,8 @@ class AreaResponse(ApiModel):
     title: str
     description: str
     notes: str
+    icon: Optional[str] = None
+    color: Optional[str] = None
     archived_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -180,6 +196,8 @@ class ResourceResponse(ApiModel):
     title: str
     description: str
     notes: str
+    icon: Optional[str] = None
+    color: Optional[str] = None
     archived_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -202,6 +220,8 @@ class ItemResponse(ApiModel):
     title: str
     description: str
     notes: str
+    icon: Optional[str] = None
+    color: Optional[str] = None
     archived_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -237,6 +257,8 @@ class ItemResponse(ApiModel):
             "title": data.title,
             "description": data.description,
             "notes": data.notes,
+            "icon": data.icon,
+            "color": data.color,
             "archived_at": data.archived_at,
             "created_at": data.created_at,
             "updated_at": data.updated_at,
@@ -272,6 +294,8 @@ def item_to_response(
             title=item.title,  # type: ignore[attr-defined]
             description=item.description,  # type: ignore[attr-defined]
             notes=item.notes,  # type: ignore[attr-defined]
+            icon=item.icon,  # type: ignore[attr-defined]
+            color=item.color,  # type: ignore[attr-defined]
             archived_at=item.archived_at,  # type: ignore[attr-defined]
             created_at=item.created_at,  # type: ignore[attr-defined]
             updated_at=item.updated_at,  # type: ignore[attr-defined]
@@ -293,6 +317,8 @@ def item_to_response(
             title=item.title,  # type: ignore[attr-defined]
             description=item.description,  # type: ignore[attr-defined]
             notes=item.notes,  # type: ignore[attr-defined]
+            icon=item.icon,  # type: ignore[attr-defined]
+            color=item.color,  # type: ignore[attr-defined]
             archived_at=item.archived_at,  # type: ignore[attr-defined]
             created_at=item.created_at,  # type: ignore[attr-defined]
             updated_at=item.updated_at,  # type: ignore[attr-defined]
@@ -307,6 +333,8 @@ def item_to_response(
         title=item.title,  # type: ignore[attr-defined]
         description=item.description,  # type: ignore[attr-defined]
         notes=item.notes,  # type: ignore[attr-defined]
+        icon=item.icon,  # type: ignore[attr-defined]
+        color=item.color,  # type: ignore[attr-defined]
         archived_at=item.archived_at,  # type: ignore[attr-defined]
         created_at=item.created_at,  # type: ignore[attr-defined]
         updated_at=item.updated_at,  # type: ignore[attr-defined]

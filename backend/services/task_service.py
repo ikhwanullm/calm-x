@@ -67,9 +67,9 @@ def _tasks_to_responses(session: Session, tasks: Sequence[Task]) -> list[TaskRes
 
     item_ids = {t.item_id for t in tasks if t.item_id is not None}
     items = {
-        i_id: (title, item_type)
-        for i_id, title, item_type in session.execute(
-            select(Item.id, Item.title, Item.type).where(Item.id.in_(item_ids))
+        i_id: (title, item_type, icon, color)
+        for i_id, title, item_type, icon, color in session.execute(
+            select(Item.id, Item.title, Item.type, Item.icon, Item.color).where(Item.id.in_(item_ids))
         ).all()
     } if item_ids else {}
 
@@ -101,6 +101,8 @@ def _tasks_to_responses(session: Session, tasks: Sequence[Task]) -> list[TaskRes
             is_someday=bool(task.is_someday),
             item_title=item[0] if item is not None else None,
             item_type=item[1] if item is not None else None,
+            item_icon=item[2] if item is not None else None,
+            item_color=item[3] if item is not None else None,
             meeting_id=task.meeting_id,
             meeting_title=meeting[0] if meeting is not None else None,
             meeting_held_at=meeting[1] if meeting is not None else None,

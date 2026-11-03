@@ -43,6 +43,8 @@ class AttentionProject(ApiModel):
     progress_percentage: int
     project_deadline: Optional[str] = None
     days_inactive: int
+    icon: Optional[str] = None
+    color: Optional[str] = None
 
 
 class DashboardCounts(ApiModel):

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import date as _date, datetime, timezone
 from typing import Any
 
@@ -67,6 +68,7 @@ def export_data(session: Session) -> dict[str, Any]:
             "project_completed_at": _dt_to_iso(item.project_completed_at),
             "area_maintenance_notes": item.area_maintenance_notes,
             "area_id": item.area_id,
+            "icon": item.icon, "color": item.color,
         }
 
     def task_dict(t: Task) -> dict:
@@ -225,6 +227,8 @@ def validate_export_data(data: Any) -> dict:
 
 
 _VALID_TYPES = frozenset({"project", "area", "resource"})
+_VALID_COLORS = frozenset({"purple", "blue", "teal", "pink", "slate"})
+_ICON_PATTERN = r"[a-z0-9-]{1,40}"
 _VALID_PRIORITIES = frozenset({"high", "medium", "low"})
 _VALID_PROJECT_STATUSES = frozenset({"active", "completed", None})
 
@@ -248,6 +252,11 @@ def _validate_record_fields(data: dict) -> None:
             raise ImportValidationError(f"{ctx}: description must be ≤ 5000 chars")
         if len(r.get("notes", "")) > 10000:
             raise ImportValidationError(f"{ctx}: notes must be ≤ 10000 chars")
+        icon, color = r.get("icon"), r.get("color")
+        if icon is not None and not (isinstance(icon, str) and re.fullmatch(_ICON_PATTERN, icon)):
+            raise ImportValidationError(f"{ctx}: icon must match {_ICON_PATTERN}")
+        if color is not None and color not in _VALID_COLORS:
+            raise ImportValidationError(f"{ctx}: color must be one of {sorted(_VALID_COLORS)}")
         if item_type == "project":
             goal = r.get("project_goal")
             if goal is not None and len(goal) > 500:
@@ -508,6 +517,7 @@ def _import_merge(session: Session, data: dict) -> dict[str, int]:
             project_status=r.get("project_status"),
             project_completed_at=_iso_to_dt(r.get("project_completed_at")),
             area_maintenance_notes=r.get("area_maintenance_notes"),
+            icon=r.get("icon"), color=r.get("color"),
         )
         session.add(item)
         session.flush()

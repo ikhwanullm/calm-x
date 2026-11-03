@@ -31,6 +31,10 @@ class Item(Base):
     # Area-specific fields (None for non-areas)
     area_maintenance_notes: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
+    # Optional look of the item: an icon key and a tint name (allowed values: schemas/item.py)
+    icon: Mapped[str | None] = mapped_column(String, nullable=True)
+    color: Mapped[str | None] = mapped_column(String, nullable=True)
+
     # Optional parent Area of a Project (None for non-projects and unassigned projects)
     area_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("items.id", ondelete="SET NULL"), nullable=True, index=True

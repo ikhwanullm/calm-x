@@ -124,6 +124,8 @@ def create_item(
         title=data.title,
         description=data.description,
         notes=data.notes,
+        icon=data.icon,
+        color=data.color,
         created_at=now,
         updated_at=now,
     )
