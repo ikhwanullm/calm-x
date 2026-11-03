@@ -80,9 +80,11 @@ variable names to the same values so generated components match.
 | `--shadow` | `0 1px 2px rgba(20,20,18,.05)` | `none` | Cards only |
 
 Identity tints (Projects and Areas only; `ItemIcon`): `--tint-{purple|blue|teal|pink|slate}-bg` / `-fg`. Light: purple
-`#EEEDFE`/`#534AB7`, blue `#E6F1FB`/`#185FA5`, teal `#E1F5EE`/`#0F6E56`, pink `#FBEAF0`/`#993556`, slate `#EFEFEA`/`#5C5C57`.
-Dark: purple `#2A2750`/`#C3BEFF`, blue `#15304D`/`#93C8F7`, teal `#0F3329`/`#74D8B8`, pink `#40202D`/`#F5A9C3`, slate `#2A2A27`/`#A6A6A0`.
-Every fg on its bg is at least 5.4:1 (light) and 5.8:1 (dark). Blue must stay visibly different from `--accent`.
+`#EEEDFE`/`#534AB7`, blue `#E6F1FB`/`#185FA5`, teal `#E3F4F8`/`#0B6378`, pink `#FBEAF0`/`#993556`, slate `#EFEFEA`/`#5C5C57`.
+Dark: purple `#2A2750`/`#C3BEFF`, blue `#15304D`/`#93C8F7`, teal `#0E3340`/`#5FD0D8`, pink `#40202D`/`#F5A9C3`, slate `#2A2A27`/`#A6A6A0`.
+Every fg on its bg is at least 5.4:1 (light) and 5.8:1 (dark). Blue must stay visibly different from `--accent`, and `teal` (a cyan, hue about 190°) from the green status color: in CIELAB its
+foreground is 33 (light) and 34 (dark) away from `--ok-fg` and 33 / 28 away from `blue`; the first teal (hue about 165°) was only 12-13 from `--ok-fg`
+and was replaced. The key `teal` is unchanged, so stored data stays valid.
 
 shadcn mapping: `--background → --bg`, `--card`/`--popover → --surface`,
 `--foreground → --text`, `--muted-foreground → --muted`, `--primary → --accent`,
