@@ -111,9 +111,48 @@ describe('WeekStrip', () => {
     expect(onOpenTask).toHaveBeenCalledWith(7)
   })
 
-  it('shows who a waiting task is waiting for', () => {
+  it('keeps the waiting-for name out of the chip and puts it in the tooltip', async () => {
+    const user = userEvent.setup()
     renderStrip(days({ '2026-10-30': { due: [task(1, 'Reply', { waiting_for: 'Budi' })] } }))
-    expect(screen.getByRole('button', { name: /Reply/ }).textContent).toContain('Budi')
+    const chip = screen.getByRole('button', { name: 'Reply' })
+    expect(chip.textContent).toBe('Reply')
+    await user.tab()
+    chip.focus()
+    expect((await screen.findAllByText('Waiting for Budi')).length).toBeGreaterThan(0)
+  })
+
+  it('lets a long title use two lines instead of cutting it to one', () => {
+    renderStrip(days({ '2026-10-30': { due: [task(1, 'A very long title that would not fit on one line')] } }))
+    const title = screen.getByText('A very long title that would not fit on one line')
+    expect(title.className).toContain('line-clamp-2')
+    expect(title.className).toContain('break-words')
+    expect(title.className).not.toContain('truncate')
+  })
+
+  it('shows a meeting time on a line of its own above the title', () => {
+    renderStrip(days({
+      [TODAY]: { meetings: [{ id: 1, title: 'Weekly sync', held_at: '2026-10-29T03:00:00Z', item_title: 'Alpha' } as never] },
+    }))
+    const title = screen.getByText('Weekly sync')
+    const time = title.previousElementSibling as HTMLElement
+    expect(time.textContent).toMatch(/^\d\d:\d\d$/)
+    expect(time.className).toContain('tabular-nums')
+  })
+
+  describe('tooltip', () => {
+    it.each([
+      ['a meeting', { meetings: [{ id: 1, title: 'Sync', held_at: '2026-10-29T03:00:00Z', item_title: 'Alpha' } as never] }, /Sync/, /^Meeting \d\d:\d\d$/, 'Alpha'],
+      ['a due task', { due: [task(1, 'Pay bill', { item_title: 'Home' })] }, 'Pay bill', 'Due', 'Home'],
+      ['a planned task', { planned: [task(1, 'Plan it', { item_title: 'Home' })] }, 'Plan it', 'Planned for today', 'Home'],
+      ['a project deadline', { deadlines: [{ id: 9, title: 'Ship project' }] }, 'Ship project', 'Project deadline', null],
+      ['a task that starts', { starts: [task(1, 'Begin', { item_title: 'Home' })] }, 'Begin', 'Starts', 'Home'],
+    ] as unknown as [string, Partial<CalendarDay>, string | RegExp, string | RegExp, string | null][])('names what %s is', async (_what, patch, name, kind, where) => {
+      renderStrip(days({ [TODAY]: patch }))
+      ;(screen.getByText(name).closest('a, button') as HTMLElement).focus()
+      const tip = await screen.findByRole('tooltip')
+      expect(within(tip).getAllByText(kind as string | RegExp).length).toBeGreaterThan(0)
+      if (where) expect(within(tip).getAllByText(where).length).toBeGreaterThan(0)
+    })
   })
 
   describe('dropping a task', () => {

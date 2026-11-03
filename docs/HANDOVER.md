@@ -11,7 +11,7 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and
   upgrades to 009 on the next app start.
-- Tests at the last code commit: backend 639 passed, frontend 1168 passed (89 files, about 35-55 s), `tsc -b` clean.
+- Tests at the last code commit: backend 639 passed, frontend 1177 passed (89 files, about 35-55 s), `tsc -b` clean.
 
 ## Next up
 
@@ -21,7 +21,7 @@ Two features, one commit each (icons may take two: backend, then UI). The micro-
 start, move its section to `docs/history/rounds.md` and leave a one-line pointer here. In the "Built after the v1 spec"
 table always write the real commit hash (amend nothing; add the hash in your docs commit), never `(newest)`.
 
-**Part 1: week strip titles no longer cut off** (`components/today/WeekStrip.tsx`)
+**Part 1: week strip titles no longer cut off (DONE, see `features/today-and-week.md`)** (`components/today/WeekStrip.tsx`)
 
 Problem: a day column is about 150 px, every entry is one truncated line, and the meeting time and the waiting-for name
 ("· Fadhli") take part of it, so most titles end in "…".

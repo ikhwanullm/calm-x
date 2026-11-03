@@ -36,6 +36,16 @@ stay below it. Only meetings have a time; everything else is date-only, so it is
 - With `workCount` 0 the dashed empty state is replaced by an all-clear block (`Sun` icon, "All done for today.", a hint about Q and
   the week strip). It fades in (`.fade-in`) when the last task of the day was just completed.
 
+## Readable week strip entries (built 2026-11-03, designed with the owner)
+
+- Each entry shows its title on up to two lines (`line-clamp-2`, `break-words`). A meeting's time sits on a small line of its own
+  above the title. The waiting-for name is no longer in the chip.
+- Hover (300 ms) or keyboard focus shows a tooltip (`components/ui/tooltip.tsx`, `@radix-ui/react-tooltip`): full title, what it is
+  (Meeting 09:00, Due, Planned for today, Project deadline, Starts), the project/area name and "Waiting for {who}". It replaced the
+  native `title`. While a task is being dragged tooltips are not rendered; the content has `pointer-events-none`, so it never blocks a drop.
+- `MAX_PER_DAY = 4` and "+N more" are unchanged; all cells of a row stay the same height. Checked with a copy of the real DB: at
+  1280 px (columns 156 px) 2 of 9 titles are still cut at two lines, at 1024 px (119 px) 7 of 9; the tooltip has the full text.
+
 ## Planned earlier (built 2026-11-02, foundation round part 2)
 
 `focus_date` never expires, so the owner decides: plans are never cleared silently.
