@@ -63,7 +63,7 @@ export function TaskCompactList({ tasks, label, selectedTaskId, onOpenDrawer, on
                   </button>
                 </td>
                 <td className="px-3 py-2 text-sm text-muted max-w-[12rem] truncate">
-                  <ItemLink itemId={task.item_id} itemType={task.item_type} title={task.item_title} />
+                  <ItemLink itemId={task.item_id} itemType={task.item_type} title={task.item_title} icon={task.item_icon} color={task.item_color} />
                 </td>
                 <td className={cn('px-3 py-2 text-sm whitespace-nowrap', overdue ? 'text-danger-fg' : 'text-muted')}>
                   {task.due_date ? formatRelativeDate(task.due_date, today) : '—'}

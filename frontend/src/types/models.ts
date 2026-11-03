@@ -10,6 +10,8 @@
 export type ItemType = 'project' | 'area' | 'resource'
 export type ProjectStatus = 'active' | 'completed'
 export type Priority = 'high' | 'medium' | 'low'
+/** Soft tints for recognising a Project or Area; never red, amber or green, which mean status. */
+export type ItemColor = 'purple' | 'blue' | 'teal' | 'pink' | 'slate'
 
 // ---------------------------------------------------------------------------
 // Item (base fields shared by all types)
@@ -21,6 +23,8 @@ interface ItemBase {
   title: string
   description: string
   notes: string
+  icon?: string | null        // key from utils/itemIcons.ts
+  color?: ItemColor | null
   archived_at: string | null  // ISO datetime string or null
   created_at: string          // ISO datetime string
   updated_at: string          // ISO datetime string
@@ -123,6 +127,8 @@ export interface ItemUpdatePayload {
   project_deadline?: string | null
   area_maintenance_notes?: string | null
   area_id?: number | null
+  icon?: string | null
+  color?: ItemColor | null
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +182,8 @@ export interface Task {
   meeting_title: string | null
   meeting_held_at: string | null // ISO datetime (UTC)
   item_title: string | null
+  item_icon?: string | null
+  item_color?: ItemColor | null
   item_type: ItemType | null
 }
 

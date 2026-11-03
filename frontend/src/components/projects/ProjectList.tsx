@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { ProgressBar, StatusBadge } from '@/components/common'
+import { ItemIcon, ProgressBar, StatusBadge } from '@/components/common'
 import { useDeadlineThreshold } from '@/hooks/useSettings'
 import { getDeadlineStatus } from '@/utils/deadline'
 import { formatRelativeDate } from '@/utils/date'
@@ -26,9 +26,10 @@ function Row({ project, today }: { project: Project; today: string }) {
         <Link
           to={`/projects/${project.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="text-sm font-medium text-text hover:underline block truncate"
+          className="text-sm font-medium text-text hover:underline flex items-center gap-2"
         >
-          {project.title}
+          <ItemIcon icon={project.icon} color={project.color} title={project.title} size={20} />
+          <span className="truncate">{project.title}</span>
         </Link>
       </td>
       <td className="px-3 py-2 text-sm text-muted max-w-[10rem] truncate">{project.area_title ?? '—'}</td>

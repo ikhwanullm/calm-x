@@ -100,6 +100,8 @@ export function TaskRow({
                 itemId={task.item_id}
                 itemType={task.item_type}
                 title={task.item_title}
+                icon={task.item_icon}
+                color={task.item_color}
                 className="text-xs text-muted truncate max-w-[16rem]"
               />
             )}

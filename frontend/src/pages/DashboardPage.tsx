@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { useDashboard } from "@/hooks/useDashboard"
-import { Skeleton, EmptyState } from "@/components/common"
+import { Skeleton, EmptyState, ItemIcon } from "@/components/common"
 import { cn } from "@/lib/utils"
 import { formatRelativeDate, getLocalToday } from "@/utils/date"
 import { formatMeetingTime } from "@/utils/meeting"
@@ -232,7 +232,10 @@ function ProjectRow({ project, today }: { project: AttentionProject; today: stri
         to={`/projects/${project.id}`}
         className="flex flex-col gap-1.5 px-4 py-3 rounded-control border border-border bg-surface hover:bg-surface-2"
       >
-        <span className="text-sm font-medium text-text truncate">{project.title}</span>
+        <span className="flex items-center gap-2 min-w-0">
+          <ItemIcon icon={project.icon} color={project.color} title={project.title} size={20} />
+          <span className="text-sm font-medium text-text truncate">{project.title}</span>
+        </span>
         <span className="flex flex-wrap gap-1.5">
           {project.reasons.map((reason) => (
             <span

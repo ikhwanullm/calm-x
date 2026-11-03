@@ -18,9 +18,10 @@ components and patterns. Do not invent new colors, font sizes or one-off styles.
 
 1. **Calm by default.** Neutral surfaces, generous whitespace, one accent color.
    Nothing on screen competes for attention unless it needs action.
-2. **Color means status, and only status.** Red, amber and green appear only for
-   deadline status (overdue, approaching, on track) and success/error feedback.
-   Status is never shown by color alone: always icon + text (+ `aria-label`).
+2. **Color means status, and only status, with one exception: item identity.** Red, amber and green appear only for
+   deadline status (overdue, approaching, on track) and success/error feedback. The exception (owner's choice, 2026-11-03):
+   a Project or Area may have an icon in a soft tint (`--tint-*`, below) so it is easy to recognise. Identity tints are
+   never red, amber/orange or green, so status colors stay unambiguous. Status is never shown by color alone: always icon + text (+ `aria-label`).
 3. **Fast to capture, quick to process.** Quick capture is reachable from every
    screen. Common actions are one click or one key away.
 4. **Show the next action.** Every list has an empty state that says what to do
@@ -77,6 +78,11 @@ variable names to the same values so generated components match.
 | `--ok-bg` / `--ok-fg` | `#EBF8F0` / `#106B3E` | `#0F2A1B` / `#7BDCA6` | On-track badge, "Ready for completion", success |
 | `--track` | `#E8E8E3` | `#2C2C29` | Progress bar track |
 | `--shadow` | `0 1px 2px rgba(20,20,18,.05)` | `none` | Cards only |
+
+Identity tints (Projects and Areas only; `ItemIcon`): `--tint-{purple|blue|teal|pink|slate}-bg` / `-fg`. Light: purple
+`#EEEDFE`/`#534AB7`, blue `#E6F1FB`/`#185FA5`, teal `#E1F5EE`/`#0F6E56`, pink `#FBEAF0`/`#993556`, slate `#EFEFEA`/`#5C5C57`.
+Dark: purple `#2A2750`/`#C3BEFF`, blue `#15304D`/`#93C8F7`, teal `#0F3329`/`#74D8B8`, pink `#40202D`/`#F5A9C3`, slate `#2A2A27`/`#A6A6A0`.
+Every fg on its bg is at least 5.4:1 (light) and 5.8:1 (dark). Blue must stay visibly different from `--accent`.
 
 shadcn mapping: `--background → --bg`, `--card`/`--popover → --surface`,
 `--foreground → --text`, `--muted-foreground → --muted`, `--primary → --accent`,

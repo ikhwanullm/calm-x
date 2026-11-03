@@ -9,9 +9,9 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
 - Everything up to the micro-interactions round (`7a868ef`) is pushed to `origin/main`.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built and archived.
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
-- Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and
-  upgrades to 009 on the next app start.
-- Tests at the last code commit: backend 639 passed, frontend 1177 passed (89 files, about 35-55 s), `tsc -b` clean.
+- Schema head: **migration 010** (`items.icon`, `items.color`). The owner's real DB was at 009 when last checked (2026-11-03) and
+  upgrades to 010 on the next app start.
+- Tests at the last code commit: backend 663 passed, frontend 1200 passed (90 files, about 35-55 s), `tsc -b` clean.
 
 ## Next up
 
@@ -39,7 +39,7 @@ Problem: a day column is about 150 px, every entry is one truncated line, and th
 - Tests: long titles are no longer cut to one line (class check), meeting time rendered apart, tooltip content for each kind,
   waiting name only in the tooltip. Check in the browser at 1280 and 1024 px with the real-length titles of a DB copy.
 
-**Part 2: an icon and a soft color per Project and Area**
+**Part 2: an icon and a soft color per Project and Area (DONE, see `features/item-detail.md`)**
 
 Owner's choice: line icons with a soft tint ("option 3"). This **loosens the rule "color means status, and only status"**
 on purpose, for item identity only. To keep status colors unambiguous, identity tints never use red, amber/orange or green.

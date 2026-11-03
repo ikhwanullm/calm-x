@@ -32,7 +32,9 @@ function setup(props: Partial<React.ComponentProps<typeof ItemPicker>> = {}) {
   return { onSelect, open }
 }
 
-const options = () => screen.queryAllByRole('option').map((o) => o.textContent)
+// The decorative icon square (aria-hidden) is not part of what a row says
+const textOf = (o: Element) => Array.from(o.childNodes).filter((n) => !(n instanceof Element && n.getAttribute('aria-hidden') === 'true')).map((n) => n.textContent).join('')
+const options = () => screen.queryAllByRole('option').map(textOf)
 
 beforeEach(() => localStorage.clear())
 
@@ -124,7 +126,7 @@ describe('ItemPicker', () => {
     }
     await user.click(screen.getByRole('button', { name: 'Move to' }))
     const recent = within(screen.getByText('Recent').closest('[cmdk-group]') as HTMLElement).getAllByRole('option')
-    expect(recent.map((o) => o.textContent)).toEqual(['ProjectProject 003Family', 'AreaHealth', 'ProjectProject 007Family'])
+    expect(recent.map(textOf)).toEqual(['ProjectProject 003Family', 'AreaHealth', 'ProjectProject 007Family'])
     await user.type(screen.getByRole('combobox'), 'health')
     expect(screen.queryByText('Recent')).toBeNull()
   })
@@ -136,7 +138,7 @@ describe('ItemPicker', () => {
     await user.click(screen.getByRole('button', { name: 'Move to' }))
     const recent = within(screen.getByText('Recent').closest('[cmdk-group]') as HTMLElement).getAllByRole('option')
     expect(recent).toHaveLength(5)
-    expect(recent.map((o) => o.textContent?.match(/Project \d+/)?.[0])).toEqual(['Project 001', 'Project 002', 'Project 003', 'Project 004', 'Project 005'])
+    expect(recent.map((o) => textOf(o).match(/Project \d+/)?.[0])).toEqual(['Project 001', 'Project 002', 'Project 003', 'Project 004', 'Project 005'])
   })
 
   it('an Inbox entry is offered when allowed, and chooses null', async () => {

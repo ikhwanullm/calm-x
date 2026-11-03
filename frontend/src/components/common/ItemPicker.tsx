@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Command } from 'cmdk'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ItemIcon } from './ItemIcon'
 import type { Item } from '@/types/models'
 
 const RECENT_KEY = 'calmx.recentDestinations'
@@ -133,6 +134,7 @@ export function ItemPicker({
       className="flex items-center gap-2 px-3 py-2 text-sm text-text cursor-pointer data-[selected=true]:bg-accent-soft data-[selected=true]:text-accent-text"
     >
       <span className="text-xs text-muted w-12 shrink-0">{d.type === 'project' ? 'Project' : 'Area'}</span>
+      <ItemIcon icon={d.icon} color={d.color} title={d.title} size={20} />
       <span className="flex-1 min-w-0 truncate">{d.title}</span>
       {d.type === 'project' && d.area_title && <span className="text-xs text-muted truncate max-w-[7rem]">{d.area_title}</span>}
     </Command.Item>

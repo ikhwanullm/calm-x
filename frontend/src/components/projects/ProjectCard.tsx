@@ -1,4 +1,4 @@
-import { CardLink, ProgressBar, StatusBadge } from '@/components/common'
+import { CardLink, ItemIcon, ProgressBar, StatusBadge } from '@/components/common'
 import { useDeadlineThreshold } from '@/hooks/useSettings'
 import { getDeadlineStatus } from '@/utils/deadline'
 import { formatRelativeDate } from '@/utils/date'
@@ -41,6 +41,7 @@ export function ProjectCard({ project, today }: { project: Project; today: strin
   return (
     <CardLink to={`/projects/${project.id}`}>
       <div className="flex items-start justify-between gap-4">
+        <ItemIcon icon={project.icon} color={project.color} title={project.title} size={28} />
         <div className="flex-1 min-w-0">
           <h2 className="text-sm font-semibold text-text truncate">{project.title}</h2>
           <p className="text-xs text-muted mt-0.5 truncate">

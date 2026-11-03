@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { CardLink } from '@/components/common'
+import { CardLink, ItemIcon } from '@/components/common'
 import { NextTaskLine } from '@/components/projects/ProjectCard'
 import { daysSinceIso, formatRelativeDate, isoToLocalDateStr } from '@/utils/date'
 import { STALE_DAYS } from '@/utils/projectList'
@@ -24,7 +24,10 @@ export function AreaCard({ area, today }: { area: Area; today: string }) {
   const activity = lastActivity(area, today)
   return (
     <CardLink to={`/areas/${area.id}`}>
-      <h2 className="text-sm font-semibold text-text truncate">{area.title}</h2>
+      <div className="flex items-center gap-3">
+        <ItemIcon icon={area.icon} color={area.color} title={area.title} size={28} />
+        <h2 className="text-sm font-semibold text-text truncate">{area.title}</h2>
+      </div>
       {area.description && <p className="text-xs text-muted mt-0.5 line-clamp-1">{area.description}</p>}
       {stats && (
         <p className="text-xs text-muted mt-1">
@@ -75,8 +78,9 @@ export function AreaList({ areas, today }: { areas: Area[]; today: string }) {
             return (
               <tr key={a.id} onClick={() => navigate(`/areas/${a.id}`)} className="border-t border-border hover:bg-surface-2 cursor-pointer">
                 <td className="px-3 py-2 max-w-[16rem]">
-                  <Link to={`/areas/${a.id}`} onClick={(e) => e.stopPropagation()} className="text-sm font-medium text-text hover:underline block truncate">
-                    {a.title}
+                  <Link to={`/areas/${a.id}`} onClick={(e) => e.stopPropagation()} className="text-sm font-medium text-text hover:underline flex items-center gap-2">
+                    <ItemIcon icon={a.icon} color={a.color} title={a.title} size={20} />
+                    <span className="truncate">{a.title}</span>
                   </Link>
                 </td>
                 <td className="px-3 py-2 text-sm tabular-nums text-muted">{a.stats?.project_count ?? ''}</td>

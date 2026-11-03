@@ -10,7 +10,7 @@ import {
   useRestoreItem,
   useDeleteItem,
 } from '@/hooks/useItems'
-import { ConfirmDialog } from '@/components/common'
+import { ConfirmDialog, ItemIconPicker } from '@/components/common'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -119,12 +119,27 @@ export function ItemHeader({ item, archived, listPath }: ItemHeaderProps) {
       {/* Header row: title + 2.16 actions menu */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          {/* Title - inline edit */}
-          <InlineTitle
-            item={item}
-            disabled={archived}
-            onSave={(title) => updateItem.mutate({ title })}
-          />
+          {/* Title - inline edit, with the icon picker for Projects and Areas */}
+          <div className="flex items-start gap-3">
+            {item.type !== 'resource' && (
+              <div className="mt-1">
+                <ItemIconPicker
+                  title={item.title}
+                  icon={item.icon}
+                  color={item.color}
+                  disabled={archived}
+                  onChange={(patch) => updateItem.mutate(patch)}
+                />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <InlineTitle
+                item={item}
+                disabled={archived}
+                onSave={(title) => updateItem.mutate({ title })}
+              />
+            </div>
+          </div>
 
           {/* 2.15: Mark complete / Reopen actions */}
           {isProject(item) && !archived && item.project_status === 'active' && (

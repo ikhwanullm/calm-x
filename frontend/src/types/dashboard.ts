@@ -30,6 +30,8 @@ export interface AttentionProject {
   progress_percentage: number
   project_deadline: string | null
   days_inactive: number
+  icon?: string | null
+  color?: import('./models').ItemColor | null
 }
 
 export interface DashboardCounts {
