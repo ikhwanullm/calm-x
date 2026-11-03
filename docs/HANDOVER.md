@@ -15,6 +15,21 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
 
 ## Next up
 
+### Follow-ups from the 2026-11-03 review of the week strip and icons (one commit each)
+
+The section below ("Readable week strip and icons") is built: when you start, move it to `docs/history/rounds.md`.
+Found by testing on a DB copy at 1440 and 1920 px:
+
+- **Teal is too close to the green status color.** Dark: teal fg `#74D8B8` vs `--ok-fg` `#7BDCA6` (about 14° of hue apart);
+  light: `#0F6E56` vs `#106B3E`. A teal project chip can be read as "On track". Move the identity tint `teal` to a clearly
+  bluer cyan (hue about 190°, e.g. light bg `#E3F4F8` / fg `#0B6378`; pick dark values with fg on bg at least 4.5:1) and
+  keep the key `teal` so stored data stays valid. Check side by side with an "On track" badge and with `blue` and the
+  accent in both themes; if it is still close to either, drop the hue from the picker (keep rendering stored `teal` as slate).
+- **The week strip does not use a wide screen.** Today's page is `max-w-6xl`, so at 1920 px the strip is 1152 px wide with
+  about 700 px empty and each day column 157 px. Let the week strip section span the full content width (the lists below may
+  keep `max-w-6xl`), so columns reach about 250 px on a 1920 px screen. Keep the 7 columns from 768 px up.
+- Small: in the icon picker, Enter in the search box picks the first match (today it does nothing until you press Down first).
+
 ### Readable week strip and icons for Projects and Areas (chosen by the owner 2026-11-03, from a mockup)
 
 Two features, one commit each (icons may take two: backend, then UI). The micro-interactions round below is done: when you
