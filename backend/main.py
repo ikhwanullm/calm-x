@@ -36,6 +36,12 @@ def check_port_available(port: int) -> bool:
             return False
 
 
+# index.html (and other root files) change name-for-name on every build but point at hashed files that the build
+# deletes. Without this a browser may keep an old copy for hours and then ask for files that no longer exist.
+# "no-cache" still lets the browser reuse its copy, but only after asking the server whether it changed.
+_NO_CACHE = {"Cache-Control": "no-cache"}
+
+
 def _safe_static_file(full_path: str, dist_path: Path) -> FileResponse | None:
     """Return a FileResponse only if the resolved path is inside dist_path.
 
@@ -55,7 +61,7 @@ def _safe_static_file(full_path: str, dist_path: Path) -> FileResponse | None:
     except ValueError:
         return None
     if candidate.exists() and candidate.is_file():
-        return FileResponse(str(candidate))
+        return FileResponse(str(candidate), headers=_NO_CACHE)
     return None
 
 
@@ -189,7 +195,7 @@ def create_app(config=None, extra_routers=None) -> FastAPI:
         # Fallback to index.html for SPA client-side routing
         index_html = dist_path / "index.html"
         if index_html.exists():
-            return FileResponse(str(index_html))
+            return FileResponse(str(index_html), headers=_NO_CACHE)
 
         return JSONResponse(
             status_code=503,

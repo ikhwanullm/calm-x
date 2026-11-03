@@ -36,7 +36,10 @@ function Show-Error($message) {
 }
 
 # Calm-X in its own window without tabs or address bar (Edge, then Chrome); the default browser as a last resort.
+# The ?v= part is a new address every time, so a copy of the page that the browser cached before the server
+# started sending "no-cache" (or any older copy) is never reused.
 function Open-App {
+    $appUrl = "$url/?v=$(Get-Date -Format 'yyyyMMddHHmmss')"
     $candidates = @(
         "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
         "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
@@ -46,11 +49,11 @@ function Open-App {
     )
     foreach ($exe in $candidates) {
         if (Test-Path $exe) {
-            Start-Process $exe -ArgumentList "--app=$url"
+            Start-Process $exe -ArgumentList "--app=$appUrl"
             return
         }
     }
-    Start-Process $url
+    Start-Process $appUrl
 }
 
 # Rebuild only when the build is missing or a source file changed after it.
@@ -124,7 +127,7 @@ if (-not $NoBrowser) {
         for ($i = 0; $i -lt 30; $i++) {
             try {
                 Invoke-WebRequest "$u/api/settings" -UseBasicParsing -TimeoutSec 1 | Out-Null
-                Start-Process $u
+                Start-Process "$u/?v=$(Get-Date -Format 'yyyyMMddHHmmss')"
                 return
             } catch {
                 Start-Sleep -Milliseconds 500

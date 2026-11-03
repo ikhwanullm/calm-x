@@ -180,3 +180,16 @@ def test_spa_static_file_served(tmp_path):
     result = _safe_static_file("favicon.svg", dist)
     assert result is not None
 
+
+def test_index_and_root_files_are_sent_with_no_cache(tmp_path):
+    """A browser must re-ask for index.html, or it keeps pointing at hashed files that a rebuild deleted."""
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<html/>")
+    (dist / "favicon.svg").write_text("<svg/>")
+    cfg = Config(port=8080, frontend_dist=str(dist))
+    client = TestClient(create_app(cfg), base_url="http://localhost:8080", raise_server_exceptions=False)
+    for path in ("/", "/projects/5", "/favicon.svg"):
+        resp = client.get(path)
+        assert resp.status_code == 200, path
+        assert resp.headers["cache-control"] == "no-cache", path

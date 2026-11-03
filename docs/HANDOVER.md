@@ -11,7 +11,7 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and
   upgrades to 009 on the next app start.
-- Tests at the last code commit: backend 632 passed, frontend 1125 passed (85 files, about 35-55 s), `tsc -b` clean.
+- Tests at the last code commit: backend 633 passed, frontend 1138 passed (86 files, about 35-55 s), `tsc -b` clean.
 
 ## Next up
 
@@ -47,6 +47,7 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
+| (newest) | Browser cache of `index.html`: the server sends `Cache-Control: no-cache` for `index.html` and root files, and the launcher opens `/?v=<timestamp>`, so a window never starts from an old copy that points at deleted chunk files (the cause of "Resources errors / links missing" seen via the desktop shortcut) |
 | (newest) | Stale tab after a rebuild: `vite:preloadError` reloads the page once (`lib/staleBuild.ts`, 10 s guard against loops), router `errorElement` `RouteError` ("Calm-X was updated" + Reload). Also: project/area names on tasks are links (`ItemLink`); windowless launcher (`install-shortcuts.ps1`) |
 | (newest) | Typography and identity: Plus Jakarta Sans bundled with @fontsource (no Google Fonts request; guard test `noExternalFonts`), `components/common/Logo.tsx` in the sidebar header (collapsed: the logo is the expand button), new `public/favicon.svg` linked in `index.html`, `icons.svg` removed |
 | `bf7f813` to `69a7d7a` | Code health round, parts 1-5: faster tests, `TaskDrawer` and `ItemDetailView` split, task lists in fixed queries, lazy routes |
