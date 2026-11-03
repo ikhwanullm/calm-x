@@ -94,7 +94,7 @@ def test_dashboard_ok_and_has_the_new_sections(client):
     assert r.status_code == 200
     b = r.json()
     assert set(b) == {
-        "inbox_count", "last_review_date", "days_since_review", "meetings_to_process", "stale_waiting",
+        "inbox_count", "last_review_date", "days_since_review", "stale_waiting",
         "stale_waiting_total", "attention_projects", "counts",
     }
     assert b["counts"] == {"active_projects": 0, "areas": 0, "resources": 0, "archived": 0, "someday": 0}
@@ -151,17 +151,16 @@ def test_counts_leave_out_archived_and_completed_and_count_someday(engine):
     assert (c.active_projects, c.areas, c.resources, c.archived, c.someday) == (2, 1, 1, 3, 2)
 
 
-# ---------- Meetings to process ----------
+# ---------- Meetings are not on the Dashboard (the Weekly Review step lists them) ----------
 
-def test_meetings_to_process_are_this_weeks_with_actions_left(engine):
+def test_the_dashboard_does_not_list_meetings(client, engine):
     with Session(engine) as s:
         p = _item(s, title="Migrate")
-        for title, days_ago, body in (("Recent", 2, "- [ ] a\n@Budi: b\n"), ("Notes only", 1, "just notes\n"), ("Old", 9, "- [ ] c\n")):
-            held = datetime.combine(TODAY, datetime.min.time(), tzinfo=timezone.utc) - timedelta(days=days_ago) + timedelta(hours=3)
-            s.add(Meeting(item_id=p.id, title=title, held_at=held, attendees="", body=body, created_at=held, updated_at=held))
+        held = datetime.combine(TODAY, datetime.min.time(), tzinfo=timezone.utc) - timedelta(days=1) + timedelta(hours=3)
+        s.add(Meeting(item_id=p.id, title="Recent", held_at=held, attendees="", body="- [ ] a\n@Budi: b\n", created_at=held, updated_at=held))
         s.commit()
-    got = _dash(engine).meetings_to_process
-    assert [(m.title, m.open_action_count, m.item_title, m.item_type) for m in got] == [("Recent", 2, "Migrate", "project")]
+    assert "meetings_to_process" not in client.get(f"/api/dashboard?today={TODAY_STR}", headers=HEADERS).json()
+    assert not hasattr(_dash(engine), "meetings_to_process")
 
 
 # ---------- Stale waiting ----------

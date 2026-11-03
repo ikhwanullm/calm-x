@@ -12,10 +12,9 @@ from backend.schemas.dashboard import (
     AttentionProject,
     DashboardCounts,
     DashboardSchema,
-    MeetingToProcess,
     StaleWaiting,
 )
-from backend.services import meeting_service, project_stats_service
+from backend.services import project_stats_service
 from backend.services.progress_service import calculate_progress
 
 STALE_WAITING_DAYS = 7        # a wait this long or longer is listed
@@ -37,13 +36,6 @@ def get_dashboard_data(
         ).scalar_one(),
         last_review_date=last_review,
         days_since_review=(client_today - date.fromisoformat(last_review)).days if last_review else None,
-        meetings_to_process=[
-            MeetingToProcess(
-                id=m.id, title=m.title, held_at=m.held_at, item_id=m.item_id, item_title=m.item_title,
-                item_type=m.item_type, open_action_count=m.open_action_count,
-            )
-            for m in meeting_service.get_review_meetings(session, client_today, local_tz)
-        ],
         stale_waiting=stale_waiting[:MAX_STALE_WAITING],
         stale_waiting_total=len(stale_waiting),
         attention_projects=_get_attention_projects(session, client_today),

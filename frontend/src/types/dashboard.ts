@@ -1,13 +1,3 @@
-export interface MeetingToProcess {
-  id: number
-  title: string
-  held_at: string            // ISO datetime (UTC)
-  item_id: number
-  item_title: string
-  item_type: string
-  open_action_count: number
-}
-
 export interface StaleWaiting {
   id: number
   title: string
@@ -46,7 +36,6 @@ export interface DashboardData {
   inbox_count: number
   last_review_date: string | null
   days_since_review: number | null
-  meetings_to_process: MeetingToProcess[]
   stale_waiting: StaleWaiting[]
   stale_waiting_total: number
   attention_projects: AttentionProject[]

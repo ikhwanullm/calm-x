@@ -127,6 +127,20 @@ export function useSetActionsClosed(id: number) {
   })
 }
 
+/** Weekly Review: "Nothing more" for any meeting in the list (the meeting id is the variable). */
+export function useCloseMeetingActions() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => meetingsApi.closeActions(id),
+    onSuccess: (meeting) => {
+      qc.setQueryData<Meeting>(meetingKeys.detail(meeting.id), meeting)
+      qc.invalidateQueries({ queryKey: meetingKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+    },
+    onError: (err: Error) => notify.error("Couldn't save that. Try again.", err.message),
+  })
+}
+
 /** "Done, no task": the chosen action lines are rewritten `[x]` in the notes; no task is made. */
 export function useCloseMeetingLines(id: number) {
   const qc = useQueryClient()

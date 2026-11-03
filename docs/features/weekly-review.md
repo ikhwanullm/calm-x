@@ -6,6 +6,10 @@ Part of the Calm-X docs; start at [`docs/HANDOVER.md`](../HANDOVER.md). Describe
 
 Order is now Inbox, Meetings, **Waiting for**, Projects, Areas, Resources, **Someday**, Summary.
 
+- **Meetings step** (changed 2026-11-03, chosen by the owner: actions are optional): lists meetings of the last 7 days with open actions that
+  are not closed (`actions_closed_at`). Per meeting: **Process** (opens it in a new tab) and **Nothing more** (`POST /api/meetings/{id}/close-actions`);
+  the row stays, dimmed, "No more actions", like in the Waiting for step. The Dashboard no longer lists meetings. See `features/meetings.md`.
+
 - **Waiting for** (`components/review/WaitingStep.tsx`, `GET /api/weekly-review/waiting?today=&tz_offset=`): every open waiting-for task
   (not Someday, not in an archived item or completed project, with a `waiting_since`), longest wait first, with who, where, due date and
   the days waited. Per task: **Followed up** (`POST /api/tasks/{id}/follow-up` sets `waiting_since` to now, so `waiting_since` means

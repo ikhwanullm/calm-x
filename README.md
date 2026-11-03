@@ -16,7 +16,8 @@ and no internet connection needed.
   to an Area, have a deadline and are completed and archived when done.
 - **Tasks**: subtasks, tags, priority, due date, "Add to Today", "Waiting for", "Defer until", "Someday", and Undo after a delete.
 - **Meeting notes**: Markdown notes per Project or Area with autosave. Lines like `[ ] do this` or `@Budi: send that`
-  become tasks; questions and decisions are kept; the next meeting starts with what is still open from the last one.
+  can become tasks (optional: `[x]` or "Nothing more to process" means handled); questions and decisions are kept; the next
+  meeting starts with what is still open from the last one.
 - **Dashboard**: only what needs attention: things to process, waits that take too long, projects that are slipping.
 - **Weekly Review**: a guided session: Inbox, Meetings, Waiting for, Projects, Areas, Resources, Someday, Summary.
 - **Templates**, **Archive**, global search, command palette, light and dark theme, automatic backups, JSON export/import.

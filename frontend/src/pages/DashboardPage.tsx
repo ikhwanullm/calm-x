@@ -3,7 +3,6 @@ import { useDashboard } from "@/hooks/useDashboard"
 import { Skeleton, EmptyState, ItemIcon } from "@/components/common"
 import { cn } from "@/lib/utils"
 import { formatRelativeDate, getLocalToday } from "@/utils/date"
-import { formatMeetingTime } from "@/utils/meeting"
 import type { AttentionProject, AttentionReason, DashboardData, StaleWaiting } from "@/types/dashboard"
 
 /** A review is due after a week (or when there never was one). */
@@ -19,7 +18,6 @@ export default function DashboardPage() {
   const today = getLocalToday()
 
   const nothingToFlag = !!data
-    && data.meetings_to_process.length === 0
     && data.stale_waiting_total === 0
     && data.attention_projects.length === 0
 
@@ -30,7 +28,7 @@ export default function DashboardPage() {
       {/* To process */}
       <section aria-labelledby="process-heading">
         <h2 id="process-heading" className="text-sm font-semibold text-text mb-3">To process</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Tile title="Inbox" loading={isLoading}>
             {data && (
               <>
@@ -41,44 +39,8 @@ export default function DashboardPage() {
             )}
           </Tile>
 
-          <Tile title="Meetings" loading={isLoading}>
-            {data && (
-              data.meetings_to_process.length === 0 ? (
-                <p className="text-sm text-muted">No actions waiting from this week&apos;s meetings.</p>
-              ) : (
-                <>
-                  <p className="text-3xl font-semibold text-text tabular-nums">{data.meetings_to_process.length}</p>
-                  <p className="text-xs text-muted">
-                    {data.meetings_to_process.length === 1 ? "meeting has" : "meetings have"} actions to turn into tasks
-                  </p>
-                </>
-              )
-            )}
-          </Tile>
-
           <ReviewTile data={data} loading={isLoading} />
         </div>
-
-        {data && data.meetings_to_process.length > 0 && (
-          <ul className="mt-3 space-y-2" aria-label="Meetings to process">
-            {data.meetings_to_process.map((m) => (
-              <li key={m.id}>
-                <Link
-                  to={`/meetings/${m.id}`}
-                  className="flex items-center gap-3 min-h-[44px] px-3 py-2 rounded-control border border-border bg-surface hover:bg-surface-2"
-                >
-                  <span className="flex-1 min-w-0">
-                    <span className="block truncate text-sm font-medium text-text">{m.title}</span>
-                    <span className="block truncate text-xs text-muted">{m.item_title} · {formatMeetingTime(m.held_at)}</span>
-                  </span>
-                  <span className="shrink-0 inline-flex items-center h-5 px-1.5 rounded-pill bg-accent-soft text-xs text-accent-text">
-                    {m.open_action_count} {m.open_action_count === 1 ? "action" : "actions"}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
       </section>
 
       {/* Waiting too long */}
@@ -127,7 +89,7 @@ export default function DashboardPage() {
       {nothingToFlag && (
         <EmptyState
           title="Nothing needs your attention."
-          description="No meeting actions waiting, no long waits and no project at risk. See Today for what to do now."
+          description="No long waits and no project at risk. See Today for what to do now."
           dashedBorder
         />
       )}

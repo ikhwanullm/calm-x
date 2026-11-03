@@ -8,7 +8,6 @@ const EMPTY: DashboardData = {
   inbox_count: 0,
   last_review_date: "2026-10-27",
   days_since_review: 2,
-  meetings_to_process: [],
   stale_waiting: [],
   stale_waiting_total: 0,
   attention_projects: [],
@@ -68,25 +67,14 @@ describe("DashboardPage", () => {
       expect(screen.getByRole("link", { name: "Process inbox →" }).getAttribute("href")).toBe("/inbox")
     })
 
-    it("lists meetings with actions left, each linking to its meeting", () => {
-      show({
-        meetings_to_process: [
-          { id: 7, title: "Weekly sync", held_at: "2026-10-28T03:00:00Z", item_id: 3, item_title: "Migrate CML", item_type: "project", open_action_count: 3 },
-          { id: 8, title: "Kickoff", held_at: "2026-10-27T03:00:00Z", item_id: 3, item_title: "Migrate CML", item_type: "project", open_action_count: 1 },
-        ],
-      })
+    it("does not show meetings: they are handled in the Weekly Review", () => {
       renderPage()
-      const list = screen.getByRole("list", { name: "Meetings to process" })
-      const link = within(list).getByRole("link", { name: /Weekly sync/ })
-      expect(link.getAttribute("href")).toBe("/meetings/7")
-      expect(link.textContent).toContain("3 actions")
-      expect(within(list).getByRole("link", { name: /Kickoff/ }).textContent).toContain("1 action")
-    })
-
-    it("says so when no meeting has actions waiting", () => {
-      renderPage()
-      expect(screen.getByText(/No actions waiting from this week/)).toBeTruthy()
+      expect(screen.queryByText("Meetings")).toBeNull()
       expect(screen.queryByRole("list", { name: "Meetings to process" })).toBeNull()
+      expect(screen.queryByText(/actions to turn into tasks|No actions waiting/)).toBeNull()
+      // Inbox and the weekly review are the two things left to process
+      expect(screen.getByRole("link", { name: "Process inbox →" })).toBeTruthy()
+      expect(screen.getByRole("link", { name: "Start weekly review" })).toBeTruthy()
     })
 
     it("weekly review: how long ago, highlighted only when it is due", () => {

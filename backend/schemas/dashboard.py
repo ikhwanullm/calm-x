@@ -12,16 +12,6 @@ from typing import List, Optional
 from backend.schemas.base import ApiModel
 
 
-class MeetingToProcess(ApiModel):
-    id: int
-    title: str
-    held_at: datetime
-    item_id: int
-    item_title: str
-    item_type: str
-    open_action_count: int
-
-
 class StaleWaiting(ApiModel):
     id: int
     title: str
@@ -59,7 +49,6 @@ class DashboardSchema(ApiModel):
     inbox_count: int
     last_review_date: Optional[str]          # YYYY-MM-DD or None
     days_since_review: Optional[int]
-    meetings_to_process: List[MeetingToProcess]
     stale_waiting: List[StaleWaiting]        # longest waits first, capped
     stale_waiting_total: int
     attention_projects: List[AttentionProject]
