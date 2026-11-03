@@ -82,6 +82,57 @@ def record_subtask_deletion(session: Session, subtask: Subtask) -> None:
     _record(session, "subtask", subtask.id, _subtask_dict(subtask))
 
 
+def record_task_completion(session: Session, task: Task, open_subtask_ids: list[int]) -> None:
+    """Remember a completion: when it happened and which subtasks were still open, so Undo can restore both."""
+    _record(session, "complete", task.id, {
+        "completed_at": _iso(task.completed_at), "open_subtask_ids": open_subtask_ids,
+    })
+
+
+def undo_complete(session: Session, task_id: int):
+    """Reopen a task exactly as it was before it was completed, subtasks included.
+
+    Refused (409) when there is nothing to undo, or the task was changed since: deleted, reopened or
+    completed again. The snapshot is used once.
+    """
+    from backend.exceptions import ConflictError
+    from backend.services.guards import guard_task_item_not_archived
+    from backend.services.task_service import _task_to_response
+
+    entry = session.execute(
+        select(UndoEntry)
+        .where(UndoEntry.kind == "complete", UndoEntry.entity_id == task_id)
+        .order_by(UndoEntry.id.desc())
+    ).scalars().first()
+    if entry is None or entry.created_at.replace(tzinfo=None) < now_utc() - UNDO_RETENTION:
+        raise ConflictError("Nothing to undo: this completion was already undone or has expired")
+    snap = json.loads(entry.payload)
+    task = session.get(Task, task_id)
+    recorded = _dt(snap["completed_at"])
+    current = task.completed_at.replace(tzinfo=None) if task is not None and task.completed_at else None
+    if task is None or not task.is_complete or current != recorded:
+        session.delete(entry)
+        raise ConflictError("The task changed since it was completed")
+    guard_task_item_not_archived(session.get(Item, task.item_id) if task.item_id else None)
+    session.delete(entry)
+
+    now = now_utc()
+    task.is_complete = 0
+    task.completed_at = None
+    task.updated_at = now
+    reopen = set(snap["open_subtask_ids"])
+    for subtask in task.subtasks:
+        if subtask.id in reopen:
+            subtask.is_complete = 0
+            subtask.updated_at = now
+    if task.item_id is not None:
+        item = session.get(Item, task.item_id)
+        if item is not None:
+            item.updated_at = now
+    session.flush()
+    return _task_to_response(session, task)
+
+
 def restore_task(session: Session, task_id: int):
     """Re-create a deleted task with its subtasks and tags.
 

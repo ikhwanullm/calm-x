@@ -11,7 +11,7 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and
   upgrades to 009 on the next app start.
-- Tests at the last code commit: backend 633 passed, frontend 1152 passed (87 files, about 35-55 s), `tsc -b` clean.
+- Tests at the last code commit: backend 639 passed, frontend 1155 passed (88 files, about 35-55 s), `tsc -b` clean.
 
 ## Next up
 
@@ -41,7 +41,7 @@ Three commits in this order: completion animation, Undo after complete, Today he
 - Tests: the existing TaskRow/TaskList/Today tests must keep passing; add tests that a completed row is still in the DOM
   right after completion and gone after the delay (fake timers), and that with `prefers-reduced-motion: reduce` it goes at once.
 
-**Part 2: "Completed · Undo" toast**
+**Part 2: "Completed · Undo" toast (DONE, see `features/lists.md`)**
 
 - `useCompleteTask` shows `notify.success('Task completed', { action: Undo, duration: UNDO_TOAST_MS })` for completions from
   task rows and the drawer. The Weekly Review steps (`InboxStep`, `ProjectsStep`, `WaitingStep`) keep their own outcome UI
@@ -101,6 +101,7 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
+| (newest) | Undo after completing a task: "Task completed" toast, `POST /api/tasks/{id}/undo-complete` (restores subtask states, 409 if the task changed since), quiet in the Weekly Review steps |
 | (newest) | Completion animation: `TaskCheckbox` (self-drawing check), growing strike-through, completed row lingers 400 ms then fades and collapses (`useLeavingRows`), motion tokens in `index.css`, `ProgressBar` width transition |
 | (newest) | Browser cache of `index.html`: the server sends `Cache-Control: no-cache` for `index.html` and root files, and the launcher opens `/?v=<timestamp>`, so a window never starts from an old copy that points at deleted chunk files (the cause of "Resources errors / links missing" seen via the desktop shortcut) |
 | (newest) | Stale tab after a rebuild: `vite:preloadError` reloads the page once (`lib/staleBuild.ts`, 10 s guard against loops), router `errorElement` `RouteError` ("Calm-X was updated" + Reload). Also: project/area names on tasks are links (`ItemLink`); windowless launcher (`install-shortcuts.ps1`) |

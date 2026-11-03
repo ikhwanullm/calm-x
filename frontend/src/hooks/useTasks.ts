@@ -200,8 +200,24 @@ export function useMoveTask() {
   })
 }
 
-export function useCompleteTask() {
+/**
+ * Completing shows "Task completed" with Undo, which reopens the task and its subtasks exactly as they were.
+ * The Weekly Review steps pass `quiet`: they show their own outcome and an Undo would not update their counters.
+ */
+export function useCompleteTask({ quiet = false }: { quiet?: boolean } = {}) {
   const qc = useQueryClient()
+
+  async function undo(id: number) {
+    try {
+      await tasksApi.undoComplete(id)
+      refreshAfterTaskChange(qc)
+      qc.invalidateQueries({ queryKey: taskKeys.detail(id) })
+      notify.success('Task reopened')
+    } catch {
+      notify.error("Couldn't undo: the task changed")
+    }
+  }
+
   return useMutation({
     mutationFn: (id: number) => tasksApi.complete(id),
     onMutate: async (id) => {
@@ -223,8 +239,14 @@ export function useCompleteTask() {
       for (const [key, data] of ctx?.prevLists ?? []) qc.setQueryData(key, data)
       notify.error("Couldn't complete task. Try again.", err.message)
     },
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       refreshAfterTaskChange(qc)
+      if (!quiet) {
+        notify.success('Task completed', {
+          action: { label: 'Undo', onClick: () => { void undo(id) } },
+          duration: UNDO_TOAST_MS,
+        })
+      }
     },
   })
 }

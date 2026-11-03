@@ -68,4 +68,10 @@ The owner found the list pages static. **Projects, All tasks, Areas and Resource
   (`rows(listKey, tasks)` and `toggle(...)` around its checkbox handler) and must keep it above anything that hides an empty list.
   Reopening has no exit animation. With reduced motion the row goes at once. Known limit: Today's "Waiting for" block and group
   headers in All tasks disappear at once when their last row leaves.
+- **Undo after completing** (designed with the owner, 2026-11-03): `useCompleteTask` shows "Task completed" with an 8 s Undo
+  (task rows and the drawer). The Weekly Review steps use `useCompleteTask({ quiet: true })` and show no toast. `mark_complete`
+  records an `undo_entries` row (kind `complete`: the completion time and the ids of the subtasks that were open);
+  `POST /api/tasks/{id}/undo-complete` reopens the task, clears `completed_at` and reopens only those subtasks, so 2 of 3 done comes
+  back as 2 of 3. It answers 409 when there is nothing to undo or the task changed since (reopened, deleted, completed again);
+  the toast then says "Couldn't undo: the task changed". Completing a task that is already complete records nothing.
 - Not done: ascending/descending toggle in the UI (the API has `order`), server-side grouping, the toolbar for Areas/Resources.

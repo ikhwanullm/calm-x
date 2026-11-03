@@ -188,7 +188,15 @@ def mark_complete(task_id: int, session: SessionDep):
     return task
 
 
-@router.post("/tasks/{task_id}/incomplete", response_model=TaskResponse)
+@router.post("/tasks/{task_id}/undo-complete", response_model=TaskResponse)
+def undo_complete(task_id: int, session: SessionDep):
+    """Undo a completion: the task and its subtasks come back as they were."""
+    task = undo_service.undo_complete(session, task_id)
+    session.commit()
+    return task
+
+
+@router.post("/tasks/{task_id}/incomplete",response_model=TaskResponse)
 def mark_incomplete(task_id: int, session: SessionDep):
     task = task_service.mark_incomplete(session, task_id)
     session.commit()

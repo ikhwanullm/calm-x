@@ -22,7 +22,7 @@ export function WaitingStep({ onHandled }: WaitingStepProps) {
   const today = getLocalToday()
   const { data: waits = [], isLoading } = useReviewWaiting()
   const followUp = useFollowUpTask()
-  const complete = useCompleteTask()
+  const complete = useCompleteTask({ quiet: true })
   const patch = usePatchTask()
   const [outcomes, setOutcomes] = useState<Record<number, Outcome>>({})
 

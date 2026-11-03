@@ -33,7 +33,7 @@ export function ProjectsStep({ onCompleted, onUpdatedDueDate, onArchived, onTask
   // Load tasks for current project
   const { data: allTasks = [], isLoading: tasksLoading } = useItemTasks(currentProject?.id ?? 0, { include_complete: false })
 
-  const completeTask = useCompleteTask()
+  const completeTask = useCompleteTask({ quiet: true })
   const createTask = useCreateTask()
   const deleteTask = useDeleteTask()
   const updateTask = useUpdateTask(editDueDateTaskId ?? 0)

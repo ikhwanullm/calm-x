@@ -334,9 +334,14 @@ def mark_complete(session: Session, task_id: int) -> TaskResponse:
 
     now = now_utc()
     if not task.is_complete:
+        from backend.services.undo_service import record_task_completion
+
+        # Completing a task completes every subtask; remember which ones were open so Undo can put them back
+        open_subtasks = [s.id for s in task.subtasks if not s.is_complete]
         # Completing a task that is already complete changes nothing: it keeps its first date (or none, for
         # a task completed before the date was recorded)
         task.completed_at = now
+        record_task_completion(session, task, open_subtasks)
     task.is_complete = 1
     # Auto-complete all subtasks
     for subtask in task.subtasks:

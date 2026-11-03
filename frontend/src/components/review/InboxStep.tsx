@@ -25,7 +25,7 @@ export function InboxStep({ onOrganized, onCompleted, onDeleted }: InboxStepProp
   const { data: areas = [] } = useItems({ type: 'area' })
 
   const moveTask = useMoveTask()
-  const completeTask = useCompleteTask()
+  const completeTask = useCompleteTask({ quiet: true })
   const deleteTask = useDeleteTask()
 
   // ---------------------------------------------------------------------------

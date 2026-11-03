@@ -165,3 +165,75 @@ def test_migration_006_creates_table(tmp_path):
     cols = [r[1] for r in con.execute("PRAGMA table_info(undo_entries)")]
     assert cols == ["id", "kind", "entity_id", "payload", "created_at"]
     con.close()
+
+
+# ── undoing a completion ─────────────────────────────────────────────────────
+
+def _task_with_subtasks(client, done_first=True):
+    task = _post(client, "/api/tasks", {"title": "Report"})
+    subs = [_post(client, f"/api/tasks/{task['id']}/subtasks", {"title": t}) for t in ("A", "B", "C")]
+    if done_first:
+        # one subtask is already done before the task is completed
+        _post(client, f"/api/subtasks/{subs[0]['id']}/complete", status=200)
+    return task, subs
+
+
+def test_undo_complete_restores_subtask_states_and_clears_the_date(ctx):
+    client, _ = ctx
+    task, _subs = _task_with_subtasks(client)
+    before = client.get(f"/api/tasks/{task['id']}", headers=HEADERS).json()
+    assert before["completed_subtask_count"] == 1
+
+    done = _post(client, f"/api/tasks/{task['id']}/complete", status=200)
+    assert done["completed_subtask_count"] == 3 and done["completed_at"] is not None
+
+    undone = _post(client, f"/api/tasks/{task['id']}/undo-complete", status=200)
+    assert undone["is_complete"] is False
+    assert undone["completed_at"] is None
+    assert undone["completed_subtask_count"] == 1  # not 0: the subtask done before stays done
+
+
+def test_undo_complete_twice_is_refused(ctx):
+    client, _ = ctx
+    task = _post(client, "/api/tasks", {"title": "Report"})
+    _post(client, f"/api/tasks/{task['id']}/complete", status=200)
+    _post(client, f"/api/tasks/{task['id']}/undo-complete", status=200)
+    r = client.post(f"/api/tasks/{task['id']}/undo-complete", headers=HEADERS)
+    assert r.status_code == 409
+
+
+def test_undo_complete_after_a_manual_reopen_is_refused(ctx):
+    client, _ = ctx
+    task = _post(client, "/api/tasks", {"title": "Report"})
+    _post(client, f"/api/tasks/{task['id']}/complete", status=200)
+    _post(client, f"/api/tasks/{task['id']}/incomplete", status=200)
+    r = client.post(f"/api/tasks/{task['id']}/undo-complete", headers=HEADERS)
+    assert r.status_code == 409
+
+
+def test_undo_of_an_older_completion_is_refused_after_completing_again(ctx):
+    client, _ = ctx
+    task = _post(client, "/api/tasks", {"title": "Report"})
+    _post(client, f"/api/tasks/{task['id']}/complete", status=200)
+    _post(client, f"/api/tasks/{task['id']}/incomplete", status=200)
+    _post(client, f"/api/tasks/{task['id']}/complete", status=200)
+    # the newest completion can be undone; the one before it cannot come back
+    _post(client, f"/api/tasks/{task['id']}/undo-complete", status=200)
+    assert client.post(f"/api/tasks/{task['id']}/undo-complete", headers=HEADERS).status_code == 409
+
+
+def test_undo_complete_of_a_deleted_task_is_refused(ctx):
+    client, _ = ctx
+    task = _post(client, "/api/tasks", {"title": "Report"})
+    _post(client, f"/api/tasks/{task['id']}/complete", status=200)
+    client.delete(f"/api/tasks/{task['id']}", headers=HEADERS)
+    assert client.post(f"/api/tasks/{task['id']}/undo-complete", headers=HEADERS).status_code == 409
+
+
+def test_completing_an_already_complete_task_records_nothing_to_undo(ctx):
+    client, _ = ctx
+    task = _post(client, "/api/tasks", {"title": "Report"})
+    _post(client, f"/api/tasks/{task['id']}/complete", status=200)
+    _post(client, f"/api/tasks/{task['id']}/complete", status=200)
+    _post(client, f"/api/tasks/{task['id']}/undo-complete", status=200)
+    assert client.post(f"/api/tasks/{task['id']}/undo-complete", headers=HEADERS).status_code == 409

@@ -138,7 +138,7 @@ def test_an_old_undo_snapshot_without_the_field_restores_with_no_date(client):
     try:
         import json
         from backend.models.undo import UndoEntry
-        entry = session.query(UndoEntry).one()
+        entry = session.query(UndoEntry).filter_by(kind="task").one()
         payload = json.loads(entry.payload) if isinstance(entry.payload, str) else dict(entry.payload)
         payload.pop("completed_at")
         entry.payload = json.dumps(payload) if isinstance(entry.payload, str) else payload

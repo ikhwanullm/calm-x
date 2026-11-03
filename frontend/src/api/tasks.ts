@@ -66,6 +66,9 @@ export const tasksApi = {
   complete: (id: number) =>
     apiClient.post<Task>(`/tasks/${id}/complete`).then(r => r.data),
 
+  undoComplete: (id: number) =>
+    apiClient.post<Task>(`/tasks/${id}/undo-complete`).then(r => r.data),
+
   incomplete: (id: number) =>
     apiClient.post<Task>(`/tasks/${id}/incomplete`).then(r => r.data),
 
