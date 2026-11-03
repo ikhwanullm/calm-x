@@ -14,6 +14,7 @@ from backend.schemas.meeting import (
     MeetingResponse,
     MeetingSummary,
     MeetingUpdate,
+    CloseLinePayload,
     ProcessPayload,
     ProcessResponse,
 )
@@ -79,6 +80,14 @@ def restore_meeting(meeting_id: int, session: SessionDep):
 def get_actions(meeting_id: int, session: SessionDep):
     """Action lines, questions and decisions found in the notes right now."""
     return meeting_service.get_actions(session, meeting_id)
+
+
+@router.post("/meetings/{meeting_id}/close-lines", response_model=MeetingResponse)
+def close_lines(meeting_id: int, payload: CloseLinePayload, session: SessionDep):
+    """Mark the chosen action lines `[x]`: handled without a task (all or nothing)."""
+    result = meeting_service.close_lines(session, meeting_id, payload)
+    session.commit()
+    return result
 
 
 @router.post("/meetings/{meeting_id}/process", response_model=ProcessResponse)

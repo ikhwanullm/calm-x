@@ -111,6 +111,20 @@ export function useDeleteMeeting() {
   })
 }
 
+/** "Done, no task": the chosen action lines are rewritten `[x]` in the notes; no task is made. */
+export function useCloseMeetingLines(id: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (lines: { line: number; text: string }[]) => meetingsApi.closeLines(id, lines),
+    onSuccess: (meeting) => {
+      qc.setQueryData<Meeting>(meetingKeys.detail(id), meeting)
+      qc.invalidateQueries({ queryKey: meetingKeys.all })
+      qc.invalidateQueries({ queryKey: dashboardKeys.all })
+    },
+    onError: (err: Error) => notify.error("Couldn't mark the action as done. Reload the notes and try again.", err.message),
+  })
+}
+
 export function useProcessMeeting(id: number) {
   const qc = useQueryClient()
   return useMutation({

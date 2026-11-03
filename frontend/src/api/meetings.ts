@@ -38,6 +38,9 @@ export const meetingsApi = {
   actions: (id: number) =>
     apiClient.get<MeetingActions>(`/meetings/${id}/actions`).then(r => r.data),
 
+  closeLines: (id: number, lines: { line: number; text: string }[]) =>
+    apiClient.post<Meeting>(`/meetings/${id}/close-lines`, { lines }).then(r => r.data),
+
   process: (id: number, actions: ProcessActionPayload[]) =>
     apiClient.post<ProcessResult>(`/meetings/${id}/process`, { actions }).then(r => r.data),
 }

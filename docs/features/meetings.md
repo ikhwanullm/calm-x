@@ -24,6 +24,12 @@ sent). **Parts A and B are built.**
   `-`/`*`/`+` list marker are ignored; fenced code blocks and lines without text are ignored):
   `[ ] text` my action, `@Who: text` someone else's action (Waiting-for task), `? text` question, `! text` decision.
   Processed lines become `[→] text` / `@→Who: text` and are only counted.
+  **Actions are optional** (chosen by the owner 2026-11-03): a line `[x] text` / `[X] text` is **closed** (handled without a task); it
+  is only counted (`closed`) and wins over the other rules, so `[x] @Who: text` is closed too. The side panel has **Done, no task** next
+  to each open action: `POST /api/meetings/{id}/close-lines` with `{lines: [{line, text}]}` rewrites `[ ] text` to `[x] text` and
+  `@Who: text` to `[x] @Who: text` in the saved notes, with the same stale check as `process` (409 and no change when a line moved or
+  changed; all or nothing; a line chosen twice is 400; archived item 403). The page saves typing first and shows the new body.
+  `GET /api/meetings/{id}/actions` returns `closed`, shown as "N done without a task".
 - **API** (`api/meetings.py`): `GET/POST /api/items/{id}/meetings`, `GET /api/meetings?q=` (title, attendees, notes),
   `GET/PUT/DELETE /api/meetings/{id}`, `POST /api/meetings/{id}/restore` (Undo), `GET /api/meetings/{id}/actions`,
   `POST /api/meetings/{id}/process`. Process re-parses the saved notes and refuses (409, nothing created) if a chosen line

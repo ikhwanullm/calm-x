@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, Trash2 } from 'lucide-react'
 import {
+  useCloseMeetingLines,
   useDeleteMeeting,
   useMeeting,
   useMeetingActions,
@@ -59,6 +60,7 @@ function MeetingEditor({ meeting }: { meeting: Meeting }) {
   const updateMeeting = useUpdateMeeting(meeting.id)
   const deleteMeeting = useDeleteMeeting()
   const processMeeting = useProcessMeeting(meeting.id)
+  const closeLines = useCloseMeetingLines(meeting.id)
   const { data: parsed, refetch: refetchActions } = useMeetingActions(meeting.id)
 
   // Drafts live here; server refetches never overwrite what is being typed.
@@ -103,6 +105,14 @@ function MeetingEditor({ meeting }: { meeting: Meeting }) {
         setBody(result.meeting.body)
         setShowProcess(false)
       },
+    })
+  }
+
+  /** "Done, no task": rewrite the line `[x]` in the saved notes (typing is saved first) and show the new text. */
+  async function handleDoneWithoutTask(action: { line: number; text: string }) {
+    if (!(await autosave.flush())) return
+    closeLines.mutate([{ line: action.line, text: action.text }], {
+      onSuccess: (updated) => setBody(updated.body),
     })
   }
 
@@ -231,17 +241,33 @@ function MeetingEditor({ meeting }: { meeting: Meeting }) {
             {openActions.length === 0 ? (
               <p className="text-sm text-muted">No open action lines.</p>
             ) : (
-              <ul className="space-y-1 text-sm text-text">
+              <ul className="space-y-1.5 text-sm text-text">
                 {openActions.map((a) => (
-                  <li key={a.line}>
-                    {a.kind === 'waiting' && <span className="text-xs text-muted">@{a.who} · </span>}
-                    {a.text}
+                  <li key={a.line} className="flex items-start justify-between gap-2">
+                    <span className="min-w-0 break-words">
+                      {a.kind === 'waiting' && <span className="text-xs text-muted">@{a.who} · </span>}
+                      {a.text}
+                    </span>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => { void handleDoneWithoutTask(a) }}
+                        disabled={closeLines.isPending}
+                        aria-label={`Done, no task: ${a.text}`}
+                        className="shrink-0 text-xs text-muted hover:text-text underline disabled:opacity-50"
+                      >
+                        Done, no task
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
             )}
             {(parsed?.converted ?? 0) > 0 && (
               <p className="text-xs text-muted">{parsed?.converted} already turned into tasks</p>
+            )}
+            {(parsed?.closed ?? 0) > 0 && (
+              <p className="text-xs text-muted">{parsed?.closed} done without a task</p>
             )}
             <Button
               type="button"

@@ -88,6 +88,12 @@ class ActionsResponse(ApiModel):
     questions: List[TextLine]
     decisions: List[TextLine]
     converted: int
+    closed: int = 0
+
+
+class ProcessActionRef(ApiModel):
+    line: int = Field(..., ge=0)
+    text: str = Field(..., description="The line's text as the user saw it; a mismatch means the notes changed")
 
 
 class ProcessAction(ApiModel):
@@ -99,6 +105,10 @@ class ProcessAction(ApiModel):
 
 class ProcessPayload(ApiModel):
     actions: List[ProcessAction] = Field(..., min_length=1, max_length=100)
+
+
+class CloseLinePayload(ApiModel):
+    lines: List[ProcessActionRef] = Field(..., min_length=1, max_length=100)
 
 
 class ProcessResponse(ApiModel):

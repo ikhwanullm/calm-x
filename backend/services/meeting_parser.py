@@ -10,7 +10,9 @@ Recognised lines (optionally inside a list, `- `, `* ` or `+ `; indentation is i
     ! text          decision
 
 Lines already turned into tasks are rewritten as `[→] text` / `@→Who: text` and are only
-counted. Lines inside ``` or ~~~ fenced code blocks are ignored, as are lines without text
+counted. A line written `[x] text` (or `[X]`) is closed: handled without a task, only counted, and it
+wins over the other rules, so `[x] @Who: text` is closed too.
+Lines inside ``` or ~~~ fenced code blocks are ignored, as are lines without text
 (the empty `[ ]` in the new-meeting template).
 """
 from __future__ import annotations
@@ -22,6 +24,7 @@ from typing import Literal
 _LIST_MARKER = r"(?:[-*+]\s+)?"
 _MINE = re.compile(rf"^(?P<prefix>\s*{_LIST_MARKER})\[ \]\s+(?P<text>\S.*?)\s*$")
 _WAITING = re.compile(rf"^(?P<prefix>\s*{_LIST_MARKER})@(?P<who>[^:\s][^:]{{0,99}}?)\s*:\s*(?P<text>\S.*?)\s*$")
+_CLOSED = re.compile(rf"^\s*{_LIST_MARKER}\[[xX]\]\s+\S")
 _DONE_MINE = re.compile(rf"^\s*{_LIST_MARKER}\[→\]\s+\S")
 _DONE_WAITING = re.compile(rf"^\s*{_LIST_MARKER}@→[^:]+:\s*\S")
 _QUESTION = re.compile(rf"^\s*{_LIST_MARKER}\?\s+(?P<text>\S.*?)\s*$")
@@ -51,6 +54,7 @@ class ParsedMeeting:
     questions: list[ParsedLine] = field(default_factory=list)
     decisions: list[ParsedLine] = field(default_factory=list)
     converted: int = 0   # lines already turned into tasks
+    closed: int = 0      # lines marked [x]: handled without a task
 
 
 def parse_meeting(body: str) -> ParsedMeeting:
@@ -64,7 +68,9 @@ def parse_meeting(body: str) -> ParsedMeeting:
             continue
         if in_fence:
             continue
-        if _DONE_MINE.match(line) or _DONE_WAITING.match(line):
+        if _CLOSED.match(line):
+            result.closed += 1
+        elif _DONE_MINE.match(line) or _DONE_WAITING.match(line):
             result.converted += 1
         elif m := _MINE.match(line):
             result.actions.append(ParsedAction(index, "mine", m["text"]))
@@ -92,4 +98,22 @@ def mark_converted(body: str, actions: list[ParsedAction]) -> str:
             m = _WAITING.match(line)
             if m:
                 lines[action.line] = f"{m['prefix']}@→{m['who'].strip()}: {m['text']}{trailing}"
+    return "\n".join(lines)
+
+
+def mark_closed(body: str, actions: list[ParsedAction]) -> str:
+    """Rewrite the given action lines as closed (`[ ] text` -> `[x] text`, `@Who: text` -> `[x] @Who: text`)."""
+    lines = body.split("\n")
+    for action in actions:
+        raw = lines[action.line]
+        trailing = "\r" if raw.endswith("\r") else ""
+        line = raw.rstrip("\r")
+        if action.kind == "mine":
+            m = _MINE.match(line)
+            if m:
+                lines[action.line] = f"{m['prefix']}[x] {m['text']}{trailing}"
+        else:
+            m = _WAITING.match(line)
+            if m:
+                lines[action.line] = f"{m['prefix']}[x] @{m['who'].strip()}: {m['text']}{trailing}"
     return "\n".join(lines)

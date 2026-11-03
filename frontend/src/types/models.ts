@@ -417,6 +417,7 @@ export interface MeetingActions {
   questions: MeetingTextLine[]
   decisions: MeetingTextLine[]
   converted: number
+  closed?: number            // lines marked [x]: handled without a task
 }
 
 export interface ProcessActionPayload {

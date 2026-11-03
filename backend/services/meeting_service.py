@@ -19,6 +19,7 @@ from backend.schemas.meeting import (
     MeetingResponse,
     MeetingSummary,
     MeetingUpdate,
+    CloseLinePayload,
     ProcessPayload,
     ProcessResponse,
     TextLine,
@@ -26,7 +27,7 @@ from backend.schemas.meeting import (
 from backend.schemas.task import TaskCreate
 from backend.services import task_service
 from backend.services.guards import guard_not_archived
-from backend.services.meeting_parser import ParsedMeeting, mark_converted, parse_meeting
+from backend.services.meeting_parser import ParsedMeeting, mark_closed, mark_converted, parse_meeting
 
 MAX_TITLE = 200
 
@@ -169,7 +170,36 @@ def get_actions(session: Session, meeting_id: int) -> ActionsResponse:
         questions=[TextLine(line=q.line, text=q.text) for q in parsed.questions],
         decisions=[TextLine(line=d.line, text=d.text) for d in parsed.decisions],
         converted=parsed.converted,
+        closed=parsed.closed,
     )
+
+
+def close_lines(session: Session, meeting_id: int, payload: CloseLinePayload) -> MeetingResponse:
+    """Mark the chosen action lines `[x]`: handled without a task. All or nothing, with the same stale check as `process`."""
+    meeting = _get_or_404(session, meeting_id)
+    item = _guard_item_accepts_meetings(session.get(Item, meeting.item_id), meeting.item_id)
+
+    open_by_line = {a.line: a for a in parse_meeting(meeting.body).actions}
+    chosen = []
+    seen: set[int] = set()
+    for req in payload.lines:
+        if req.line in seen:
+            raise ValidationError(f"Line {req.line} was chosen twice")
+        seen.add(req.line)
+        action = open_by_line.get(req.line)
+        if action is None or action.text != req.text.strip():
+            raise ConflictError(
+                "The meeting notes changed since the actions were listed. Reload and try again.",
+                detail=f"line={req.line}",
+            )
+        chosen.append(action)
+
+    now = now_utc()
+    meeting.body = mark_closed(meeting.body, chosen)
+    meeting.updated_at = now
+    item.updated_at = now
+    session.flush()
+    return to_response(session, meeting)
 
 
 def process_meeting(session: Session, meeting_id: int, payload: ProcessPayload) -> ProcessResponse:
