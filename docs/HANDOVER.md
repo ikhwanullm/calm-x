@@ -23,12 +23,6 @@ recurring tasks, Done log + weekly status report (can use `tasks.completed_at`),
 
 Small fixes that may be done any time (one commit each; found in the 2026-11-02 review):
 
-- **Stale chunks after a rebuild.** Pages are lazy-loaded since the code health round. The launcher rebuilds `frontend/dist`
-  on start, so a browser tab left open from before the rebuild asks for chunk files that no longer exist and the page
-  fails to open (react-router's default error screen). Fix: listen for Vite's `vite:preloadError` event in `main.tsx` and
-  reload the page once (a `sessionStorage` flag prevents a reload loop), and give the router an `errorElement` with a
-  quiet "Calm-X was updated. Reload" message. Verify on a scratch build: open the app, rebuild into the same scratch dist with
-  a changed source, then open a page that was not loaded yet.
 - **"Planned earlier" buttons** (`components/today/PlannedEarlier.tsx`): Keep for today, Remove from Today and Clear all stay
   clickable while saving (a double click gives two toasts); disable them while their request runs. Check the row at a narrow
   width (task, label and two buttons on one line) and let the buttons wrap below the task if it is cramped.
@@ -53,6 +47,7 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
+| (newest) | Stale tab after a rebuild: `vite:preloadError` reloads the page once (`lib/staleBuild.ts`, 10 s guard against loops), router `errorElement` `RouteError` ("Calm-X was updated" + Reload). Also: project/area names on tasks are links (`ItemLink`); windowless launcher (`install-shortcuts.ps1`) |
 | (newest) | Typography and identity: Plus Jakarta Sans bundled with @fontsource (no Google Fonts request; guard test `noExternalFonts`), `components/common/Logo.tsx` in the sidebar header (collapsed: the logo is the expand button), new `public/favicon.svg` linked in `index.html`, `icons.svg` removed |
 | `bf7f813` to `69a7d7a` | Code health round, parts 1-5: faster tests, `TaskDrawer` and `ItemDetailView` split, task lists in fixed queries, lazy routes |
 | `a868009` | Foundation part 4: one refresh helper for task hooks, v1 spec files marked archived |

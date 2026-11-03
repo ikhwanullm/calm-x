@@ -6,6 +6,9 @@ import { ThemeProvider } from './components/ThemeProvider'
 import { queryClient } from './lib/queryClient'
 import App from './App.tsx'
 import './index.css'
+import { installStaleBuildReload } from './lib/staleBuild'
+
+installStaleBuildReload()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

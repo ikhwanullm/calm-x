@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
+import { RouteError } from './components/layout/RouteError'
 import { RouteFallback } from './components/layout/RouteFallback'
 // The two pages people land on stay in the main bundle; every other page loads when it is first opened.
 import DashboardPage from './pages/DashboardPage'
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
   {
     // AppShell wraps its <Outlet /> in a Suspense, so the sidebar stays put while a page loads
     element: <AppShell />,
+    errorElement: <RouteError />,
     children: [
       { path: '/', element: <DashboardPage /> },
       { path: '/today', element: <TodayPage /> },
@@ -54,6 +56,7 @@ export const router = createBrowserRouter([
   // outside AppShell per tasks.md Phase 9 note.
   {
     path: '/review',
+    errorElement: <RouteError />,
     element: (
       <Suspense fallback={<RouteFallback />}>
         <WeeklyReviewPage />
