@@ -1,6 +1,6 @@
 import { GripVertical, Sun } from 'lucide-react'
 import type { Task } from '@/types/models'
-import { PriorityChip, TagChip, StatusBadge } from '@/components/common'
+import { PriorityChip, TagChip, StatusBadge, ItemLink } from '@/components/common'
 import { getDeadlineStatus } from '@/utils/deadline'
 import { useDeadlineThreshold } from '@/hooks/useSettings'
 import { daysSinceIso, formatAbsoluteDate, getLocalToday } from '@/utils/date'
@@ -32,7 +32,6 @@ export function TaskRow({
   showDeadlineStatus = true,
   showItem = false,
 }: TaskRowProps) {
-  const itemLabel = showItem ? task.item_title ?? 'Inbox' : null
   const today = getLocalToday()
   const isDeferred = !!task.defer_until && task.defer_until > today && !task.is_complete
   const isParked = task.is_someday && !task.is_complete
@@ -91,10 +90,15 @@ export function TaskRow({
 
         {/* Meta line */}
         {(task.priority !== 'medium' || task.subtask_count > 0 || task.tags.length > 0 ||
-          task.waiting_for || itemLabel || deferLabel || isParked) && (
+          task.waiting_for || showItem || deferLabel || isParked) && (
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {itemLabel && (
-              <span className="text-xs text-muted truncate max-w-[16rem]">{itemLabel}</span>
+            {showItem && (
+              <ItemLink
+                itemId={task.item_id}
+                itemType={task.item_type}
+                title={task.item_title}
+                className="text-xs text-muted truncate max-w-[16rem]"
+              />
             )}
             {isParked && (
               <span className="inline-flex items-center h-5 px-1.5 rounded-pill bg-surface-2 text-xs text-muted">

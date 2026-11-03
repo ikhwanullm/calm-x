@@ -90,6 +90,31 @@ describe('TaskRow', () => {
     expect(screen.getByText('Inbox')).toBeTruthy()
   })
 
+  it('links the parent item to its page, and leaves Inbox as plain text', async () => {
+    const onOpenDrawer = vi.fn()
+    const user = userEvent.setup()
+    const first = renderRow({
+      task: { ...baseTask, item_id: 7, item_type: 'project', item_title: 'Migrate CML' },
+      showItem: true,
+      onOpenDrawer,
+    })
+    const link = screen.getByRole('link', { name: 'Migrate CML' })
+    expect(link.getAttribute('href')).toBe('/projects/7')
+    await user.click(link)
+    expect(onOpenDrawer).not.toHaveBeenCalled()
+    first.unmount()
+
+    const second = renderRow({
+      task: { ...baseTask, item_id: 3, item_type: 'area', item_title: 'Cloudera' },
+      showItem: true,
+    })
+    expect(screen.getByRole('link', { name: 'Cloudera' }).getAttribute('href')).toBe('/areas/3')
+    second.unmount()
+
+    renderRow({ showItem: true })
+    expect(screen.queryByRole('link', { name: 'Inbox' })).toBeNull()
+  })
+
   it('shows the overdue badge for a past due date', () => {
     renderRow({ task: { ...baseTask, due_date: '2020-01-01' } })
     expect(screen.getByLabelText(/^overdue:/i)).toBeTruthy()

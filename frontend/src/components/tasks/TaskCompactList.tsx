@@ -1,4 +1,4 @@
-import { PriorityChip, TagChip } from '@/components/common'
+import { PriorityChip, TagChip, ItemLink } from '@/components/common'
 import { formatRelativeDate, getLocalToday } from '@/utils/date'
 import { cn } from '@/lib/utils'
 import type { Task } from '@/types/models'
@@ -58,7 +58,9 @@ export function TaskCompactList({ tasks, label, selectedTaskId, onOpenDrawer, on
                     {task.title}
                   </button>
                 </td>
-                <td className="px-3 py-2 text-sm text-muted max-w-[12rem] truncate">{task.item_title ?? 'Inbox'}</td>
+                <td className="px-3 py-2 text-sm text-muted max-w-[12rem] truncate">
+                  <ItemLink itemId={task.item_id} itemType={task.item_type} title={task.item_title} />
+                </td>
                 <td className={cn('px-3 py-2 text-sm whitespace-nowrap', overdue ? 'text-danger-fg' : 'text-muted')}>
                   {task.due_date ? formatRelativeDate(task.due_date, today) : '—'}
                 </td>

@@ -57,4 +57,8 @@ The owner found the list pages static. **Projects, All tasks, Areas and Resource
 - **Chosen by me**: Someday and not-yet-started tasks are hidden unless their chip is on (the Today rules); chips combine with AND;
   the old separate "Completed (n)" block is gone (use the Status select); completed tasks due earlier go in an "Earlier (completed)"
   group instead of "Overdue"; the compact list repeats its header row in every group.
+- **Project/Area name is a link** (asked for by the owner, 2026-11-03): `components/common/ItemLink.tsx` links to `/projects/{id}` or
+  `/areas/{id}` (plain "Inbox" text for tasks without an item). Used in `TaskRow` (when `showItem`), `TaskCompactList`, and in the task
+  drawer footer ("In ..."). Group headers by project/area get a small arrow link next to the collapse button. Not linked: Dashboard
+  and Weekly Review rows (they have their own actions per row).
 - Not done: ascending/descending toggle in the UI (the API has `order`), server-side grouping, the toolbar for Areas/Resources.

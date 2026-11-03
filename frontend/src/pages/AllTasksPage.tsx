@@ -1,5 +1,6 @@
 import React from "react"
-import { ChevronDown, ChevronRight } from "lucide-react"
+import { ArrowUpRight, ChevronDown, ChevronRight } from "lucide-react"
+import { Link } from "react-router-dom"
 import { useFilteredTasks, type FilterParams, type TaskListParams } from "@/hooks/useFilterTasks"
 import { useCompleteTask, useIncompleteTask } from "@/hooks/useTasks"
 import { useDeadlineThreshold } from "@/hooks/useSettings"
@@ -194,17 +195,34 @@ export default function AllTasksPage() {
         <div className="mt-4 space-y-5">
           {groups.map((g) => {
             const isCollapsed = collapsed.has(g.key)
+            // Groups by project or area hold tasks of one item; its page is one click away
+            const first = g.tasks[0]
+            const itemPath = first && first.item_id !== null && first.item_type !== null && g.key === `item-${first.item_id}`
+              ? `${first.item_type === 'area' ? '/areas' : '/projects'}/${first.item_id}`
+              : null
             return (
               <section key={g.key} aria-label={g.label}>
-                <button
-                  type="button"
-                  aria-expanded={!isCollapsed}
-                  onClick={() => toggleCollapsed(g.key)}
-                  className="flex items-center gap-1.5 mb-2 text-xs font-semibold text-muted uppercase tracking-wide hover:text-text"
-                >
-                  {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
-                  {g.label} <span className="font-normal tabular-nums">{g.tasks.length}</span>
-                </button>
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    type="button"
+                    aria-expanded={!isCollapsed}
+                    onClick={() => toggleCollapsed(g.key)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-muted uppercase tracking-wide hover:text-text"
+                  >
+                    {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
+                    {g.label} <span className="font-normal tabular-nums">{g.tasks.length}</span>
+                  </button>
+                  {itemPath && (
+                    <Link
+                      to={itemPath}
+                      aria-label={`Open ${g.label}`}
+                      title={`Open ${g.label}`}
+                      className="text-muted hover:text-accent-text"
+                    >
+                      <ArrowUpRight size={14} aria-hidden="true" />
+                    </Link>
+                  )}
+                </div>
                 {!isCollapsed && renderTasks(g.tasks, g.label)}
               </section>
             )

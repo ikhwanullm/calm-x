@@ -1,5 +1,5 @@
 import { Trash2 } from 'lucide-react'
-import { Button, ItemPicker } from '@/components/common'
+import { Button, ItemLink, ItemPicker } from '@/components/common'
 import { useMoveTask } from '@/hooks/useTasks'
 import { useItems } from '@/hooks/useItems'
 import type { Task } from '@/types/models'
@@ -37,10 +37,16 @@ interface DrawerFooterProps {
   onDelete: () => void
 }
 
-/** Move to a project or area (or the Inbox), and Delete task. */
+/** Where the task lives (a link to its page), Move to a project or area (or the Inbox), and Delete task. */
 export function DrawerFooter({ taskId, task, isLoading, onDelete }: DrawerFooterProps) {
   return (
     <div className="shrink-0 px-5 py-3 border-t border-border space-y-2">
+      {task && task.item_id !== null && (
+        <p className="text-sm text-muted">
+          In{' '}
+          <ItemLink itemId={task.item_id} itemType={task.item_type} title={task.item_title} className="text-text font-medium" />
+        </p>
+      )}
       <MoveToSelect taskId={taskId} currentItemId={task?.item_id ?? null} />
       <Button
         variant="danger"
