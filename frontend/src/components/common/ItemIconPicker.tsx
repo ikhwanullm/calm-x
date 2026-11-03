@@ -61,6 +61,12 @@ export function ItemIconPicker({ title, icon, color, onChange, disabled = false 
               e.preventDefault()
               grid.current?.querySelector<HTMLButtonElement>('button[data-icon]')?.focus()
             }
+            // Enter picks the first match, so typing a name and pressing Enter is enough
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              const first = groups[0]?.icons[0]
+              if (first) onChange({ icon: first.key })
+            }
           }}
           placeholder="Search icons"
           aria-label="Search icons"

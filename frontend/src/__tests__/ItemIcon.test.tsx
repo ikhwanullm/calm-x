@@ -82,6 +82,20 @@ describe('ItemIconPicker', () => {
     expect(screen.getByText('No icon matches.')).toBeTruthy()
   })
 
+  it('Enter in the search box picks the first match, and does nothing when nothing matches', async () => {
+    const user = userEvent.setup()
+    const onChange = setup()
+    await user.click(screen.getByRole('button', { name: 'Change icon' }))
+    const search = await screen.findByRole('searchbox', { name: 'Search icons' })
+    await user.type(search, 'rock{Enter}')
+    expect(onChange).toHaveBeenCalledWith({ icon: 'rocket' })
+
+    onChange.mockClear()
+    await user.clear(search)
+    await user.type(search, 'zzzz{Enter}')
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   it('moves through the grid with the arrow keys and picks with Enter', async () => {
     const user = userEvent.setup()
     const onChange = setup()
