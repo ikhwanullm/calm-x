@@ -43,6 +43,9 @@ stay below it. Only meetings have a time; everything else is date-only, so it is
 - Hover (300 ms) or keyboard focus shows a tooltip (`components/ui/tooltip.tsx`, `@radix-ui/react-tooltip`): full title, what it is
   (Meeting 09:00, Due, Planned for today, Project deadline, Starts), the project/area name and "Waiting for {who}". It replaced the
   native `title`. While a task is being dragged tooltips are not rendered; the content has `pointer-events-none`, so it never blocks a drop.
+- **Wide screens** (2026-11-03): the shell's 1240 px cap is lifted on `/today` (`AppShell`), and the week strip spans the full content width while
+  the lists below keep `max-w-6xl`. Measured on a copy of the real DB: columns are 247 px at 1920 px (no title cut at two lines), 178 px at
+  1440 px and 119 px at 1024 px.
 - `MAX_PER_DAY = 4` and "+N more" are unchanged; all cells of a row stay the same height. Checked with a copy of the real DB: at
   1280 px (columns 156 px) 2 of 9 titles are still cut at two lines, at 1024 px (119 px) 7 of 9; the tooltip has the full text.
 

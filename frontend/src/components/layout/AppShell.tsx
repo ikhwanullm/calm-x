@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useState } from "react"
-import { NavLink, Outlet, useNavigate } from "react-router-dom"
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { RouteFallback } from "./RouteFallback"
 import { Logo } from "@/components/common/Logo"
 import {
@@ -130,6 +130,8 @@ function SidebarNavItem({
 }
 
 export function AppShell() {
+  // Today's week strip uses the whole width of a wide screen; every other page keeps the 1240 px cap
+  const wide = useLocation().pathname === "/today"
   const [captureOpen, setCaptureOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
@@ -274,7 +276,7 @@ export function AppShell() {
 
         {/* Scrollable main content */}
         <main className="flex-1 overflow-y-auto p-8">
-          <div className="mx-auto max-w-[1240px]">
+          <div className={cn("mx-auto", !wide && "max-w-[1240px]")}>
             <Suspense fallback={<RouteFallback />}>
               <Outlet />
             </Suspense>

@@ -195,12 +195,15 @@ export default function TodayPage() {
   }
 
   return (
-    <div className="max-w-6xl">
+    <div>
+      <div className="max-w-6xl">
       <h1 className="text-2xl font-semibold text-text tracking-tight" style={{ letterSpacing: "-0.02em" }}>
         {selectedDay === today ? greeting : "Today"}
       </h1>
       <p className="text-sm text-muted mt-1">{[formatAbsoluteDate(today), ...(selectedDay === today ? summary : [])].join(" · ")}</p>
+      </div>
 
+      {/* The week strip uses the whole content width; the lists below keep a readable width */}
       <section aria-label="Week view" className="mt-5">
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <Button type="button" variant="secondary" size="sm" aria-label="Previous week" onClick={() => goToWeek(addDays(weekStart, -7))}>
@@ -228,6 +231,7 @@ export default function TodayPage() {
         )}
       </section>
 
+      <div className="max-w-6xl">
       {renderOtherDay()}
 
       {selectedDay === today && (isLoading ? (
@@ -306,6 +310,7 @@ export default function TodayPage() {
           )}
         </>
       ))}
+      </div>
 
       <TaskDrawer taskId={selectedTaskId} onClose={closeDrawer} />
     </div>
