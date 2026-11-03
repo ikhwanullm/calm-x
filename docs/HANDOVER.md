@@ -6,18 +6,19 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
 
 ## Where things stand
 
-- Everything up to the week strip and icons round (`a003fb1`) is pushed to `origin/main`.
+- Everything up to the week strip and icons round (`a003fb1`) is pushed; the meeting and follow-up commits below are not pushed yet to `origin/main`.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built and archived.
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
 - Schema head: **migration 011** (`meetings.actions_closed_at`; 010 is `items.icon`/`items.color`). The owner's real DB was at 009 when
   last checked (2026-11-03) and upgrades to 011 on the next app start.
-- Tests at the last code commit: backend 663 passed, frontend 1200 passed (90 files, about 35-55 s), `tsc -b` clean.
+- Tests at the last code commit: backend 681 passed, frontend 1213 passed (92 files, about 35-55 s), `tsc -b` clean.
 
 ## Next up
 
-Order: the meeting change first (the owner feels it daily), then the follow-ups below it.
+Everything below is built. Nothing is queued; see "After that". When you start the next piece of work, move the two finished sections
+below to `docs/history/rounds.md` and leave a one-line pointer here.
 
-### Meeting actions are optional (chosen by the owner 2026-11-03)
+### Meeting actions are optional (DONE 2026-11-03, see `features/meetings.md`, `dashboard.md`, `weekly-review.md`)
 
 Problem: every `[ ] …` and `@Who: …` line counts as an action that **must** become a task. Until it does, the meeting stays
 in the Dashboard's "To process → Meetings" and in the Weekly Review Meetings step for 7 days. The owner often writes `[ ]`
@@ -62,7 +63,7 @@ Update `docs/features/meetings.md` and `features/dashboard.md`/`weekly-review.md
   like the Waiting for step). The step's empty state stays as it is.
 - Tests: dashboard response has no `meetings_to_process`; DashboardPage renders without it; MeetingsStep "Nothing more" flow.
 
-### Follow-ups from the 2026-11-03 review of the week strip and icons (one commit each)
+### Follow-ups from the 2026-11-03 review of the week strip and icons (DONE 2026-11-03)
 
 Found by testing on a DB copy at 1440 and 1920 px:
 
@@ -112,6 +113,12 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
+| `9b45a2d` | Icon picker: Enter in the search box picks the first match |
+| `9747d02` | Week strip spans the full width of a wide screen on `/today` (247 px columns at 1920 px) |
+| `ad439a1` | The `teal` identity tint is a cyan (about 190 degrees), clearly away from the green status color |
+| `e75b483` | Meetings leave the Dashboard (`meetings_to_process` removed); Weekly Review Meetings step: Nothing more per meeting |
+| `6304415` | Meeting "Nothing more to process": `meetings.actions_closed_at` (migration 011), close-actions / reopen-actions, panel button and Reopen |
+| `4a4bd25` | `[x]` lines in meeting notes are closed (no task); Done, no task per action, `POST /api/meetings/{id}/close-lines` |
 | `e7d8c32`, `f2de554` | Icon and soft color per Project and Area: migration 010 (`items.icon`, `items.color`), `item_icon`/`item_color` on tasks, `ItemIcon`, picker popover on the detail page, shown on cards, rows, task item links, ItemPicker and the Dashboard |
 | `68970eb` | Week strip: titles on two lines, meeting time on its own line, tooltip (Radix) with kind, project/area and waiting-for |
 | `7a868ef` | Today greeting by hour, one-line day summary (to do, meetings, waiting) and an all-clear block that fades in |
