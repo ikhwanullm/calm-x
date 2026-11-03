@@ -86,6 +86,11 @@ When you build or change a feature, update its file (or add one and list it here
 
 The owner starts the app with `Start Calm-X.cmd` (repo root). It rebuilds `frontend/dist` only when
 `frontend/src` changed, runs `python -m backend.main` on port 8080 (migrations run at startup) and opens the browser.
+That window must stay open. The windowless way: `install-shortcuts.ps1` creates "Calm-X" / "Stop Calm-X" shortcuts
+(`calmx-hidden.vbs` runs `start-calmx.ps1 -Background` / `stop-calmx.ps1` with no console; icon `assets/calmx.ico`; logs in
+`logs/`, gitignored). `-Background` never starts a second server and opens an Edge/Chrome `--app=` window. `stop-calmx.ps1`
+only stops a process on the port whose command line contains `backend.main`. To test the launcher, use another `-Port`,
+`-SkipBuild` and `CALM_X_*` env vars pointing at copies, so `frontend/dist` and the real DB stay untouched.
 
 ### Verification recipe (never against the real DB)
 

@@ -41,7 +41,13 @@ npm install
 
 **Windows:** double-click `Start Calm-X.cmd`. It builds the frontend when the source changed since the last build,
 starts the server on <http://127.0.0.1:8080> and opens the browser. Keep the window open while you use the app; close it
-or press `Ctrl+C` to stop. Options: `start-calmx.ps1 -Port 9090 -NoBrowser`.
+or press `Ctrl+C` to stop. Options: `start-calmx.ps1 -Port 9090 -NoBrowser -SkipBuild`.
+
+**Windows, without a console window:** run `install-shortcuts.ps1` once (right-click > Run with PowerShell). It puts
+"Calm-X" and "Stop Calm-X" shortcuts (with the Calm-X icon) on the Desktop and in the Start Menu. "Calm-X" starts the
+server hidden (it also rebuilds the frontend first when the source changed) and opens Calm-X in its own Edge or Chrome
+app window; if the server already runs it only opens the window. "Stop Calm-X" stops the server. Logs go to `logs/`.
+`install-shortcuts.ps1 -Remove` deletes the shortcuts.
 
 **Any platform, by hand:**
 
