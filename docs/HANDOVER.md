@@ -15,6 +15,53 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
 
 ## Next up
 
+Order: the meeting change first (the owner feels it daily), then the follow-ups below it.
+
+### Meeting actions are optional (chosen by the owner 2026-11-03)
+
+Problem: every `[ ] …` and `@Who: …` line counts as an action that **must** become a task. Until it does, the meeting stays
+in the Dashboard's "To process → Meetings" and in the Weekly Review Meetings step for 7 days. The owner often writes `[ ]`
+lines as a plain checklist inside the notes (on 2026-11-03 two real meetings had 5 and 3 such lines), so the reminder nags.
+Decision: actions are optional, the Dashboard no longer shows meetings at all, the review step stays but is quick to clear.
+Update `docs/features/meetings.md` and `features/dashboard.md`/`weekly-review.md` with the new rules. Three commits:
+
+**Part 1: `[x]` means handled, no task**
+
+- `meeting_parser`: a line `[x] text` or `[X] text` (same list-marker and indentation rules) is **closed**: not an action, not
+  converted; count it in a new `ParsedMeeting.closed`. Return it in `GET /api/meetings/{id}/actions` as `closed` (count) so the
+  side panel can say "2 done without a task". GitHub-flavoured Markdown already renders `[x]` as a ticked box in Preview.
+- Side panel on the meeting page: each open action gets **Done, no task** next to it. It rewrites that line in the saved body:
+  `[ ] text` -> `[x] text`, `@Who: text` -> `[x] @Who: text` (the `[x]` prefix wins over the `@` rule in the parser). New
+  endpoint `POST /api/meetings/{id}/close-lines` with `{lines: [{line, text}]}`, same stale check as `process` (409 and no change
+  if a chosen line moved or changed), all or nothing. Save the editor first (the process dialog already flushes autosave; do
+  the same). The editor shows the new text without losing the cursor or unsaved typing (reuse how `process` refreshes the body).
+- Tests: parser (`[x]`, `[X]`, with list markers, inside a fence ignored), close-lines happy path, 409 on a moved line, a
+  closed line never becomes a task, and `open_action_count` drops.
+
+**Part 2: "Nothing more to process" per meeting** (migration `011_meeting_actions_closed.py`)
+
+- `meetings.actions_closed_at DATETIME` (plain `ADD COLUMN`, NULL for existing rows). `POST /api/meetings/{id}/close-actions`
+  sets it to now; `POST /api/meetings/{id}/reopen-actions` clears it. Guarded like other meeting writes (archived item: 403).
+  In `MeetingSummary`/`MeetingResponse`; carried by export/import (optional in files) and the meeting undo snapshot.
+- A meeting with `actions_closed_at` set is **never "to process"**, whatever its lines say: `get_review_meetings` leaves it
+  out, and every place that shows an open-action count (`MeetingsSection`, `MeetingsPage`, `MeetingsStep`) shows nothing for
+  it. The lines stay in the notes as written. New actions typed later do not reopen it automatically; the owner can reopen.
+  Processing lines (`process`) still works on a closed meeting and does not change the flag.
+- Meeting page: a quiet **Nothing more to process** button in the side panel when there are open actions. When closed, the
+  panel shows "Actions closed {relative date} · Reopen", and the remaining `[ ]` lines are listed muted as "not turned into tasks"
+  (still selectable for Process).
+- Tests: closed meetings leave the review list; reopen brings them back; export/import round trip; undo of a deleted closed
+  meeting keeps the flag; migration on a 010 copy leaves rows NULL.
+
+**Part 3: Dashboard without meetings; a lighter review step**
+
+- Dashboard: remove the Meetings tile from "To process" and the list of meetings under it; remove `meetings_to_process` from
+  `GET /api/dashboard` and its schema (nothing else reads it), and from the "all clear" condition. Inbox and Weekly review stay.
+- Weekly Review Meetings step stays, listing the same meetings (open actions, last 7 days, not closed). Per meeting, next to
+  **Process** (opens in a new tab as now) add **Nothing more** (calls `close-actions`; the row stays, dimmed, "No more actions",
+  like the Waiting for step). The step's empty state stays as it is.
+- Tests: dashboard response has no `meetings_to_process`; DashboardPage renders without it; MeetingsStep "Nothing more" flow.
+
 ### Follow-ups from the 2026-11-03 review of the week strip and icons (one commit each)
 
 The section below ("Readable week strip and icons") is built: when you start, move it to `docs/history/rounds.md`.
