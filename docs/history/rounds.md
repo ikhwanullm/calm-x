@@ -107,3 +107,62 @@ Three small fixes from the read-only end-to-end review, one commit each.
   **Waiting-for tasks stay in**, labelled "Waiting · {who}" (the default from the plan). The owner has not decided this; to
   exclude them instead, add `Task.waiting_for.is_(None)` to the query in `dashboard_service._get_upcoming_deadlines`
   and drop the label in `NeedsAttentionRow`.
+
+## Micro-interactions round (done 2026-11-03)
+
+Commits `802d1b9` (completion animation), `6a1e191` (Undo after complete), `7a868ef` (Today greeting). Behaviour is in
+`features/lists.md` and `features/today-and-week.md`. The design as it was handed over:
+
+#### Design (chosen by the owner 2026-11-03, from an interactive mockup)
+
+Three commits in this order: completion animation, Undo after complete, Today header. Owner's choices: **subtle motion**
+(about 180 ms per step, no bounce or overshoot) and **English** copy, like the rest of the UI. Add motion tokens once in
+`index.css` (`--dur-fast: 120ms`, `--dur: 180ms`, `--ease: cubic-bezier(.2,0,0,1)`) and document them in `ui-guidelines.md`
+§3 next to the other tokens. Everything that moves sits behind `@media (prefers-reduced-motion: no-preference)` (Tailwind
+`motion-safe:`); with reduced motion the end state appears at once and nothing else changes.
+
+**Part 1: completing a task feels finished (DONE, see `features/lists.md`; Parts 2 and 3 are still to build)**
+
+- In `TaskRow` and `TaskCompactList` (so Today, Inbox, Someday, All tasks and Project/Area pages all get it):
+  1. The checkbox fills with the accent and the check mark draws itself (stroke-dashoffset), `--dur`. Keep a real
+     `<input type="checkbox">` for keyboard and screen readers; style it with `appearance-none` plus an SVG check, or put a
+     visual box over a visually hidden input. Focus ring as now.
+  2. The title gets a strike-through that grows left to right and turns `--muted`, `--dur`.
+  3. In lists that drop completed tasks (Today, Inbox, Someday, an open-only All tasks), the row stays visible for about
+     400 ms after the click, then fades and collapses its height (`--dur`), and the rows below slide up. Today, a refetch
+     removes it at once; keep a leaving row on screen with a small helper (e.g. `hooks/useLeavingRows.ts`: remembers rows
+     that left the data in the last ~600 ms and renders them with a leaving class). Lists that keep completed tasks
+     (project page with "Show completed", All tasks with Status all) only do steps 1-2.
+  4. Reopening (unchecking) has no exit animation: the strike-through simply goes away.
+- `ProgressBar` animates its width (`transition: width 300ms`), so a project's progress moves to the new value.
+- Drag and drop must still work (`@dnd-kit` rows with a leaving class are not draggable).
+- Tests: the existing TaskRow/TaskList/Today tests must keep passing; add tests that a completed row is still in the DOM
+  right after completion and gone after the delay (fake timers), and that with `prefers-reduced-motion: reduce` it goes at once.
+
+**Part 2: "Completed · Undo" toast (DONE, see `features/lists.md`)**
+
+- `useCompleteTask` shows `notify.success('Task completed', { action: Undo, duration: UNDO_TOAST_MS })` for completions from
+  task rows and the drawer. The Weekly Review steps (`InboxStep`, `ProjectsStep`, `WaitingStep`) keep their own outcome UI
+  and show no toast (pass an option such as `{ quiet: true }`), because an Undo there would not update the step's counters.
+- Undo must put the task back **exactly** as it was, including its subtasks. Plain `incomplete` is not enough: completing a
+  task completes all its subtasks, and reopening it reopens all of them (R8.9), so 2 of 3 done would come back as 0 of 3.
+  Add `POST /api/tasks/{id}/undo-complete`: `mark_complete` records the ids of the subtasks that were open just before
+  (in `undo_entries`, kind `complete`, 24 h like the others); undo reopens the task, clears `completed_at`, and reopens only
+  those subtasks. Refuse with 409 if the task was changed since (reopened, deleted or completed again), and the toast then says
+  "Couldn't undo: the task changed".
+- Tests (backend): complete then undo restores subtask states and `completed_at` NULL; undo twice is refused; undo after a
+  manual reopen is refused. Export/import does not need the new undo kind (Replace already clears `undo_entries`).
+
+**Part 3: Today header (DONE, see `features/today-and-week.md`)**
+
+- Replace the plain "Today" h1 with a greeting by the local hour: before 12:00 "Good morning", 12:00-16:59 "Good afternoon",
+  from 17:00 "Good evening". Same h1 size and weight as now; the page title in the tab stays "Today". Recompute when the window
+  regains focus and every 5 minutes, so a tab left open does not keep saying "Good morning" at night.
+- Under it, one muted line: the date as now, then a summary of today, leaving out zero parts:
+  "Tue, 3 Nov 2026 · 3 to do · 1 meeting · 6 waiting" ("to do" = overdue + due today + planned for today + planned earlier,
+  the existing `workCount`; meetings of today from the week data; waiting = the Waiting for list). Each part is plain text,
+  not a link. Nothing at all when the data is still loading (no "0").
+- When `workCount` is 0 replace the dashed empty state with a calm all-clear block: a `Sun` icon (lucide, 20 px, muted),
+  "All done for today." and a muted second line "Add something with Q, or plan from the week above.". If there were tasks
+  today and the last one was just completed, the block fades in (`--dur`) instead of popping.
+- Only on Today and only for today's view; selecting another day in the week strip keeps that day's heading as now.

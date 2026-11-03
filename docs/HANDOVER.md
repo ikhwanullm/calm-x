@@ -1,12 +1,12 @@
 # Calm-X handover
 
-Last updated 2026-11-02. Written for the next coding session; read `CLAUDE.md` first for the hard rules.
+Last updated 2026-11-03. Written for the next coding session; read `CLAUDE.md` first for the hard rules.
 This file is the entry point: status, what to build next, how to run and verify, architecture and gotchas.
 How each feature behaves is in `docs/features/`; finished work rounds are recorded in `docs/history/rounds.md`.
 
 ## Where things stand
 
-- Everything up to the code health round (`69a7d7a`, docs `ebab360`) is pushed to `origin/main`.
+- Everything up to the micro-interactions round (`7a868ef`) is pushed to `origin/main`.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built and archived.
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and
@@ -73,59 +73,7 @@ Update `ui-guidelines.md` §1 rule 2 and §3 tokens to say exactly that.
 - Tests: migration on a copy of a 009 DB leaves rows NULL; invalid color 400; export/import round trip; `ItemIcon` fallback
   letter; picker keyboard flow; `item_icon` in task responses with the query count unchanged.
 
-### Micro-interactions and a warmer Today header (chosen by the owner 2026-11-03, from an interactive mockup)
-
-Three commits in this order: completion animation, Undo after complete, Today header. Owner's choices: **subtle motion**
-(about 180 ms per step, no bounce or overshoot) and **English** copy, like the rest of the UI. Add motion tokens once in
-`index.css` (`--dur-fast: 120ms`, `--dur: 180ms`, `--ease: cubic-bezier(.2,0,0,1)`) and document them in `ui-guidelines.md`
-§3 next to the other tokens. Everything that moves sits behind `@media (prefers-reduced-motion: no-preference)` (Tailwind
-`motion-safe:`); with reduced motion the end state appears at once and nothing else changes.
-
-**Part 1: completing a task feels finished (DONE, see `features/lists.md`; Parts 2 and 3 are still to build)**
-
-- In `TaskRow` and `TaskCompactList` (so Today, Inbox, Someday, All tasks and Project/Area pages all get it):
-  1. The checkbox fills with the accent and the check mark draws itself (stroke-dashoffset), `--dur`. Keep a real
-     `<input type="checkbox">` for keyboard and screen readers; style it with `appearance-none` plus an SVG check, or put a
-     visual box over a visually hidden input. Focus ring as now.
-  2. The title gets a strike-through that grows left to right and turns `--muted`, `--dur`.
-  3. In lists that drop completed tasks (Today, Inbox, Someday, an open-only All tasks), the row stays visible for about
-     400 ms after the click, then fades and collapses its height (`--dur`), and the rows below slide up. Today, a refetch
-     removes it at once; keep a leaving row on screen with a small helper (e.g. `hooks/useLeavingRows.ts`: remembers rows
-     that left the data in the last ~600 ms and renders them with a leaving class). Lists that keep completed tasks
-     (project page with "Show completed", All tasks with Status all) only do steps 1-2.
-  4. Reopening (unchecking) has no exit animation: the strike-through simply goes away.
-- `ProgressBar` animates its width (`transition: width 300ms`), so a project's progress moves to the new value.
-- Drag and drop must still work (`@dnd-kit` rows with a leaving class are not draggable).
-- Tests: the existing TaskRow/TaskList/Today tests must keep passing; add tests that a completed row is still in the DOM
-  right after completion and gone after the delay (fake timers), and that with `prefers-reduced-motion: reduce` it goes at once.
-
-**Part 2: "Completed · Undo" toast (DONE, see `features/lists.md`)**
-
-- `useCompleteTask` shows `notify.success('Task completed', { action: Undo, duration: UNDO_TOAST_MS })` for completions from
-  task rows and the drawer. The Weekly Review steps (`InboxStep`, `ProjectsStep`, `WaitingStep`) keep their own outcome UI
-  and show no toast (pass an option such as `{ quiet: true }`), because an Undo there would not update the step's counters.
-- Undo must put the task back **exactly** as it was, including its subtasks. Plain `incomplete` is not enough: completing a
-  task completes all its subtasks, and reopening it reopens all of them (R8.9), so 2 of 3 done would come back as 0 of 3.
-  Add `POST /api/tasks/{id}/undo-complete`: `mark_complete` records the ids of the subtasks that were open just before
-  (in `undo_entries`, kind `complete`, 24 h like the others); undo reopens the task, clears `completed_at`, and reopens only
-  those subtasks. Refuse with 409 if the task was changed since (reopened, deleted or completed again), and the toast then says
-  "Couldn't undo: the task changed".
-- Tests (backend): complete then undo restores subtask states and `completed_at` NULL; undo twice is refused; undo after a
-  manual reopen is refused. Export/import does not need the new undo kind (Replace already clears `undo_entries`).
-
-**Part 3: Today header (DONE, see `features/today-and-week.md`)**
-
-- Replace the plain "Today" h1 with a greeting by the local hour: before 12:00 "Good morning", 12:00-16:59 "Good afternoon",
-  from 17:00 "Good evening". Same h1 size and weight as now; the page title in the tab stays "Today". Recompute when the window
-  regains focus and every 5 minutes, so a tab left open does not keep saying "Good morning" at night.
-- Under it, one muted line: the date as now, then a summary of today, leaving out zero parts:
-  "Tue, 3 Nov 2026 · 3 to do · 1 meeting · 6 waiting" ("to do" = overdue + due today + planned for today + planned earlier,
-  the existing `workCount`; meetings of today from the week data; waiting = the Waiting for list). Each part is plain text,
-  not a link. Nothing at all when the data is still loading (no "0").
-- When `workCount` is 0 replace the dashed empty state with a calm all-clear block: a `Sun` icon (lucide, 20 px, muted),
-  "All done for today." and a muted second line "Add something with Q, or plan from the week above.". If there were tasks
-  today and the last one was just completed, the block fades in (`--dur`) instead of popping.
-- Only on Today and only for today's view; selecting another day in the week strip keeps that day's heading as now.
+The micro-interactions round (completion animation, Undo after complete, Today greeting) is done; see `history/rounds.md`.
 
 ### After that
 
@@ -159,12 +107,12 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
-| (newest) | Today greeting by hour, one-line day summary (to do, meetings, waiting) and an all-clear block that fades in |
-| (newest) | Undo after completing a task: "Task completed" toast, `POST /api/tasks/{id}/undo-complete` (restores subtask states, 409 if the task changed since), quiet in the Weekly Review steps |
-| (newest) | Completion animation: `TaskCheckbox` (self-drawing check), growing strike-through, completed row lingers 400 ms then fades and collapses (`useLeavingRows`), motion tokens in `index.css`, `ProgressBar` width transition |
-| (newest) | Browser cache of `index.html`: the server sends `Cache-Control: no-cache` for `index.html` and root files, and the launcher opens `/?v=<timestamp>`, so a window never starts from an old copy that points at deleted chunk files (the cause of "Resources errors / links missing" seen via the desktop shortcut) |
-| (newest) | Stale tab after a rebuild: `vite:preloadError` reloads the page once (`lib/staleBuild.ts`, 10 s guard against loops), router `errorElement` `RouteError` ("Calm-X was updated" + Reload). Also: project/area names on tasks are links (`ItemLink`); windowless launcher (`install-shortcuts.ps1`) |
-| (newest) | Typography and identity: Plus Jakarta Sans bundled with @fontsource (no Google Fonts request; guard test `noExternalFonts`), `components/common/Logo.tsx` in the sidebar header (collapsed: the logo is the expand button), new `public/favicon.svg` linked in `index.html`, `icons.svg` removed |
+| `7a868ef` | Today greeting by hour, one-line day summary (to do, meetings, waiting) and an all-clear block that fades in |
+| `6a1e191` | Undo after completing a task: "Task completed" toast, `POST /api/tasks/{id}/undo-complete` (restores subtask states, 409 if the task changed since), quiet in the Weekly Review steps |
+| `802d1b9` | Completion animation: `TaskCheckbox` (self-drawing check), growing strike-through, completed row lingers 400 ms then fades and collapses (`useLeavingRows`), motion tokens in `index.css`, `ProgressBar` width transition |
+| `748e1bc` | Browser cache of `index.html`: the server sends `Cache-Control: no-cache` for `index.html` and root files, and the launcher opens `/?v=<timestamp>`, so a window never starts from an old copy that points at deleted chunk files (the cause of "Resources errors / links missing" seen via the desktop shortcut) |
+| `0cd815b`, `86d9b9f`, `c21d353` | Stale tab after a rebuild: `vite:preloadError` reloads the page once (`lib/staleBuild.ts`, 10 s guard against loops), router `errorElement` `RouteError` ("Calm-X was updated" + Reload). Also: project/area names on tasks are links (`ItemLink`); windowless launcher (`install-shortcuts.ps1`) |
+| `dd60644`, `acb1e3c` | Typography and identity: Plus Jakarta Sans bundled with @fontsource (no Google Fonts request; guard test `noExternalFonts`), `components/common/Logo.tsx` in the sidebar header (collapsed: the logo is the expand button), new `public/favicon.svg` linked in `index.html`, `icons.svg` removed |
 | `bf7f813` to `69a7d7a` | Code health round, parts 1-5: faster tests, `TaskDrawer` and `ItemDetailView` split, task lists in fixed queries, lazy routes |
 | `a868009` | Foundation part 4: one refresh helper for task hooks, v1 spec files marked archived |
 | `155e2a9` | Foundation part 3: every API datetime is timezone-aware (`schemas/base.py` `ApiModel`) |
