@@ -11,7 +11,7 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and
   upgrades to 009 on the next app start.
-- Tests at the last code commit: backend 633 passed, frontend 1138 passed (86 files, about 35-55 s), `tsc -b` clean.
+- Tests at the last code commit: backend 633 passed, frontend 1152 passed (87 files, about 35-55 s), `tsc -b` clean.
 
 ## Next up
 
@@ -23,7 +23,7 @@ Three commits in this order: completion animation, Undo after complete, Today he
 §3 next to the other tokens. Everything that moves sits behind `@media (prefers-reduced-motion: no-preference)` (Tailwind
 `motion-safe:`); with reduced motion the end state appears at once and nothing else changes.
 
-**Part 1: completing a task feels finished**
+**Part 1: completing a task feels finished (DONE, see `features/lists.md`; Parts 2 and 3 are still to build)**
 
 - In `TaskRow` and `TaskCompactList` (so Today, Inbox, Someday, All tasks and Project/Area pages all get it):
   1. The checkbox fills with the accent and the check mark draws itself (stroke-dashoffset), `--dur`. Keep a real
@@ -101,6 +101,7 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
+| (newest) | Completion animation: `TaskCheckbox` (self-drawing check), growing strike-through, completed row lingers 400 ms then fades and collapses (`useLeavingRows`), motion tokens in `index.css`, `ProgressBar` width transition |
 | (newest) | Browser cache of `index.html`: the server sends `Cache-Control: no-cache` for `index.html` and root files, and the launcher opens `/?v=<timestamp>`, so a window never starts from an old copy that points at deleted chunk files (the cause of "Resources errors / links missing" seen via the desktop shortcut) |
 | (newest) | Stale tab after a rebuild: `vite:preloadError` reloads the page once (`lib/staleBuild.ts`, 10 s guard against loops), router `errorElement` `RouteError` ("Calm-X was updated" + Reload). Also: project/area names on tasks are links (`ItemLink`); windowless launcher (`install-shortcuts.ps1`) |
 | (newest) | Typography and identity: Plus Jakarta Sans bundled with @fontsource (no Google Fonts request; guard test `noExternalFonts`), `components/common/Logo.tsx` in the sidebar header (collapsed: the logo is the expand button), new `public/favicon.svg` linked in `index.html`, `icons.svg` removed |

@@ -12,6 +12,7 @@ import { ConfirmDialog, EmptyState, ItemPicker } from "@/components/common"
 import { BulkBar, InlineEdit, RowMenu } from "@/components/inbox/TriageControls"
 import type { EditKind } from "@/components/inbox/TriageControls"
 import { useTriage } from "@/hooks/useTriage"
+import { useLeavingRows } from "@/hooks/useLeavingRows"
 import { getLocalToday } from "@/utils/date"
 import { CaptureBox } from "@/components/capture/CaptureBox"
 import { notify } from "@/lib/toast"
@@ -43,6 +44,8 @@ export default function InboxPage() {
 
   const openTasks = tasks.filter((t) => !t.is_complete)
   const completedTasks = tasks.filter((t) => t.is_complete)
+  const leaving = useLeavingRows()
+  const rows = leaving.rows("inbox", openTasks)
   const destinations = allItems.filter((i) => i.type === "project" || i.type === "area")
 
   // Remove IDs that are no longer in openTasks (e.g. after individual or bulk move)
@@ -180,7 +183,7 @@ export default function InboxPage() {
 
       {isLoading ? (
         <p className="text-sm text-muted mt-4">Loading…</p>
-      ) : tasks.length === 0 ? (
+      ) : tasks.length === 0 && rows.length === 0 ? (
         <EmptyState
           title="Inbox zero."
           description="Everything has a home."
@@ -203,7 +206,7 @@ export default function InboxPage() {
           )}
 
           <div className="space-y-1">
-            {openTasks.map((task) => (
+            {rows.map(({ task, leaving: isLeaving }) => (
               <div key={task.id} role="listitem">
               <div className="flex items-center gap-2">
                 {/* Selection checkbox */}
@@ -219,8 +222,9 @@ export default function InboxPage() {
                     task={task}
                     isSelected={selectedTaskId === task.id}
                     onOpenDrawer={openTaskDrawer}
-                    onToggleComplete={handleToggleComplete}
+                    onToggleComplete={(t) => leaving.toggle("inbox", openTasks, t, handleToggleComplete)}
                     isDraggable={false}
+                    leaving={isLeaving}
                   />
                 </div>
                 <RowMoveSelect task={task} destinations={destinations} />

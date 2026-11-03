@@ -4,6 +4,7 @@ import { useSomedayTasks, useCompleteTask, useIncompleteTask } from "@/hooks/use
 import { TaskDrawer } from "@/components/tasks/TaskDrawer"
 import { TaskRow } from "@/components/tasks/TaskRow"
 import { EmptyState, Skeleton } from "@/components/common"
+import { useLeavingRows } from "@/hooks/useLeavingRows"
 import type { Task } from "@/types/models"
 
 export default function SomedayPage() {
@@ -14,6 +15,9 @@ export default function SomedayPage() {
   const { data: tasks = [], isLoading, isError } = useSomedayTasks()
   const completeTask = useCompleteTask()
   const incompleteTask = useIncompleteTask()
+
+  const leaving = useLeavingRows()
+  const rows = leaving.rows('someday', tasks)
 
   function openDrawer(taskId: number) {
     drawerTriggerRef.current = document.activeElement as HTMLElement | null
@@ -53,7 +57,7 @@ export default function SomedayPage() {
         <p className="mt-6 text-sm text-danger-fg">
           Couldn&apos;t load Someday. Check that the server is running and try again.
         </p>
-      ) : tasks.length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="mt-6">
           <EmptyState
             title="Nothing parked."
@@ -63,15 +67,16 @@ export default function SomedayPage() {
         </div>
       ) : (
         <div className="space-y-1 mt-6" role="list" aria-label="Someday tasks">
-          {tasks.map((task) => (
+          {rows.map(({ task, leaving: isLeaving }) => (
             <div key={task.id} role="listitem">
               <TaskRow
                 task={task}
                 isSelected={selectedTaskId === task.id}
                 onOpenDrawer={openDrawer}
-                onToggleComplete={handleToggleComplete}
+                onToggleComplete={(t) => leaving.toggle('someday', tasks, t, handleToggleComplete)}
                 isDraggable={false}
                 showItem
+                leaving={isLeaving}
               />
             </div>
           ))}

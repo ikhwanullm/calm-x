@@ -5,6 +5,7 @@ import { getDeadlineStatus } from '@/utils/deadline'
 import { useDeadlineThreshold } from '@/hooks/useSettings'
 import { daysSinceIso, formatAbsoluteDate, getLocalToday } from '@/utils/date'
 import { cn } from '@/lib/utils'
+import { TaskCheckbox } from './TaskCheckbox'
 
 export interface TaskRowProps {
   task: Task
@@ -20,6 +21,8 @@ export interface TaskRowProps {
   showDeadlineStatus?: boolean
   /** Show which Project/Area the task belongs to (for cross-item lists like Today) */
   showItem?: boolean
+  /** The row has been completed and is on its way out of the list (fade and collapse) */
+  leaving?: boolean
 }
 
 export function TaskRow({
@@ -31,6 +34,7 @@ export function TaskRow({
   onToggleComplete,
   showDeadlineStatus = true,
   showItem = false,
+  leaving = false,
 }: TaskRowProps) {
   const today = getLocalToday()
   const isDeferred = !!task.defer_until && task.defer_until > today && !task.is_complete
@@ -44,6 +48,7 @@ export function TaskRow({
     : null
 
   return (
+    <div className="task-row-wrap" data-leaving={leaving}>
     <div
       className={cn(
         'flex items-center gap-2 min-h-[52px] px-3 py-2 rounded-control border border-transparent',
@@ -67,12 +72,10 @@ export function TaskRow({
       )}
 
       {/* Checkbox */}
-      <input
-        type="checkbox"
+      <TaskCheckbox
         checked={task.is_complete}
         onChange={() => onToggleComplete(task)}
         aria-label={`Mark complete: ${task.title}`}
-        className="flex-shrink-0 h-4 w-4 rounded accent-[var(--accent)] cursor-pointer"
       />
 
       {/* Title + meta */}
@@ -82,10 +85,10 @@ export function TaskRow({
           onClick={() => onOpenDrawer(task.id)}
           className={cn(
             'w-full text-left text-sm font-medium truncate',
-            task.is_complete ? 'text-muted line-through' : 'text-text hover:text-accent-text',
+            task.is_complete ? 'text-muted' : 'text-text hover:text-accent-text',
           )}
         >
-          {task.title}
+          <span className="task-title" data-done={task.is_complete}>{task.title}</span>
         </button>
 
         {/* Meta line */}
@@ -140,6 +143,7 @@ export function TaskRow({
           <StatusBadge status={deadlineStatus} date={task.due_date} today={today} />
         </div>
       )}
+    </div>
     </div>
   )
 }

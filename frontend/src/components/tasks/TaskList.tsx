@@ -18,6 +18,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import type { Task } from '@/types/models'
 import { TaskRow } from './TaskRow'
+import { useLeavingRows } from '@/hooks/useLeavingRows'
 import { cn } from '@/lib/utils'
 
 interface SortableTaskRowProps {
@@ -26,9 +27,10 @@ interface SortableTaskRowProps {
   onOpenDrawer: (id: number) => void
   onToggleComplete: (task: Task) => void
   showDeadlineStatus?: boolean
+  leaving?: boolean
 }
 
-function SortableTaskRow({ task, isSelected, onOpenDrawer, onToggleComplete, showDeadlineStatus }: SortableTaskRowProps) {
+function SortableTaskRow({ task, isSelected, onOpenDrawer, onToggleComplete, showDeadlineStatus, leaving }: SortableTaskRowProps) {
   const {
     attributes,
     listeners,
@@ -53,6 +55,7 @@ function SortableTaskRow({ task, isSelected, onOpenDrawer, onToggleComplete, sho
         onOpenDrawer={onOpenDrawer}
         onToggleComplete={onToggleComplete}
         showDeadlineStatus={showDeadlineStatus}
+        leaving={leaving}
         isDraggable
         dragHandleProps={{ ...attributes, ...listeners } as React.HTMLAttributes<HTMLButtonElement>}
       />
@@ -92,6 +95,9 @@ export function TaskList({
   const openTasks = tasks.filter(t => !t.is_complete)
   const completedTasks = tasks.filter(t => t.is_complete)
   const [showCompleted, setShowCompleted] = useState(false)
+  // A task that was just completed stays in the open list for a moment before it moves to "completed"
+  const leaving = useLeavingRows()
+  const rows = leaving.rows('open', openTasks)
 
   function handleDragStart(event: DragStartEvent) {
     const task = tasks.find(t => t.id === event.active.id)
@@ -133,15 +139,27 @@ export function TaskList({
           strategy={verticalListSortingStrategy}
         >
           <div role="list" aria-label="Tasks">
-            {openTasks.map(task => (
+            {rows.map(({ task, leaving: isLeaving, retained }) => (
               <div key={task.id} role="listitem">
-                <SortableTaskRow
-                  task={task}
-                  isSelected={task.id === selectedTaskId}
-                  onOpenDrawer={onOpenDrawer}
-                  onToggleComplete={onToggleComplete}
-                  showDeadlineStatus={showDeadlineStatus}
-                />
+                {retained ? (
+                  <TaskRow
+                    task={task}
+                    onOpenDrawer={onOpenDrawer}
+                    onToggleComplete={onToggleComplete}
+                    showDeadlineStatus={showDeadlineStatus}
+                    isDraggable={false}
+                    leaving={isLeaving}
+                  />
+                ) : (
+                  <SortableTaskRow
+                    task={task}
+                    isSelected={task.id === selectedTaskId}
+                    onOpenDrawer={onOpenDrawer}
+                    onToggleComplete={(t) => leaving.toggle('open', openTasks, t, onToggleComplete)}
+                    showDeadlineStatus={showDeadlineStatus}
+                    leaving={isLeaving}
+                  />
+                )}
               </div>
             ))}
           </div>

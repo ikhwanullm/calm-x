@@ -45,6 +45,11 @@
   /* Shadow */
   --shadow: 0 1px 2px rgba(20, 20, 18, 0.05);
 
+  /* Motion: subtle, no bounce. Only used inside prefers-reduced-motion: no-preference. */
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
   /* ---- shadcn/ui variable mapping ---- */
   --background: var(--bg);
   --foreground: var(--text);
@@ -104,6 +109,65 @@ body {
   outline-offset: 2px;
 }
 
+
+/* ============================================================
+   Task completion: checkbox, strike-through, leaving row.
+   The end states are static; the motion is only added below.
+   ============================================================ */
+.task-check-mark path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.task-check:checked + .task-check-mark path {
+  stroke-dashoffset: 0;
+}
+
+.task-title {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 55%;
+  background-size: 0 1px;
+}
+.task-title[data-done='true'] {
+  background-size: 100% 1px;
+  color: var(--muted);
+}
+
+.task-row-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.task-row-wrap > * {
+  min-height: 0;
+}
+.task-row-wrap[data-leaving='true'] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+.task-row-wrap[data-leaving='true'] > * {
+  overflow: hidden;
+}
+tr[data-leaving='true'] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .task-check {
+    transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  }
+  .task-check-mark path {
+    transition: stroke-dashoffset var(--dur) var(--ease);
+  }
+  .task-title {
+    transition: background-size var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .task-row-wrap {
+    transition: grid-template-rows var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  }
+  tr[data-leaving] {
+    transition: opacity var(--dur) var(--ease);
+  }
+}
 
 /* WCAG AA 3:1 border for form controls (--border-strong).
    Applies to raw elements and Tailwind's [border-color:*] utility.

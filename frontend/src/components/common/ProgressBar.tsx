@@ -23,7 +23,7 @@ export function ProgressBar({ completed, total, label, className }: ProgressBarP
         className="flex-1 h-2 rounded-pill bg-track overflow-hidden"
       >
         <div
-          className="h-full bg-accent rounded-pill transition-all duration-300"
+          className="h-full bg-accent rounded-pill motion-safe:transition-[width] motion-safe:duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>

@@ -15,13 +15,17 @@ interface PlannedEarlierProps {
   selectedTaskId: number | null
   onOpenDrawer: (taskId: number) => void
   onToggleComplete: (task: Task) => void
+  /** Rows that are on their way out of the list (fade and collapse) */
+  leavingIds?: ReadonlySet<number>
 }
+
+const NONE: ReadonlySet<number> = new Set()
 
 /**
  * "Add to Today" plans do not expire by themselves, so the ones from earlier days are listed apart, oldest first,
  * and the owner decides: keep a plan for today, or take it off Today (one by one, or all at once with Undo).
  */
-export function PlannedEarlier({ tasks, today, selectedTaskId, onOpenDrawer, onToggleComplete }: PlannedEarlierProps) {
+export function PlannedEarlier({ tasks, today, selectedTaskId, onOpenDrawer, onToggleComplete, leavingIds = NONE }: PlannedEarlierProps) {
   const patch = usePatchTask()
   const qc = useQueryClient()
 
@@ -73,6 +77,7 @@ export function PlannedEarlier({ tasks, today, selectedTaskId, onOpenDrawer, onT
                 onToggleComplete={onToggleComplete}
                 isDraggable={false}
                 showItem
+                leaving={leavingIds.has(task.id)}
               />
             </div>
             <span className="shrink-0 text-xs text-muted whitespace-nowrap">{plannedLabel(task.focus_date!, today)}</span>

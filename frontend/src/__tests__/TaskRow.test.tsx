@@ -67,19 +67,19 @@ describe('TaskRow', () => {
   it('shows a "Starts" chip and dims a task deferred past today', () => {
     const { container } = renderRow({ task: { ...baseTask, defer_until: '2099-01-05' } })
     expect(screen.getByText(/^Starts /)).toBeTruthy()
-    expect(container.firstChild).toHaveClass('opacity-60')
+    expect(container.firstChild?.firstChild).toHaveClass('opacity-60')
   })
 
   it('shows no "Starts" chip once the defer date has arrived', () => {
     const { container } = renderRow({ task: { ...baseTask, defer_until: '2020-01-05' } })
     expect(screen.queryByText(/^Starts /)).toBeNull()
-    expect(container.firstChild).not.toHaveClass('opacity-60')
+    expect(container.firstChild?.firstChild).not.toHaveClass('opacity-60')
   })
 
   it('shows a "Someday" chip and dims a parked task', () => {
     const { container } = renderRow({ task: { ...baseTask, is_someday: true } })
     expect(screen.getByText('Someday')).toBeTruthy()
-    expect(container.firstChild).toHaveClass('opacity-60')
+    expect(container.firstChild?.firstChild).toHaveClass('opacity-60')
   })
 
   it('shows the parent item when asked, and Inbox for inbox tasks', () => {
@@ -156,10 +156,19 @@ describe('TaskRow', () => {
     expect(onToggleComplete).toHaveBeenCalledWith(baseTask)
   })
 
-  it('completed task title has line-through', () => {
+  it('completed task title is struck through', () => {
     renderRow({ task: { ...baseTask, is_complete: true } })
-    const titleBtn = screen.getByText('Write tests')
-    expect(titleBtn.className).toContain('line-through')
+    expect(screen.getByText('Write tests').getAttribute('data-done')).toBe('true')
+  })
+
+  it('open task title is not struck through', () => {
+    renderRow()
+    expect(screen.getByText('Write tests').getAttribute('data-done')).toBe('false')
+  })
+
+  it('marks a leaving row so it can fade out', () => {
+    const { container } = renderRow({ leaving: true })
+    expect(container.querySelector('.task-row-wrap')?.getAttribute('data-leaving')).toBe('true')
   })
 
   it('shows subtask count when subtasks exist', () => {
@@ -175,6 +184,6 @@ describe('TaskRow', () => {
 
   it('selected row has accent-soft background class', () => {
     const { container } = renderRow({ isSelected: true })
-    expect(container.firstChild).toHaveClass('bg-accent-soft')
+    expect(container.firstChild?.firstChild).toHaveClass('bg-accent-soft')
   })
 })

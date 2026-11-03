@@ -61,4 +61,11 @@ The owner found the list pages static. **Projects, All tasks, Areas and Resource
   `/areas/{id}` (plain "Inbox" text for tasks without an item). Used in `TaskRow` (when `showItem`), `TaskCompactList`, and in the task
   drawer footer ("In ..."). Group headers by project/area get a small arrow link next to the collapse button. Not linked: Dashboard
   and Weekly Review rows (they have their own actions per row).
+- **Completing a task** (designed with the owner, 2026-11-03): `components/tasks/TaskCheckbox.tsx` is a real checkbox drawn as an
+  accent box with a self-drawing check mark; the title gets a strike-through that grows left to right (`.task-title`, `data-done`).
+  Lists that drop completed tasks (Today, Inbox, Someday, All tasks with Status open, project/area open list) keep the row for 400 ms,
+  then fade and collapse it (`.task-row-wrap[data-leaving]`; compact list rows only fade). The page owns `hooks/useLeavingRows.ts`
+  (`rows(listKey, tasks)` and `toggle(...)` around its checkbox handler) and must keep it above anything that hides an empty list.
+  Reopening has no exit animation. With reduced motion the row goes at once. Known limit: Today's "Waiting for" block and group
+  headers in All tasks disappear at once when their last row leaves.
 - Not done: ascending/descending toggle in the UI (the API has `order`), server-side grouping, the toolbar for Areas/Resources.

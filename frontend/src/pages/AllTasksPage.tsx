@@ -9,6 +9,7 @@ import { useViewMode } from "@/hooks/useViewMode"
 import { TaskDrawer } from "@/components/tasks/TaskDrawer"
 import { TaskRow } from "@/components/tasks/TaskRow"
 import { TaskCompactList } from "@/components/tasks/TaskCompactList"
+import { useLeavingRows } from "@/hooks/useLeavingRows"
 import { ListToolbar } from "@/components/lists/ListToolbar"
 import type { ToolbarChip } from "@/components/lists/ListToolbar"
 import { EmptyState, Skeleton } from "@/components/common"
@@ -117,7 +118,13 @@ export default function AllTasksPage() {
     toggle("meeting", "From a meeting", "meeting", chipOn.meeting),
   ]
 
-  const groups = groupTasks(tasks, group, today)
+  // Tasks that were just completed stay on screen for a moment before they leave the list
+  const leaving = useLeavingRows()
+  const rows = leaving.rows("all", tasks)
+  const shown = rows.map((r) => r.task)
+  const leavingIds = new Set(rows.filter((r) => r.leaving).map((r) => r.task.id))
+  const toggleComplete = (task: Task) => leaving.toggle("all", tasks, task, handleToggleComplete)
+  const groups = groupTasks(shown, group, today)
 
   function renderTasks(list: Task[], label: string) {
     if (view === "list") {
@@ -127,7 +134,8 @@ export default function AllTasksPage() {
           label={label}
           selectedTaskId={selectedTaskId}
           onOpenDrawer={openDrawer}
-          onToggleComplete={handleToggleComplete}
+          onToggleComplete={toggleComplete}
+          leavingIds={leavingIds}
         />
       )
     }
@@ -139,9 +147,10 @@ export default function AllTasksPage() {
               task={task}
               isSelected={selectedTaskId === task.id}
               onOpenDrawer={openDrawer}
-              onToggleComplete={handleToggleComplete}
+              onToggleComplete={toggleComplete}
               isDraggable={false}
               showItem
+              leaving={leavingIds.has(task.id)}
             />
           </div>
         ))}
@@ -183,14 +192,14 @@ export default function AllTasksPage() {
         <div className="space-y-2 mt-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" delay={0} />)}
         </div>
-      ) : tasks.length === 0 ? (
+      ) : shown.length === 0 ? (
         <EmptyState
           title="No matching tasks found."
           description="Try adjusting or clearing the filters."
           dashedBorder
         />
       ) : group === "none" ? (
-        <div className="mt-4">{renderTasks(tasks, "Filtered tasks")}</div>
+        <div className="mt-4">{renderTasks(shown, "Filtered tasks")}</div>
       ) : (
         <div className="mt-4 space-y-5">
           {groups.map((g) => {

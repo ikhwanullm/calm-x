@@ -87,6 +87,12 @@ Rules:
 - Do not add a color without adding it here first, with light and dark values that pass AA.
 - Text on any `*-bg` token uses its matching `*-fg` token. Never put muted text on a status background.
 
+### Motion
+
+Subtle, no bounce or overshoot. Tokens in `index.css`: `--dur-fast: 120ms`, `--dur: 180ms`, `--ease: cubic-bezier(.2,0,0,1)`.
+Everything that moves sits behind `@media (prefers-reduced-motion: no-preference)` (or Tailwind `motion-safe:`); with reduced
+motion the end state appears at once and nothing else changes.
+
 ### Typography
 
 Font: **Plus Jakarta Sans** (variable, 400, 500, 600, 700), bundled with `@fontsource-variable/plus-jakarta-sans` and imported in `main.tsx`; never loaded from a CDN. Fallback `system-ui, -apple-system, 'Segoe UI', sans-serif`.

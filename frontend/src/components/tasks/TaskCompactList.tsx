@@ -1,6 +1,7 @@
 import { PriorityChip, TagChip, ItemLink } from '@/components/common'
 import { formatRelativeDate, getLocalToday } from '@/utils/date'
 import { cn } from '@/lib/utils'
+import { TaskCheckbox } from './TaskCheckbox'
 import type { Task } from '@/types/models'
 
 const CHIP = 'inline-flex items-center h-5 px-1.5 rounded-pill bg-surface-2 text-xs text-muted whitespace-nowrap'
@@ -11,10 +12,14 @@ export interface TaskCompactListProps {
   selectedTaskId: number | null
   onOpenDrawer: (taskId: number) => void
   onToggleComplete: (task: Task) => void
+  /** Rows that are on their way out of the list (fade) */
+  leavingIds?: ReadonlySet<number>
 }
 
+const NONE: ReadonlySet<number> = new Set()
+
 /** One row per task: checkbox, title, project, due, priority, tags and state chips. */
-export function TaskCompactList({ tasks, label, selectedTaskId, onOpenDrawer, onToggleComplete }: TaskCompactListProps) {
+export function TaskCompactList({ tasks, label, selectedTaskId, onOpenDrawer, onToggleComplete, leavingIds = NONE }: TaskCompactListProps) {
   const today = getLocalToday()
   return (
     <div className="overflow-x-auto rounded-card border border-border bg-surface">
@@ -35,15 +40,14 @@ export function TaskCompactList({ tasks, label, selectedTaskId, onOpenDrawer, on
             return (
               <tr
                 key={task.id}
+                data-leaving={leavingIds.has(task.id)}
                 className={cn('border-t border-border hover:bg-surface-2', selectedTaskId === task.id && 'bg-accent-soft')}
               >
                 <td className="px-3 py-2">
-                  <input
-                    type="checkbox"
+                  <TaskCheckbox
                     checked={task.is_complete}
                     onChange={() => onToggleComplete(task)}
                     aria-label={`Mark complete: ${task.title}`}
-                    className="h-4 w-4 rounded accent-[var(--accent)] cursor-pointer"
                   />
                 </td>
                 <td className="px-3 py-2 max-w-[22rem]">
@@ -52,10 +56,10 @@ export function TaskCompactList({ tasks, label, selectedTaskId, onOpenDrawer, on
                     onClick={() => onOpenDrawer(task.id)}
                     className={cn(
                       'w-full text-left text-sm font-medium truncate',
-                      task.is_complete ? 'text-muted line-through' : 'text-text hover:text-accent-text'
+                      task.is_complete ? 'text-muted' : 'text-text hover:text-accent-text'
                     )}
                   >
-                    {task.title}
+                    <span className="task-title" data-done={task.is_complete}>{task.title}</span>
                   </button>
                 </td>
                 <td className="px-3 py-2 text-sm text-muted max-w-[12rem] truncate">

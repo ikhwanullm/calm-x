@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom"
 import { ChevronLeft, ChevronRight, Flag } from "lucide-react"
 import { useTodayTasks, useCompleteTask, useIncompleteTask } from "@/hooks/useTasks"
 import { useRescheduleTask, useWeek } from "@/hooks/useCalendar"
+import { useLeavingRows } from "@/hooks/useLeavingRows"
 import { TaskDrawer } from "@/components/tasks/TaskDrawer"
 import { TaskRow } from "@/components/tasks/TaskRow"
 import { WeekStrip } from "@/components/today/WeekStrip"
@@ -99,23 +100,31 @@ export default function TodayPage() {
   const waiting = data?.waiting ?? []
   const workCount = overdue.length + dueToday.length + focused.length + plannedEarlier.length
 
+  // A task you just completed stays on screen for a moment before it leaves its list
+  const leaving = useLeavingRows()
+  const todayListKeys = ["today-overdue", "today-due", "today-focused"]
+  const stillLeaving = todayListKeys.some((key) => leaving.rows(key, []).length > 0)
+  const plannedEarlierRows = leaving.rows("today-earlier", plannedEarlier)
+
   function renderSection(title: string, tasks: Task[], id: string) {
-    if (tasks.length === 0) return null
+    const rows = leaving.rows(id, tasks)
+    if (rows.length === 0) return null
     return (
       <section aria-labelledby={id} className="mt-6">
         <h2 id={id} className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
           {title} <span className="font-normal tabular-nums">{tasks.length}</span>
         </h2>
         <div className="space-y-1" role="list">
-          {tasks.map((task) => (
+          {rows.map(({ task, leaving: isLeaving }) => (
             <div key={task.id} role="listitem">
               <TaskRow
                 task={task}
                 isSelected={selectedTaskId === task.id}
                 onOpenDrawer={openDrawer}
-                onToggleComplete={handleToggleComplete}
+                onToggleComplete={(t) => leaving.toggle(id, tasks, t, handleToggleComplete)}
                 isDraggable={false}
                 showItem
+                leaving={isLeaving}
               />
             </div>
           ))}
@@ -219,7 +228,7 @@ export default function TodayPage() {
             </section>
           )}
 
-          {workCount === 0 ? (
+          {workCount === 0 && !stillLeaving ? (
             <div className="mt-6">
               <EmptyState
                 title="Nothing planned for today."
@@ -236,11 +245,12 @@ export default function TodayPage() {
           )}
 
           <PlannedEarlier
-            tasks={plannedEarlier}
+            tasks={plannedEarlierRows.map((r) => r.task)}
+            leavingIds={new Set(plannedEarlierRows.filter((r) => r.leaving).map((r) => r.task.id))}
             today={today}
             selectedTaskId={selectedTaskId}
             onOpenDrawer={openDrawer}
-            onToggleComplete={handleToggleComplete}
+            onToggleComplete={(t) => leaving.toggle("today-earlier", plannedEarlier, t, handleToggleComplete)}
           />
 
           {waiting.length > 0 && (
@@ -256,15 +266,16 @@ export default function TodayPage() {
               </button>
               {showWaiting && (
                 <div className="space-y-1 mt-2" role="list">
-                  {waiting.map((task) => (
+                  {leaving.rows("today-waiting", waiting).map(({ task, leaving: isLeaving }) => (
                     <div key={task.id} role="listitem">
                       <TaskRow
                         task={task}
                         isSelected={selectedTaskId === task.id}
                         onOpenDrawer={openDrawer}
-                        onToggleComplete={handleToggleComplete}
+                        onToggleComplete={(t) => leaving.toggle("today-waiting", waiting, t, handleToggleComplete)}
                         isDraggable={false}
                         showItem
+                        leaving={isLeaving}
                       />
                     </div>
                   ))}
