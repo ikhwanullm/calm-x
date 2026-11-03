@@ -73,10 +73,27 @@ describe('TodayPage', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
   })
 
-  it('shows an empty state when nothing is planned', async () => {
+  it('shows an all-clear block when nothing is planned', async () => {
     vi.mocked(tasksApi.today).mockResolvedValue({ overdue: [], due_today: [], focused: [], waiting: [] })
     renderPage()
-    expect(await screen.findByText('Nothing planned for today.')).toBeTruthy()
+    expect(await screen.findByText('All done for today.')).toBeTruthy()
+    expect(screen.getByText('Add something with Q, or plan from the week above.')).toBeTruthy()
+  })
+
+  it('greets by the hour and summarises the day, leaving out zero parts', async () => {
+    vi.mocked(tasksApi.today).mockResolvedValue({
+      overdue: [task(1, 'Late')], due_today: [task(2, 'Now')], focused: [],
+      waiting: [task(4, 'Firewall rule', { waiting_for: 'Security team' })],
+    })
+    renderPage()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/^Good (morning|afternoon|evening)$/)
+    expect(await screen.findByText(/· 2 to do · 1 waiting$/)).toBeTruthy()
+  })
+
+  it('shows no counts while the data is loading', () => {
+    vi.mocked(tasksApi.today).mockReturnValue(new Promise(() => {}))
+    renderPage()
+    expect(screen.queryByText(/to do|waiting/)).toBeNull()
   })
 
   it('completes a task from Today', async () => {

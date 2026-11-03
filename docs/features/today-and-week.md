@@ -27,6 +27,15 @@ stay below it. Only meetings have a time; everything else is date-only, so it is
   warn, overdue danger, deadlines a bordered chip with a flag icon, starts muted.
 - Not done: dragging with the keyboard, showing overdue tasks of earlier weeks in the strip.
 
+## Greeting and day summary (built 2026-11-03, designed with the owner)
+
+- The h1 is a greeting by the local hour (before 12:00 "Good morning", 12:00-16:59 "Good afternoon", from 17:00 "Good evening"),
+  `hooks/useGreeting.ts`, recomputed on window focus and every 5 minutes. Only when today is the selected day; another day keeps "Today".
+- The muted line under it: the date, then "N to do" (`workCount`), "N meeting(s)" (today's meetings from the current week's data)
+  and "N waiting", leaving out zero parts and everything while loading. Plain text, not links.
+- With `workCount` 0 the dashed empty state is replaced by an all-clear block (`Sun` icon, "All done for today.", a hint about Q and
+  the week strip). It fades in (`.fade-in`) when the last task of the day was just completed.
+
 ## Planned earlier (built 2026-11-02, foundation round part 2)
 
 `focus_date` never expires, so the owner decides: plans are never cleared silently.
@@ -34,4 +43,4 @@ stay below it. Only meetings have a time; everything else is date-only, so it is
 Built in `components/today/PlannedEarlier.tsx`, `plannedLabel` in `utils/date.ts`). Details: the split is done in the browser from `get_today`'s
 `focused` list (a plan counts as "for today" when `focus_date >= today`); "Clear all" and its Undo are client-side (`tasksApi.update` per task; Undo
 restores each previous date; only the ones that were cleared are offered back); the week strip's `planned` list (`calendar_service`) now only holds
-`focus_date >= today`, so old plans are not drawn there. If only old plans exist, no "Nothing planned for today" message is shown.
+`focus_date >= today`, so old plans are not drawn there. If only old plans exist, no "All done for today" block is shown.

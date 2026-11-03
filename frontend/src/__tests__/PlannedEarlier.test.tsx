@@ -144,7 +144,7 @@ describe('Today page with old plans', () => {
     })
     wrap(<TodayPage />)
     expect(await screen.findByRole('heading', { name: /Planned earlier 1/ })).toBeTruthy()
-    expect(screen.queryByText('Nothing planned for today.')).toBeNull()
+    expect(screen.queryByText('All done for today.')).toBeNull()
     expect(screen.queryByRole('heading', { name: /Planned for today/ })).toBeNull()
   })
 

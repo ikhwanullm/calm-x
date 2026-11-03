@@ -1,6 +1,8 @@
 import React from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { ChevronLeft, ChevronRight, Flag } from "lucide-react"
+import { ChevronLeft, ChevronRight, Flag, Sun } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useGreeting } from "@/hooks/useGreeting"
 import { useTodayTasks, useCompleteTask, useIncompleteTask } from "@/hooks/useTasks"
 import { useRescheduleTask, useWeek } from "@/hooks/useCalendar"
 import { useLeavingRows } from "@/hooks/useLeavingRows"
@@ -8,7 +10,7 @@ import { TaskDrawer } from "@/components/tasks/TaskDrawer"
 import { TaskRow } from "@/components/tasks/TaskRow"
 import { WeekStrip } from "@/components/today/WeekStrip"
 import { PlannedEarlier } from "@/components/today/PlannedEarlier"
-import { Button, EmptyState, Skeleton } from "@/components/common"
+import { Button, Skeleton } from "@/components/common"
 import { formatAbsoluteDate, getLocalToday } from "@/utils/date"
 import { addDays, dayLabel, isValidDate, meetingTime, mondayOf, weekRangeLabel } from "@/utils/week"
 import type { MeetingSummary, Task } from "@/types/models"
@@ -54,6 +56,7 @@ export default function TodayPage() {
     : weekDays.includes(today) ? today : weekStart
 
   const { data: week } = useWeek(weekStart)
+  const { data: currentWeek } = useWeek(currentMonday)
   const reschedule = useRescheduleTask()
   const selectedWeekDay = week?.days.find((d) => d.date === selectedDay)
 
@@ -99,6 +102,24 @@ export default function TodayPage() {
   const plannedEarlier = focusedAll.filter((t) => !!t.focus_date && t.focus_date < today)
   const waiting = data?.waiting ?? []
   const workCount = overdue.length + dueToday.length + focused.length + plannedEarlier.length
+
+  // The greeting and the one-line summary under it; nothing is counted until the data has loaded
+  const greeting = useGreeting()
+  const meetingsToday = currentWeek?.days.find((d) => d.date === today)?.meetings.length ?? 0
+  const summary = data
+    ? [
+        workCount > 0 ? `${workCount} to do` : null,
+        meetingsToday > 0 ? `${meetingsToday} ${meetingsToday === 1 ? "meeting" : "meetings"}` : null,
+        waiting.length > 0 ? `${waiting.length} waiting` : null,
+      ].filter((part): part is string => part !== null)
+    : []
+
+  // The all-clear block fades in when the last task of the day was just completed, instead of popping
+  const hadWork = React.useRef(false)
+  const fadeAllClear = hadWork.current
+  React.useEffect(() => {
+    hadWork.current = workCount > 0
+  })
 
   // A task you just completed stays on screen for a moment before it leaves its list
   const leaving = useLeavingRows()
@@ -176,9 +197,9 @@ export default function TodayPage() {
   return (
     <div className="max-w-6xl">
       <h1 className="text-2xl font-semibold text-text tracking-tight" style={{ letterSpacing: "-0.02em" }}>
-        Today
+        {selectedDay === today ? greeting : "Today"}
       </h1>
-      <p className="text-sm text-muted mt-1">{formatAbsoluteDate(today)}</p>
+      <p className="text-sm text-muted mt-1">{[formatAbsoluteDate(today), ...(selectedDay === today ? summary : [])].join(" · ")}</p>
 
       <section aria-label="Week view" className="mt-5">
         <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -229,12 +250,12 @@ export default function TodayPage() {
           )}
 
           {workCount === 0 && !stillLeaving ? (
-            <div className="mt-6">
-              <EmptyState
-                title="Nothing planned for today."
-                description="Open any task and choose Add to Today. Overdue and due-today tasks appear here on their own."
-                dashedBorder
-              />
+            <div
+              className={cn("mt-6 flex flex-col items-center text-center px-4 py-10 rounded-card border border-dashed border-border", fadeAllClear && "fade-in")}
+            >
+              <Sun size={20} aria-hidden="true" className="text-muted" />
+              <p className="mt-2 text-sm font-medium text-text">All done for today.</p>
+              <p className="mt-1 text-sm text-muted">Add something with Q, or plan from the week above.</p>
             </div>
           ) : (
             <>

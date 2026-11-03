@@ -95,7 +95,7 @@ describe('Today page week view', () => {
     renderPage()
     expect(await screen.findByRole('heading', { name: /Meetings/ })).toBeTruthy()
     expect(screen.getAllByText(/Weekly sync/).length).toBeGreaterThan(1)  // in the strip and in the list
-    expect(screen.getByText('Nothing planned for today.')).toBeTruthy()
+    expect(screen.getByText('All done for today.')).toBeTruthy()
   })
 
   it('moves between weeks through the URL and back with "This week"', async () => {
@@ -124,7 +124,7 @@ describe('Today page week view', () => {
     renderPage('/today?week=2026-13-45&day=nope')
     await screen.findByRole('list', { name: 'Week' })
     expect(calendarApi.week).toHaveBeenCalledWith(MONDAY, TODAY, expect.any(String))
-    expect(screen.getByText('Nothing planned for today.')).toBeTruthy()
+    expect(screen.getByText('All done for today.')).toBeTruthy()
   })
 
   it('selecting another day lists its meetings, tasks and deadlines, and keeps the week in the URL', async () => {
@@ -136,7 +136,7 @@ describe('Today page week view', () => {
     const plan = await screen.findByRole('region', { name: /Plan for Fri 30 Oct/ })
     expect(plan.textContent).toContain('Send report')
     expect(plan.textContent).toContain('Ship it')
-    expect(screen.queryByText('Nothing planned for today.')).toBeNull()
+    expect(screen.queryByText('All done for today.')).toBeNull()
   })
 
   it('says so when the selected day is empty', async () => {

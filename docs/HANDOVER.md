@@ -11,7 +11,7 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
 - Schema head: **migration 009** (`tasks.completed_at`). The owner's real DB was at 008 when last checked (2026-11-02) and
   upgrades to 009 on the next app start.
-- Tests at the last code commit: backend 639 passed, frontend 1155 passed (88 files, about 35-55 s), `tsc -b` clean.
+- Tests at the last code commit: backend 639 passed, frontend 1168 passed (89 files, about 35-55 s), `tsc -b` clean.
 
 ## Next up
 
@@ -55,7 +55,7 @@ Three commits in this order: completion animation, Undo after complete, Today he
 - Tests (backend): complete then undo restores subtask states and `completed_at` NULL; undo twice is refused; undo after a
   manual reopen is refused. Export/import does not need the new undo kind (Replace already clears `undo_entries`).
 
-**Part 3: Today header**
+**Part 3: Today header (DONE, see `features/today-and-week.md`)**
 
 - Replace the plain "Today" h1 with a greeting by the local hour: before 12:00 "Good morning", 12:00-16:59 "Good afternoon",
   from 17:00 "Good evening". Same h1 size and weight as now; the page title in the tab stays "Today". Recompute when the window
@@ -101,6 +101,7 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
+| (newest) | Today greeting by hour, one-line day summary (to do, meetings, waiting) and an all-clear block that fades in |
 | (newest) | Undo after completing a task: "Task completed" toast, `POST /api/tasks/{id}/undo-complete` (restores subtask states, 409 if the task changed since), quiet in the Weekly Review steps |
 | (newest) | Completion animation: `TaskCheckbox` (self-drawing check), growing strike-through, completed row lingers 400 ms then fades and collapses (`useLeavingRows`), motion tokens in `index.css`, `ProgressBar` width transition |
 | (newest) | Browser cache of `index.html`: the server sends `Cache-Control: no-cache` for `index.html` and root files, and the launcher opens `/?v=<timestamp>`, so a window never starts from an old copy that points at deleted chunk files (the cause of "Resources errors / links missing" seen via the desktop shortcut) |

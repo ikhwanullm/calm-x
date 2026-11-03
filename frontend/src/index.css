@@ -151,7 +151,15 @@ tr[data-leaving='true'] {
   opacity: 0;
 }
 
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  .fade-in {
+    animation: fade-in var(--dur) var(--ease);
+  }
   .task-check {
     transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
   }
