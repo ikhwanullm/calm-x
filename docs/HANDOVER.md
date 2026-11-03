@@ -107,6 +107,7 @@ When you build or change a feature, update its file (or add one and list it here
 
 | Commit | What |
 |---|---|
+| `68970eb` | Week strip: titles on two lines, meeting time on its own line, tooltip (Radix) with kind, project/area and waiting-for |
 | `7a868ef` | Today greeting by hour, one-line day summary (to do, meetings, waiting) and an all-clear block that fades in |
 | `6a1e191` | Undo after completing a task: "Task completed" toast, `POST /api/tasks/{id}/undo-complete` (restores subtask states, 409 if the task changed since), quiet in the Weekly Review steps |
 | `802d1b9` | Completion animation: `TaskCheckbox` (self-drawing check), growing strike-through, completed row lingers 400 ms then fades and collapses (`useLeavingRows`), motion tokens in `index.css`, `ProgressBar` width transition |
