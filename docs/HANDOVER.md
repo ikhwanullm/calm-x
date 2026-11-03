@@ -6,7 +6,7 @@ How each feature behaves is in `docs/features/`; finished work rounds are record
 
 ## Where things stand
 
-- Everything up to the micro-interactions round (`7a868ef`) is pushed to `origin/main`.
+- Everything up to the week strip and icons round (`a003fb1`) is pushed to `origin/main`.
 - The v1 spec (`.kiro/specs/para-task-manager/`: requirements, design, tasks Phases 0–11) is fully built and archived.
   Everything after that was added on top, directly in code; these docs describe it, the spec files do not.
 - Schema head: **migration 010** (`items.icon`, `items.color`). The owner's real DB was at 009 when last checked (2026-11-03) and
@@ -64,7 +64,6 @@ Update `docs/features/meetings.md` and `features/dashboard.md`/`weekly-review.md
 
 ### Follow-ups from the 2026-11-03 review of the week strip and icons (one commit each)
 
-The section below ("Readable week strip and icons") is built: when you start, move it to `docs/history/rounds.md`.
 Found by testing on a DB copy at 1440 and 1920 px:
 
 - **Teal is too close to the green status color.** Dark: teal fg `#74D8B8` vs `--ok-fg` `#7BDCA6` (about 14° of hue apart);
@@ -77,63 +76,7 @@ Found by testing on a DB copy at 1440 and 1920 px:
   keep `max-w-6xl`), so columns reach about 250 px on a 1920 px screen. Keep the 7 columns from 768 px up.
 - Small: in the icon picker, Enter in the search box picks the first match (today it does nothing until you press Down first).
 
-### Readable week strip and icons for Projects and Areas (chosen by the owner 2026-11-03, from a mockup)
-
-Two features, one commit each (icons may take two: backend, then UI). The micro-interactions round below is done: when you
-start, move its section to `docs/history/rounds.md` and leave a one-line pointer here. In the "Built after the v1 spec"
-table always write the real commit hash (amend nothing; add the hash in your docs commit), never `(newest)`.
-
-**Part 1: week strip titles no longer cut off (DONE, see `features/today-and-week.md`)** (`components/today/WeekStrip.tsx`)
-
-Problem: a day column is about 150 px, every entry is one truncated line, and the meeting time and the waiting-for name
-("· Fadhli") take part of it, so most titles end in "…".
-
-- Each entry shows its title on up to **two lines** (`line-clamp-2`, `break-words`), then "…". Same 12px text.
-- A meeting shows its time on a small line of its own above the title (same chip, `tabular-nums`, slightly muted) instead
-  of in front of it.
-- The waiting-for name leaves the chip; it moves to the tooltip.
-- A quick **tooltip** on hover and keyboard focus (about 300 ms delay) with the full title, what the entry is (Meeting
-  09:00, Due, Planned for today, Project deadline, Starts), the project/area name and "Waiting for {who}" when set.
-  Use shadcn's Tooltip (`@radix-ui/react-tooltip`, generated into `components/ui/` and themed per `ui-guidelines.md` §2); it
-  replaces the slow native `title`. It must close when a drag starts and must not block dropping.
-- Keep `MAX_PER_DAY = 4` and "+N more"; a cell may grow taller, all cells in the row keep the same height (grid stretch).
-- The vertical agenda below 768 px: titles there are full width already; only take over the new time line and tooltip text.
-- Tests: long titles are no longer cut to one line (class check), meeting time rendered apart, tooltip content for each kind,
-  waiting name only in the tooltip. Check in the browser at 1280 and 1024 px with the real-length titles of a DB copy.
-
-**Part 2: an icon and a soft color per Project and Area (DONE, see `features/item-detail.md`)**
-
-Owner's choice: line icons with a soft tint ("option 3"). This **loosens the rule "color means status, and only status"**
-on purpose, for item identity only. To keep status colors unambiguous, identity tints never use red, amber/orange or green.
-Update `ui-guidelines.md` §1 rule 2 and §3 tokens to say exactly that.
-
-- Data: migration `010_item_icon.py` adds `items.icon TEXT` and `items.color TEXT` (plain `ADD COLUMN`, both NULL for
-  existing rows). `icon` is a key like `database`; the backend accepts any `^[a-z0-9-]{1,40}$` (the frontend owns the list
-  and shows the fallback for a key it does not know). `color` must be one of `purple`, `blue`, `teal`, `pink`, `slate`
-  (400 otherwise). All item types may have them (Resources too), but the UI to pick them is on Projects and Areas only for now.
-  Carry both in export/import, `ItemResponse`, and in task responses as `item_icon` / `item_color` (add them to the items
-  query in `task_service._tasks_to_responses`; still four queries).
-- Tokens: `--tint-{purple|blue|teal|pink|slate}-bg` / `-fg` in light and dark in `index.css` (light like the mockup:
-  purple `#EEEDFE`/`#534AB7`, blue `#E6F1FB`/`#185FA5`, teal `#E1F5EE`/`#0F6E56`, pink `#FBEAF0`/`#993556`, slate
-  `#EFEFEA`/`#5C5C57`; pick dark values with the same contrast rule as the other tokens: fg on bg at least 4.5:1).
-  `blue` must stay visibly different from the accent; if it is too close, drop it rather than invent another hue.
-- Icon set: `utils/itemIcons.ts` maps about 40 lucide icon keys to components, grouped loosely (work: briefcase, database,
-  server, cloud, code, git-branch, chart-bar, shield, rocket, file-text, presentation, users, handshake, calendar,
-  wallet; life: home, heart, dumbbell, book-open, graduation-cap, plane, car, utensils, music, camera, sprout, baby,
-  paw-print; general: star, flag, target, lightbulb, puzzle, wrench, package, globe, megaphone, compass, leaf, sparkles).
-  Check each name exists in the installed lucide-react before adding it.
-- `components/common/ItemIcon.tsx`: a rounded square (radius 6-7 px) in `--tint-{color}-bg` with the icon in
-  `--tint-{color}-fg`; sizes 16 (inline), 20 (rows, picker) and 28 (detail page, cards). No icon set: the first letter of the
-  title in the same square (slate when no color). Decorative (`aria-hidden`): the name next to it is the label.
-- Picker on the Project/Area page: the 28 px icon next to the title is a button ("Change icon"); it opens a popover
-  (shadcn Popover, `@radix-ui/react-popover`) with a search box, the icon grid, the five color swatches (with their names
-  as labels) and "Remove icon". Arrow keys move in the grid, Enter picks, Esc closes; saves at once (`PUT /api/items/{id}`)
-  with the usual optimistic update and error toast. Not offered on archived items (read-only).
-- Shown in: Projects and Areas cards and list rows, the Project/Area detail header, the project/area name on task rows and
-  in the task drawer (`ItemLink`, 16 px), `ItemPicker` entries, the Dashboard's "Projects needing attention". Not in the
-  week strip (no room), not on Resources yet.
-- Tests: migration on a copy of a 009 DB leaves rows NULL; invalid color 400; export/import round trip; `ItemIcon` fallback
-  letter; picker keyboard flow; `item_icon` in task responses with the query count unchanged.
+The week strip and icons round is done; see `history/rounds.md`.
 
 The micro-interactions round (completion animation, Undo after complete, Today greeting) is done; see `history/rounds.md`.
 
